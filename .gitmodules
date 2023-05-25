@@ -1,0 +1,27 @@
+[submodule "extern/tskit"]
+	path = extern/tskit
+	url = https://github.com/tskit-dev/tskit.git
+[submodule "extern/kassert"]
+	path = extern/kassert
+	url = https://github.com/kamping-site/kassert/
+[submodule "extern/Catch2"]
+	path = extern/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "extern/backward-cpp"]
+	path = extern/backward-cpp
+	url = https://github.com/bombela/backward-cpp.git
+[submodule "extern/nanobench"]
+	path = extern/nanobench
+	url = https://github.com/martinus/nanobench.git
+[submodule "extern/cli11"]
+	path = extern/CLI11
+	url = https://github.com/CLIUtils/CLI11.git
+[submodule "extern/xxHash"]
+	path = extern/xxHash
+	url = https://github.com/Cyan4973/xxHash.git
+[submodule "extern/fmt"]
+	path = extern/fmt
+	url = https://github.com/fmtlib/fmt
+[submodule "extern/bit_vector"]
+	path = extern/bit_vector
+	url = https://github.com/pasta-toolbox/bit_vector

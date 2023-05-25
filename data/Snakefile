@@ -1,0 +1,28 @@
+rule generate_tree_sequence:
+    output:
+        "generated-pop{pop_size}-seq{seq_length}-ind{num_ind}-seed{seed}.trees"
+    wildcard_constraints:
+        pop_size= '\d+',
+        seq_length = '\d+',
+        num_ind = '\d+',
+        seed = '\d+',
+    shell:
+        "python -m generate-tree-sequence {wildcards.pop_size} {wildcards.seq_length} "
+        "    {wildcards.num_ind} {wildcards.seed} > {output}"
+
+rule generate_tree_sequence_with_mutations:
+    output:
+        "generated-pop{pop_size}-seq{seq_length}-ind{num_ind}-mut{mut_rate}-seed{seed}.trees"
+    wildcard_constraints:
+        pop_size = '\d+',
+        seq_length = '\d+',
+        num_ind = '\d+',
+        seed = '\d+',
+        mut_rate = '[\d.-e]+',
+    shell:
+        "python -m generate-tree-sequence {wildcards.pop_size} {wildcards.seq_length} "
+        "    {wildcards.num_ind} {wildcards.seed} --add-mutations --mutation-rate {wildcards.mut_rate} "
+        "    > {output}"
+
+# TODO Write rule to generate the files needed for tests and benchmarks
+# TODO Write a rule to download the empirical .trees files for tests and benchmarks
