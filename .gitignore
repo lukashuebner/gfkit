@@ -658,3 +658,7 @@ perf.data.old
 .git-rev
 experiments/plots/*.pdf
 experiments/plots/*.png
+data/*.trees.tsz
+
+# direnv
+.envrc
