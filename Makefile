@@ -71,7 +71,7 @@ data/1kg_chr%.trees.tsz:
 
 # Unified Genealogy of Modern and Ancient Genomes by Wohns et al.
 data/unified_chr%.trees.tsz:
-	curl --location --progress-bar --output $@ https://zenodo.org/record/5495535/files/hgdp_tgp_sgdp_chr$*_p.dated.trees.tsz
+	curl --location --progress-bar --output $@ https://zenodo.org/record/5495535/files/hgdp_tgp_sgdp_chr$*_q.dated.trees.tsz
 
 # Simulated genomes by Anderson-Tromce
 data/anderson_chr%.trees.tsz:
