@@ -45,6 +45,13 @@ $(BENCHMARK_BIN): .git-rev
 	cmake --build --preset release --parallel
 	ctest --preset release
 
+# Extract statistics from our datasets
+$(DATA_DIR)/trees-files-stats.csv: $(TREES_FILES) $(SCRIPT_DIR)/extract-trees-files-stats.py
+	$(SCRIPT_DIR)/extract-trees-files-stats.py $(TREES_FILES) > "$@"
+
+$(PLOT_DIR)/trees-files-stats-num-trees.pdf: $(DATA_DIR)/num-breakpoints.csv $(SCRIPT_DIR)/plot-trees-file-stats.R $(SCRIPT_DIR)/common.R
+	$(SCRIPT_DIR)/plot-trees-files-stats.R --input "$<" --output "$@"
+
 # Download and extract datasets
 # Extract .trees.tsz files
 data/%.trees: data/%.trees.tsz
