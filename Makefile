@@ -17,14 +17,18 @@ benchmark-all: $(DATA_DIR)/sf-vs-ts-speed.csv
 .PHONY: plot-all
 plot-all: $(PLOT_DIR)/sf-vs-ts-speed.pdf
 
-$(PLOT_DIR)/sf-vs-ts-speed.pdf: $(SCRIPT_DIR)/plot-sf-vs-ts-speed.R $(SCRIPT_DIR)/common.R $(DATA_DIR)/sf-vs-ts-speed.csv
+# We don't list $(DATA_DIR)/sf-vs-ts-speed.csv as a dependency here, as we do not want the benchmarks to be
+# run automatically when we're just trying create the plots.
+$(PLOT_DIR)/sf-vs-ts-speed.pdf: $(SCRIPT_DIR)/plot-sf-vs-ts-speed.R $(SCRIPT_DIR)/common.R
 	$(SCRIPT_DIR)/plot-sf-vs-ts-speed.R --input "$(DATA_DIR)/sf-vs-ts-speed.csv" --output "$@"
 
+# Rules to collect all benchmark results into a single file.
 $(DATA_DIR)/sf-vs-ts-speed.csv: $(MEASUREMENT_FILES)
 	cat $^ > "$@"
 	sed -i '2,$$ { /^algorithm,variant,dataset,iteration,walltime_ns/d }' "$@"
 
-# Using $(BENCHMARK_BIN) as a dependency here, would lead to re-running the benchmarks all the time.
+# Using $(BENCHMARK_BIN) as a dependency here, would lead to re-running the benchmarks on every invocation of Make 
+# as $(BENCHMARK_BIN) is a phony target.
 $(DATA_DIR)/%.csv: data/%.trees
 	$(BENCHMARK_BIN) \
 		--iterations $(ITERATIONS) \
@@ -73,8 +77,8 @@ data/unified_chr%.trees.tsz:
 data/anderson_chr%.trees.tsz:
 	curl --location --progress-bar --output $@ https://zenodo.org/record/7702392/files/simulated_chrom_$*.ts.tsz
 
-.PHONY: download_sgdp_data
-download_sgdp_data: \
+.PHONY: download-sgdp-data
+download-sgdp-data: \
 	data/sgdp_chr1.trees \
 	data/sgdp_chr2.trees \
 	data/sgdp_chr3.trees \
@@ -98,8 +102,8 @@ download_sgdp_data: \
 	data/sgdp_chr21.trees \
 	data/sgdp_chr22.trees
 
-.PHONY: download_1kg_data
-download_1kg_data: \
+.PHONY: download-1kg-data
+download-1kg-data: \
 	data/1kg_chr1.trees \
 	data/1kg_chr2.trees \
 	data/1kg_chr3.trees \
@@ -123,8 +127,8 @@ download_1kg_data: \
 	data/1kg_chr21.trees \
 	data/1kg_chr22.trees
 	
-.PHONY: download_unified_data
-download_unified_data: \
+.PHONY: download-unified-data
+download-unified-data: \
 	data/unified_chr1.trees \
 	data/unified_chr2.trees \
 	data/unified_chr3.trees \
@@ -148,8 +152,8 @@ download_unified_data: \
 	data/unified_chr21.trees \
 	data/unified_chr22.trees
 
-.PHONY: download_anderson_data
-download_anderson_data: \
+.PHONY: download-anderson-data
+download-anderson-data: \
 	data/anderson_chr1.trees \
 	data/anderson_chr2.trees \
 	data/anderson_chr3.trees \
@@ -173,5 +177,5 @@ download_anderson_data: \
 	data/anderson_chr21.trees \
 	data/anderson_chr22.trees
 
-.PHONY: download_all_data
-download_all_data: download_sgdp_data download_1kg_data download_unified_data
+.PHONY: download-all-data
+download-all-data: download-sgdp-data download-1kg-data download-unified-data
