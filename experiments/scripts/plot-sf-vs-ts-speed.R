@@ -25,8 +25,6 @@ args <- parser$parse_args()
 # args$input <- "experiments/data/sf-vs-ts-speed.csv"
 # args$output <- "experiments/plots/sf-vs-ts-speed.pdf"
 
-# save_plot <- ggsave_factory(
-
 dataset_from_filename <- function(filename) {
     tools::file_path_sans_ext(basename(filename))
 }
@@ -113,7 +111,7 @@ algorithm_colors <- c(
     "load" = "#ff7f0e",
     "build_sf" = "#d62728",
     "compute_subtree_sizes" = "#1f77b4",
-    "compute_afs" = "#2ca02c",
+    "compute_afs" = "#2ca02c"
 )
 
 algorithm_labels <- c(
