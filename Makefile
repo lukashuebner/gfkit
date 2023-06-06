@@ -33,7 +33,7 @@ $(DATA_DIR)/%.csv: data/%.trees
 	$(BENCHMARK_BIN) \
 		--iterations $(ITERATIONS) \
 		--file "$<" \
-		--version $(file < .git-rev) \
+		--revision $(file < .git-rev) \
 		--machine $(shell hostname) \
 		> "$@"
 
