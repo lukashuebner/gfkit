@@ -8,6 +8,7 @@ MEASUREMENT_FILES = $(patsubst data/%.trees, $(DATA_DIR)/%.csv, $(TREES_FILES))
 BENCHMARK_BIN = build/release/benchmarks/benchmark
 
 .ONESHELL:
+.DELETE_ON_ERROR:
 
 .PHONY: all
 all: $(BENCHMARK_BIN) benchmark-all plot-all
