@@ -15,8 +15,13 @@ all: $(BENCHMARK_BIN) benchmark-all plot-all
 .PHONY: benchmark-all
 benchmark-all: $(DATA_DIR)/sf-vs-ts-speed.csv
 
+.PHONY: clean-benchmark-results
+clean-benchmark-results:
+	rm -f $(DATA_DIR)/{tgp,1kg,anderson,sgdp}_chr*.csv
+	rm -f $(DATA_DIR)/sf-vs-ts-speed.csv
+
 .PHONY: plot-all
-plot-all: $(PLOT_DIR)/sf-vs-ts-speed.pdf
+plot-all: plot-sf-vs-ts-speed plot-trees-files-stats
 
 # We don't list $(DATA_DIR)/sf-vs-ts-speed.csv as a dependency here, as we do not want the benchmarks to be
 # run automatically when we're just trying create the plots.
@@ -27,6 +32,9 @@ $(PLOT_DIR)/sf-vs-ts-speed.pdf: $(SCRIPT_DIR)/plot-sf-vs-ts-speed.R $(SCRIPT_DIR
 $(DATA_DIR)/sf-vs-ts-speed.csv: $(MEASUREMENT_FILES)
 	cat $^ > "$@"
 	sed -i '2,$$ { /^algorithm,variant,dataset,iteration,walltime_ns/d }' "$@"
+
+.PHONY: plot-sf-vs-ts-speed
+plot-sf-vs-ts-speed: $(PLOT_DIR)/sf-vs-ts-speed.pdf
 
 # Using $(BENCHMARK_BIN) as a dependency here, would lead to re-running the benchmarks on every invocation of Make 
 # as $(BENCHMARK_BIN) is a phony target.
@@ -67,6 +75,9 @@ TREES_FILES_PLOTS = \
 
 $(TREES_FILES_PLOTS): $(DATA_DIR)/trees-files-stats.csv $(SCRIPT_DIR)/plot-trees-files-stats.R $(SCRIPT_DIR)/common.R
 	$(SCRIPT_DIR)/plot-trees-files-stats.R --input "$<" --output "$@"
+
+.PHONY: plot-trees-files-stats
+plot-trees-files-stats: $(TREES_FILES_PLOTS)
 
 # Download and extract datasets
 # Extract .trees.tsz files
