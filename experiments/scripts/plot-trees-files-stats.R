@@ -15,7 +15,7 @@ parser$add_argument(
     help = "Input file name (csv)"
 )
 parser$add_argument(
-    "-o", "--output",
+    "-o", "--output-prefix",
     type = "character",
     required = TRUE,
     help = "Output file name (pdf/png/...)"
@@ -24,7 +24,7 @@ args <- parser$parse_args()
 
 # args <- list()
 # args$input <- "experiments/data/trees-files-stats.csv"
-# args$output <- "experiments/plots/trees-file-stats"
+# args$output_prefix <- "experiments/plots/trees-files-stats"
 
 data <- read_csv(
     args$input,
@@ -32,7 +32,7 @@ data <- read_csv(
     col_types <- cols(
         filename = col_character(),
         collection = col_character(),
-        organism  = col_character(),
+        organism = col_character(),
         chromosome = col_integer(),
         num_trees = col_double(),
         sequence_length = col_double(),
@@ -42,11 +42,12 @@ data <- read_csv(
         num_individuals = col_double(),
         num_migrations = col_double(),
         num_mutations = col_double(),
-        num_nodes  = col_double(),
+        num_nodes = col_double(),
         num_populations = col_double(),
         num_provenances = col_double(),
-        num_sites = col_double(), 
-    )) %>%
+        num_sites = col_double(),
+    )
+) %>%
     mutate(
         collection = factor(collection),
         organism = factor(organism),
@@ -61,7 +62,7 @@ paste("Organism:", unique(data$organism))
 paste("Number of chromosomes:", length(unique(data$chromosome)))
 
 style <- c()
-style$height <- 40
+style$height <- 120
 style$width <- 120
 style$unit <- "mm"
 style$text_size <- 8
@@ -73,17 +74,21 @@ plot_distribution_of <- function(data, y, ylabel, x, output_postfix) {
     y <- enquo(y)
     ggplot(data, aes(y = !!y, x = !!x)) +
         geom_boxplot() +
-        theme_husky(style) +
+        scale_y_log_with_ticks_and_lines() +
+        theme_husky(
+            style = style,
+            axis.text.x = element_text(angle = 30, hjust = 1)
+        ) +
         labs(
             x = element_blank(),
             y = ylabel,
         ) +
-        coord_flip() +
+        # coord_flip() +
         gg_eps()
 
-        output <- paste(args$output, output_postfix, ".pdf", sep = "")
-        ggsave(output, width = style$width, height = style$height, units = style$unit)
-    }
+    output <- paste(args$output_prefix, output_postfix, ".pdf", sep = "")
+    ggsave(output, width = style$width, height = style$height, units = style$unit)
+}
 
 plot_distribution_of(data, y = num_trees, ylabel = "Number of trees", x = collection, output_postfix = "-num-trees")
 plot_distribution_of(data, y = sequence_length, ylabel = "Sequence length", x = collection, output_postfix = "-sequence-length")
@@ -94,14 +99,21 @@ plot_for_each_chromosome <- function(data, y, ylabel, output_postfix) {
     y <- enquo(y)
     ggplot(data, aes(x = chromosome, y = !!y, color = collection, shape = collection)) +
         geom_point() +
-        theme_husky(style) +
+        scale_y_log_with_ticks_and_lines() +
+        theme_husky(
+            style = style,
+            legend.position = "bottom",
+            legend.box.margin = margin(1, 1, 1, 1),
+            legend.box.spacing = margin(0, 0, 0, 0),
+        ) +
         labs(
             x = element_blank(),
             y = ylabel,
         ) +
+        guides(color = guide_legend(nrow = 2, byrow = TRUE)) +
         gg_eps()
 
-    output <- paste(args$output, output_postfix, ".pdf", sep = "")
+    output <- paste(args$output_prefix, output_postfix, ".pdf", sep = "")
     ggsave(output, width = style$width, height = style$height, units = style$unit)
 }
 

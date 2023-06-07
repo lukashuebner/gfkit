@@ -73,8 +73,8 @@ TREES_FILES_PLOTS = \
 	$(PLOT_DIR)/trees-files-stats-num-sites-per-chromosome.pdf \
 	$(PLOT_DIR)/trees-files-stats-sequence-length-per-chromosome.pdf
 
-$(TREES_FILES_PLOTS): $(DATA_DIR)/trees-files-stats.csv $(SCRIPT_DIR)/plot-trees-files-stats.R $(SCRIPT_DIR)/common.R
-	$(SCRIPT_DIR)/plot-trees-files-stats.R --input "$<" --output "$@"
+$(TREES_FILES_PLOTS) &: $(DATA_DIR)/trees-files-stats.csv $(SCRIPT_DIR)/plot-trees-files-stats.R $(SCRIPT_DIR)/common.R
+	$(SCRIPT_DIR)/plot-trees-files-stats.R --input "$<" --output-prefix "$(PLOT_DIR)/trees-files-stats"
 
 .PHONY: plot-trees-files-stats
 plot-trees-files-stats: $(TREES_FILES_PLOTS)
