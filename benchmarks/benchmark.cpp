@@ -151,13 +151,21 @@ int main(int argc, char** argv) {
     std::string machine_id = "";
     app.add_option("-m,--machine", machine_id, "Identifier of this computer (e.g. hostname)")->default_val("undefined");
 
+    uint64_t num_warmup_iterations = 1;
+    app.add_option(
+           "-w,--warmup-iterations",
+           num_warmup_iterations,
+           "The number of warmup iterations to run before the actual benchmarking starts"
+       )
+        ->check(CLI::NonNegativeNumber)
+        ->default_val(1);
+
     CLI11_PARSE(app, argc, argv);
 
     // Set-up results printer
     ResultsPrinter results_printer(std::cout, revision, machine_id);
     results_printer.print_header();
 
-    const uint8_t num_warmup_iterations = 1;
     for (uint8_t _iteration = 0; _iteration < num_iterations + num_warmup_iterations; ++_iteration) {
         bool const    warmup    = _iteration < num_warmup_iterations;
         uint8_t const iteration = warmup ? _iteration : _iteration - num_warmup_iterations;

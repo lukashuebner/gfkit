@@ -1,4 +1,5 @@
 ITERATIONS = 10
+WARMUP_ITERATIONS = 1
 PLOT_DIR = experiments/plots
 SCRIPT_DIR = experiments/scripts
 DATA_DIR = experiments/data
@@ -31,6 +32,7 @@ $(DATA_DIR)/sf-vs-ts-speed.csv: $(MEASUREMENT_FILES)
 # as $(BENCHMARK_BIN) is a phony target.
 $(DATA_DIR)/%.csv: data/%.trees
 	$(BENCHMARK_BIN) \
+		--warmup-iterations $(WARMUP_ITERATIONS) \
 		--iterations $(ITERATIONS) \
 		--file "$<" \
 		--revision $(file < .git-rev) \
