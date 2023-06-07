@@ -137,7 +137,7 @@ class FilenameMetadataFactory():
 
     @staticmethod
     def _parse_anderson_filename(filename):
-        match = re.match(r'unified_chr(\d+)\.trees', filename)
+        match = re.match(r'anderson_chr(\d+)\.trees', filename)
         if match is None:
             return None
         else:
