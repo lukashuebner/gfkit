@@ -53,7 +53,17 @@ $(BENCHMARK_BIN): .git-rev
 $(DATA_DIR)/trees-files-stats.csv: $(TREES_FILES) $(SCRIPT_DIR)/extract-trees-files-stats.py
 	$(SCRIPT_DIR)/extract-trees-files-stats.py $(TREES_FILES) > "$@"
 
-$(PLOT_DIR)/trees-files-stats-num-trees.pdf: $(DATA_DIR)/trees-files-stats.csv $(SCRIPT_DIR)/plot-trees-files-stats.R $(SCRIPT_DIR)/common.R
+TREES_FILES_PLOTS = \
+	$(PLOT_DIR)/trees-files-stats-num-trees.pdf \
+	$(PLOT_DIR)/trees-files-stats-num-samples.pdf \
+	$(PLOT_DIR)/trees-files-stats-num-sites.pdf \
+	$(PLOT_DIR)/trees-files-stats-sequence-length.pdf \
+	$(PLOT_DIR)/trees-files-stats-num-trees-per-chromosome.pdf \
+	$(PLOT_DIR)/trees-files-stats-num-samples-per-chromosome.pdf \
+	$(PLOT_DIR)/trees-files-stats-num-sites-per-chromosome.pdf \
+	$(PLOT_DIR)/trees-files-stats-sequence-length-per-chromosome.pdf
+
+$(TREES_FILES_PLOTS): $(DATA_DIR)/trees-files-stats.csv $(SCRIPT_DIR)/plot-trees-files-stats.R $(SCRIPT_DIR)/common.R
 	$(SCRIPT_DIR)/plot-trees-files-stats.R --input "$<" --output "$@"
 
 # Download and extract datasets
