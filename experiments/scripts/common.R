@@ -9,6 +9,8 @@ library(scales, warn.conflicts = FALSE)
 library(showtext)
 library(latex2exp)
 library(tools)
+library(R.oo, warn.conflicts = FALSE)
+library(R.utils, warn.conflicts = FALSE)
 
 # TODO: Develop this collection of helper functions into a reusable library
 
