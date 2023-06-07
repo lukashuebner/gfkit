@@ -1,4 +1,3 @@
-
 #!/usr/bin/env Rscript
 
 source("experiments/scripts/common.R")
@@ -23,9 +22,9 @@ parser$add_argument(
 )
 args <- parser$parse_args()
 
-args <- list()
-args$input <- "experiments/data/trees-files-stats.csv"
-args$output <- "experiments/plots/trees-file-stats"
+# args <- list()
+# args$input <- "experiments/data/trees-files-stats.csv"
+# args$output <- "experiments/plots/trees-file-stats"
 
 data <- read_csv(
     args$input,
@@ -56,10 +55,10 @@ data <- read_csv(
     )
 
 stopifnot(nrow(data) == length(unique(data$filename)))
-paste("Number of trees:", nrow(data))
-paste("Collections:", unique(data$collection))
-paste("Organisms:", unique(data$organism))
-paste("Chromosomes:", unique(data$chromosome))
+paste("Number of .trees files:", nrow(data))
+paste("Collection:", unique(data$collection))
+paste("Organism:", unique(data$organism))
+paste("Number of chromosomes:", length(unique(data$chromosome)))
 
 style <- c()
 style$height <- 40
