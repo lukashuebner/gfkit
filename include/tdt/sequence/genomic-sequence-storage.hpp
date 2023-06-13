@@ -28,7 +28,7 @@ public:
         return static_cast<unsigned char>(idx);
     }
 
-    static constexpr unsigned int num_states = 4;
+    static constexpr unsigned char num_states = 4;
 };
 
 class PerfectDNAHasher {
