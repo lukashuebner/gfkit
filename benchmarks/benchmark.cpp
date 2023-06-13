@@ -105,8 +105,9 @@ void benchmark(
 
     // Benchmark building the DAG from the tree sequence
     timer.start();
-    CompressedForest       compressed_forest(tree_sequence);
-    GenomicSequenceStorage sequence_store(tree_sequence, compressed_forest);
+    ForestCompressor       forest_compressor(tree_sequence);
+    CompressedForest       compressed_forest = forest_compressor.compress();
+    GenomicSequenceStorage sequence_store(tree_sequence, forest_compressor);
     if (!warmup) {
         results_printer.print(warmup, "build_sf", "sf", ts_file, timer.stop(), iteration);
     }

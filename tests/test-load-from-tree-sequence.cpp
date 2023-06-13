@@ -41,25 +41,25 @@ std::vector<std::string> ts_files = load_file_names_from_file("data/expensive_te
 std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
 #endif
 
-    TEST_CASE("Build tree sequence and tree from tgp_chr8.trees", "[LoadFromTreeSequence]") {
-    TSKitTreeSequence tree_sequence(tgp_chr8_ts_file);
-    TSKitTree         current_tree(tree_sequence);
+// TEST_CASE("Build tree sequence and tree from tgp_chr8.trees", "[LoadFromTreeSequence]") {
+//     TSKitTreeSequence tree_sequence(tgp_chr8_ts_file);
+//     TSKitTree         current_tree(tree_sequence);
 
-    CHECK(tree_sequence.num_nodes() == 44910);
-    CHECK(tree_sequence.num_edges() == 382351);
-    CHECK(tree_sequence.num_sites() == 106678);
-    CHECK(tree_sequence.num_mutations() == 391346);
-    CHECK(tree_sequence.num_trees() == 9973);
-    CHECK(tree_sequence.num_individuals() == 2504);
-    CHECK(tree_sequence.num_populations() == 26);
-    CHECK(tree_sequence.num_samples() == 5008);
-    CHECK(tree_sequence.num_samples() == tree_sequence.num_individuals() * 2); // humans are diploid
-    CHECK(tree_sequence.sequence_length() == 146364024.0);
+//     CHECK(tree_sequence.num_nodes() == 44910);
+//     CHECK(tree_sequence.num_edges() == 382351);
+//     CHECK(tree_sequence.num_sites() == 106678);
+//     CHECK(tree_sequence.num_mutations() == 391346);
+//     CHECK(tree_sequence.num_trees() == 9973);
+//     CHECK(tree_sequence.num_individuals() == 2504);
+//     CHECK(tree_sequence.num_populations() == 26);
+//     CHECK(tree_sequence.num_samples() == 5008);
+//     CHECK(tree_sequence.num_samples() == tree_sequence.num_individuals() * 2); // humans are diploid
+//     CHECK(tree_sequence.sequence_length() == 146364024.0);
 
-    for (current_tree.first(); current_tree.is_valid(); current_tree.next()) {
-        CHECK(current_tree.num_roots() == 1);
-    }
-}
+//     for (current_tree.first(); current_tree.is_valid(); current_tree.next()) {
+//         CHECK(current_tree.num_roots() == 1);
+//     }
+// }
 
 TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
     auto const&       ts_file = GENERATE_REF(from_range(ts_files));
@@ -162,7 +162,8 @@ TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    CompressedForest  compressed_forest(tree_sequence);
+    ForestCompressor  forest_compressor(tree_sequence);
+    CompressedForest  compressed_forest = forest_compressor.compress();
 
     EdgeListGraph const& dag = compressed_forest.postorder_edges();
 

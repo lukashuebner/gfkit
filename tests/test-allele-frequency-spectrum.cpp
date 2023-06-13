@@ -70,10 +70,12 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
-    CompressedForest       compressed_forest(tdt_tree_sequence);
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, compressed_forest);
+    ForestCompressor forest_compressor(tdt_tree_sequence);
+    CompressedForest compressed_forest = forest_compressor.compress();
 
+    GenomicSequenceStorage                        sequence_store(tdt_tree_sequence, forest_compressor);
     AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
+
     CHECK(afs.num_samples() == 4);
     CHECK(afs.num_sites() == 3);
 
@@ -139,8 +141,9 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
-    CompressedForest       compressed_forest(tdt_tree_sequence);
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, compressed_forest);
+    ForestCompressor       forest_compressor(tdt_tree_sequence);
+    CompressedForest       compressed_forest = forest_compressor.compress();
+    GenomicSequenceStorage sequence_store(tdt_tree_sequence, forest_compressor);
 
     AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
     CHECK(afs.num_samples() == 4);
@@ -214,8 +217,9 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
-    CompressedForest       compressed_forest(tdt_tree_sequence);
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, compressed_forest);
+    ForestCompressor       forest_compressor(tdt_tree_sequence);
+    CompressedForest       compressed_forest = forest_compressor.compress();
+    GenomicSequenceStorage sequence_store(tdt_tree_sequence, forest_compressor);
 
     AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
     CHECK(afs.num_samples() == 4);
@@ -289,8 +293,9 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
-    CompressedForest       compressed_forest(tdt_tree_sequence);
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, compressed_forest);
+    ForestCompressor       forest_compressor(tdt_tree_sequence);
+    CompressedForest       compressed_forest = forest_compressor.compress();
+    GenomicSequenceStorage sequence_store(tdt_tree_sequence, forest_compressor);
 
     AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
     CHECK(afs.num_samples() == 4);
@@ -324,11 +329,13 @@ TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    auto                   reference_afs = tree_sequence.allele_frequency_spectrum();
-    CompressedForest       compressed_forest(tree_sequence);
-    GenomicSequenceStorage sequence_store(tree_sequence, compressed_forest);
+    auto             reference_afs = tree_sequence.allele_frequency_spectrum();
+    ForestCompressor forest_compressor(tree_sequence);
+    CompressedForest compressed_forest = forest_compressor.compress();
 
+    GenomicSequenceStorage                    sequence_store(tree_sequence, forest_compressor);
     AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
+
     CHECK(afs.num_samples() == compressed_forest.postorder_edges().num_leaves());
     CHECK(afs.num_sites() == sequence_store.num_sites());
 

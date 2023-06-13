@@ -21,7 +21,7 @@ public:
     using const_iterator = std::vector<value_type>::const_iterator;
 
     AlleleFrequencySpectrum(GenomicSequenceStorage const& sequence_store, CompressedForest& compressed_forest) {
-        auto const num_samples = compressed_forest.postorder_edges().num_leaves();
+        auto const num_samples = compressed_forest.num_leaves();
         _num_sites             = sequence_store.num_sites();
 
         // TODO where to put this line?

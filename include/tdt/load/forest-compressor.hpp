@@ -14,8 +14,102 @@
 #include "tdt/tskit.hpp"
 #include "tdt/utils/concepts.hpp"
 
-// TODO Separate this class into the construction and the storage
 class CompressedForest {
+public:
+    EdgeListGraph const& postorder_edges() const {
+        return _dag_postorder_edges;
+    }
+
+    EdgeListGraph& postorder_edges() {
+        return _dag_postorder_edges;
+    }
+
+    void compute_num_samples_below() {
+        KASSERT(_dag_postorder_edges.check_postorder(), "DAG edges are not post-ordered.", tdt::assert::normal);
+        std::fill(_subtree_sizes.begin(), _subtree_sizes.end(), 0);
+        _subtree_sizes.resize(_dag_postorder_edges.num_nodes(), 0);
+        for (auto&& leaf: _dag_postorder_edges.leaves()) {
+            _subtree_sizes[leaf] = 1;
+        }
+        // TODO Try prefetching a few edges ahead
+        for (auto&& edge: _dag_postorder_edges) {
+            _subtree_sizes[edge.from()] += _subtree_sizes[edge.to()];
+            KASSERT(
+                _subtree_sizes[edge.from()] <= _dag_postorder_edges.num_leaves(),
+                "Number of samples below a node exceeds the number of samples in the tree sequence.",
+                tdt::assert::light
+            );
+        }
+    }
+
+    size_t num_nodes() const {
+        return _dag_postorder_edges.num_nodes();
+    }
+
+    void num_nodes(size_t const num_nodes) {
+        _dag_postorder_edges.num_nodes(num_nodes);
+    }
+
+    size_t num_samples_below(SubtreeId subtree_id) const {
+        KASSERT(subtree_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
+        return _subtree_sizes[subtree_id];
+    }
+
+    auto& num_samples_below() const {
+        return _subtree_sizes;
+    }
+
+    bool is_sample(NodeId const node_id) const {
+        return _dag_postorder_edges.is_leaf(node_id);
+    }
+
+    size_t num_samples() const {
+        return _dag_postorder_edges.num_leaves();
+    }
+
+    size_t num_trees() const {
+        return _dag_postorder_edges.num_trees();
+    }
+
+    size_t num_edges() const {
+        return _dag_postorder_edges.num_edges();
+    }
+
+    void add_leaf(NodeId const leaf) {
+        _dag_postorder_edges.add_leaf(leaf);
+    }
+
+    void add_root(NodeId const root) {
+        _dag_postorder_edges.add_root(root);
+    }
+
+    void add_edge(NodeId const from, NodeId const to) {
+        _dag_postorder_edges.add_edge(from, to);
+    }
+
+    std::vector<NodeId> const& roots() const {
+        return _dag_postorder_edges.roots();
+    }
+
+    std::size_t num_roots() const {
+        return _dag_postorder_edges.num_roots();
+    }
+
+    std::vector<NodeId> const& leaves() const {
+        return _dag_postorder_edges.leaves();
+    }
+
+    std::size_t num_leaves() const {
+        return _dag_postorder_edges.num_leaves();
+    }
+
+private:
+    EdgeListGraph       _dag_postorder_edges;
+    std::vector<size_t> _subtree_sizes;
+};
+
+// TODO Separate this class into the construction and the storage
+class ForestCompressor {
     class SubtreeIdNodeMapper {
     public:
         SubtreeIdNodeMapper() {
@@ -61,8 +155,11 @@ class CompressedForest {
     };
 
 public:
-    CompressedForest(TSKitTreeSequence& tree_sequence) {
-        TSKitTree                ts_tree(tree_sequence);
+    ForestCompressor(TSKitTreeSequence& tree_sequence) : _tree_sequence(tree_sequence) {}
+
+    CompressedForest compress() {
+        CompressedForest         compressed_forest;
+        TSKitTree                ts_tree(_tree_sequence);
         SuccinctSubtreeIdFactory succinct_subtree_id_factory;
         // Reserve the memory for the subtree id once. This prevents reallocations and re-filling the memory for every
         // subtree id, thus improves performance.
@@ -73,7 +170,7 @@ public:
         // TODO Write assertions for that no old subtree id is reused
         std::vector<SuccinctSubtreeId> ts_node_to_dag_subtree_id_map(ts_tree.max_node_id() + 1);
 
-        _ts_node2cf_subtree.reserve(tree_sequence.num_trees());
+        _ts_node2cf_subtree.reserve(_tree_sequence.num_trees());
         bool first_tree = true;
         // TODO Rewrite this, once we have the tree_sequence iterator
         for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next(), first_tree = false) {
@@ -103,7 +200,7 @@ public:
                             tdt::assert::normal
                         );
                         NodeId dag_node_id = _dag_subtree_to_node_map.insert(dag_subtree_id);
-                        _dag_postorder_edges.add_leaf(dag_node_id);
+                        compressed_forest.add_leaf(dag_node_id);
                         _ts_node2cf_subtree.back()[ts_node_id] = dag_node_id;
                     } else {
                         KASSERT(
@@ -157,12 +254,12 @@ public:
                         if (is_root) {
                             dag_node_id = _dag_subtree_to_node_map.insert_root();
                             // If the node is a root node in the tree sequence, also add it to the DAG as a root node.
-                            _dag_postorder_edges.add_root(dag_node_id);
+                            compressed_forest.add_root(dag_node_id);
                         } else {
                             dag_node_id = _dag_subtree_to_node_map.insert(dag_subtree_id);
                         }
                         for (auto child_dag_node_id: children_dag_node_ids) {
-                            _dag_postorder_edges.add_edge(dag_node_id, child_dag_node_id);
+                            compressed_forest.add_edge(dag_node_id, child_dag_node_id);
                         }
                         _ts_node2cf_subtree.back()[ts_node_id] = dag_node_id;
                     } else {
@@ -171,62 +268,17 @@ public:
                 }
             }
         }
-        KASSERT(_dag_postorder_edges.roots().size() == tree_sequence.num_trees());
-        KASSERT(_dag_postorder_edges.num_roots() == tree_sequence.num_trees());
-        KASSERT(_dag_postorder_edges.num_leaves() == tree_sequence.num_samples());
+        KASSERT(compressed_forest.roots().size() == _tree_sequence.num_trees());
+        KASSERT(compressed_forest.num_roots() == _tree_sequence.num_trees());
+        KASSERT(compressed_forest.num_leaves() == _tree_sequence.num_samples());
 
         // Set the number of nodes in the DAG so it does not have to be recomputed.
-        _dag_postorder_edges.num_nodes(_dag_subtree_to_node_map.num_nodes());
+        compressed_forest.num_nodes(_dag_subtree_to_node_map.num_nodes());
 
         // As we build the tree edges by a postorder traversal on the tree, the from edges should be post-ordered, too.
-        _dag_postorder_edges.traversal_order(TraversalOrder::Postorder);
-    }
+        compressed_forest.postorder_edges().traversal_order(TraversalOrder::Postorder);
 
-    EdgeListGraph const& postorder_edges() const {
-        return _dag_postorder_edges;
-    }
-
-    void compute_num_samples_below() {
-        KASSERT(_dag_postorder_edges.check_postorder(), "DAG edges are not post-ordered.", tdt::assert::normal);
-        std::fill(_subtree_sizes.begin(), _subtree_sizes.end(), 0);
-        _subtree_sizes.resize(_dag_subtree_to_node_map.num_nodes(), 0);
-        for (auto&& leaf: _dag_postorder_edges.leaves()) {
-            _subtree_sizes[leaf] = 1;
-        }
-        // TODO Try prefetching a few edges ahead
-        for (auto&& edge: _dag_postorder_edges) {
-            _subtree_sizes[edge.from()] += _subtree_sizes[edge.to()];
-            KASSERT(
-                _subtree_sizes[edge.from()] <= _dag_postorder_edges.num_leaves(),
-                "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                tdt::assert::light
-            );
-        }
-    }
-
-    size_t num_nodes() const {
-        return _dag_subtree_to_node_map.num_nodes();
-    }
-
-    size_t num_samples_below(SubtreeId subtree_id) const {
-        KASSERT(subtree_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
-        return _subtree_sizes[subtree_id];
-    }
-
-    auto& num_samples_below() const {
-        return _subtree_sizes;
-    }
-
-    bool is_sample(NodeId const node_id) const {
-        return _dag_postorder_edges.is_leaf(node_id);
-    }
-
-    size_t num_samples() const {
-        return _dag_postorder_edges.num_leaves();
-    }
-
-    size_t num_trees() const {
-        return _dag_postorder_edges.num_trees();
+        return compressed_forest;
     }
 
     // TODO Rework the naming of nodes and subtrees in the tree sequence and the dag
@@ -245,9 +297,8 @@ public:
     }
 
 private:
-    EdgeListGraph       _dag_postorder_edges;
     SubtreeIdNodeMapper _dag_subtree_to_node_map;
-    std::vector<size_t> _subtree_sizes;
+    TSKitTreeSequence&  _tree_sequence;
 
     // TODO Move this to a separate class
     // TODO Use a different data structure for this?

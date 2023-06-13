@@ -104,7 +104,7 @@ public:
         _mutations.reserve(num_mutations_hint);
     }
 
-    GenomicSequenceStorage(TSKitTreeSequence const& tree_sequence, CompressedForest const& compressed_forest)
+    GenomicSequenceStorage(TSKitTreeSequence const& tree_sequence, ForestCompressor const& compressed_forest)
         : _num_sites(tree_sequence.num_sites()) {
         TSKitSiteToTreeMapper site2tree(tree_sequence);
 
