@@ -8,6 +8,7 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/load/forest-compressor.hpp"
+#include "tdt/graph/compressed-forest.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 
 // We store the number of sites without a mutation in af[0], the number of singletons (sites with one mutation) in

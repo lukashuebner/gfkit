@@ -156,15 +156,7 @@ set(TDT_ASSERTION_LEVEL
     $<IF:$<CONFIG:Debug>,"normal","none">
     CACHE STRING "Assertion level"
 )
-set_property(
-    CACHE TDT_ASSERTION_LEVEL
-    PROPERTY STRINGS
-             none
-             exceptions
-             light
-             normal
-             heavy
-)
+set_property(CACHE TDT_ASSERTION_LEVEL PROPERTY STRINGS none exceptions light normal heavy)
 message(STATUS "Assertion level: ${TDT_ASSERTION_LEVEL}")
 
 # If TDT_ASSERTION_LEVEL defaults to the generator expression, ${TDT_ASSERTION_LEVEL} may not be quoted However, if it
@@ -209,6 +201,12 @@ add_subdirectory("extern/fmt")
 
 # Add pasta::bit_vector for bitsets
 add_subdirectory("extern/bit_vector")
+
+# Add cereal for serialization
+option(BUILD_DOC "" OFF)
+option(BUILD_SANDBOX "" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "" ON)
+add_subdirectory("extern/cereal")
 
 # Google SparseHash for fast hash tables TODO Add as submodule
 

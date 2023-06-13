@@ -5,6 +5,8 @@
 #include "CLI/Config.hpp"
 #include "CLI/Formatter.hpp"
 #include "perf.hpp"
+#include "tdt/graph/compressed-forest.hpp"
+#include "tdt/load/compressed-forest-serialization.hpp"
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 
@@ -93,7 +95,12 @@ private:
 };
 
 void benchmark(
-    bool const warmup, uint8_t const iteration, std::string const& ts_file, ResultsPrinter& results_printer
+    bool const                 warmup,
+    uint8_t const              iteration,
+    std::string const&         ts_file,
+    ResultsPrinter&            results_printer,
+    std::optional<std::string> sf_input_file,
+    std::optional<std::string> sf_output_file
 ) {
     // Benchmark tree sequence loading
     Timer             timer;
@@ -104,12 +111,28 @@ void benchmark(
     }
 
     // Benchmark building the DAG from the tree sequence
-    timer.start();
-    ForestCompressor       forest_compressor(tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress();
-    GenomicSequenceStorage sequence_store(tree_sequence, forest_compressor);
-    if (!warmup) {
-        results_printer.print(warmup, "build_sf", "sf", ts_file, timer.stop(), iteration);
+    CompressedForest       compressed_forest;
+    GenomicSequenceStorage sequence_store;
+    if (sf_input_file) {
+        CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
+    } else {
+        timer.start();
+        ForestCompressor forest_compressor(tree_sequence);
+        compressed_forest = forest_compressor.compress();
+        if (!warmup) {
+            results_printer.print(warmup, "compress_forest", "sf", ts_file, timer.stop(), iteration);
+        }
+
+        timer.start();
+        sequence_store = GenomicSequenceStorage(tree_sequence, forest_compressor);
+        if (!warmup) {
+            results_printer
+                .print(warmup, "initialize_genomic_sequence_storage", "sf", ts_file, timer.stop(), iteration);
+        }
+
+        if (sf_output_file) {
+            CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
+        }
     }
 
     // Benchmark computing subtree sizes
@@ -152,16 +175,25 @@ int main(int argc, char** argv) {
     std::string machine_id = "";
     app.add_option("-m,--machine", machine_id, "Identifier of this computer (e.g. hostname)")->default_val("undefined");
 
+    std::optional<std::string> sf_output_file = std::nullopt;
+    auto sf_output_file_opt = app.add_option("-o,--output", sf_output_file, "Output file for the compressed forest");
+
+    std::optional<std::string> sf_input_file = std::nullopt;
+    auto sf_input_file_opt = app.add_option("-i,--input", sf_input_file, "Input file for the compressed forest")
+                                 ->check(CLI::ExistingFile)
+                                 ->excludes(sf_output_file_opt);
+
     uint64_t num_warmup_iterations = 1;
     app.add_option(
            "-w,--warmup-iterations",
            num_warmup_iterations,
            "The number of warmup iterations to run before the actual benchmarking starts"
-       )
+    )
         ->check(CLI::NonNegativeNumber)
         ->default_val(1);
 
     CLI11_PARSE(app, argc, argv);
+    KASSERT(!(sf_output_file && sf_input_file), "Cannot specify both input and output file", tdt::assert::light);
 
     // Set-up results printer
     ResultsPrinter results_printer(std::cout, revision, machine_id);
@@ -176,6 +208,6 @@ int main(int argc, char** argv) {
         } else {
             std::cerr << "Running iteration " << static_cast<int>(iteration) << " on file " << ts_file << "\n";
         }
-        benchmark(warmup, iteration, ts_file, results_printer);
+        benchmark(warmup, iteration, ts_file, results_printer, sf_input_file, sf_output_file);
     }
 }

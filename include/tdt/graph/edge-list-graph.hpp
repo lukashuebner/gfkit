@@ -75,27 +75,27 @@ public:
         return nodes;
     }
 
-    iterator begin() {
+    iterator begin() noexcept {
         return _edges.begin();
     }
 
-    iterator end() {
+    iterator end() noexcept {
         return _edges.end();
     }
 
-    const_iterator begin() const {
+    const_iterator begin() const noexcept {
         return _edges.begin();
     }
 
-    const_iterator end() const {
+    const_iterator end() const noexcept {
         return _edges.end();
     }
 
-    const_iterator cbegin() const {
+    const_iterator cbegin() const noexcept {
         return _edges.cbegin();
     }
 
-    const_iterator cend() const {
+    const_iterator cend() const noexcept {
         return _edges.cend();
     }
 
@@ -251,6 +251,11 @@ public:
 
     bool is_leaf(NodeId const node) const {
         return std::find(_leaves.begin(), _leaves.end(), node) != _leaves.end();
+    }
+
+    template <class Archive>
+    void serialize(Archive& ar) {
+        ar(_edges, _roots, _leaves, _traversal_order);
     }
 
 private:

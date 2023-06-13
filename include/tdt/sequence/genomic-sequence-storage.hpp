@@ -54,6 +54,8 @@ class GenomicSequenceStorage {
 public:
     class Mutation {
     public:
+        Mutation() = default;
+
         Mutation(
             SiteId       site_id,
             TreeId       tree_id,
@@ -86,6 +88,16 @@ public:
         // TODO Use a reference instead of an id?
         [[nodiscard]] tsk_id_t parent_mutation_id() const {
             return _parent_mutation_id;
+        }
+
+        template <class Archive>
+        void serialize(Archive& archive) {
+            archive(_site_id, _derived_state, _tree_id, _subtree_id, _parent_mutation_id);
+        }
+
+        bool operator==(Mutation const& other) const noexcept {
+            return _site_id == other._site_id && _derived_state == other._derived_state && _tree_id == other._tree_id
+                   && _subtree_id == other._subtree_id && _parent_mutation_id == other._parent_mutation_id;
         }
 
     private:
@@ -259,6 +271,11 @@ public:
     [[nodiscard]] std::span<const Mutation> mutations_at_site(SiteId const site_id) const {
         return std::span(_mutations)
             .subspan(_mutation_indices[site_id], _mutation_indices[site_id + 1] - _mutation_indices[site_id]);
+    }
+
+    template <class Archive>
+    void serialize(Archive& archive) {
+        archive(_sites, _mutation_indices, _mutations, _num_sites);
     }
 
 private:

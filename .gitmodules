@@ -25,6 +25,6 @@
 [submodule "extern/bit_vector"]
 	path = extern/bit_vector
 	url = https://github.com/pasta-toolbox/bit_vector
-[submodule "extern/cista"]
-	path = extern/cista
-	url = https://github.com/felixguendling/cista.git
+[submodule "extern/cereal"]
+	path = extern/cereal
+	url = https://github.com/USCiLab/cereal.git

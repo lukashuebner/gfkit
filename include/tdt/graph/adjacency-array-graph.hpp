@@ -7,6 +7,7 @@
 #include "common.hpp"
 #include "edge-list-graph.hpp"
 #include "tdt/assertion_levels.hpp"
+#include "tdt/checking_casts.hpp"
 
 class AdjacencyArrayGraph {
 public:
@@ -14,10 +15,17 @@ public:
     // using const_iterator = EdgeListGraph::const_iterator;
 
     // TODO think about moving the roots and leaves
-    AdjacencyArrayGraph(EdgeListGraph& edges, bool sorted = false)
-        : _num_edges(0),
-          _roots(edges.roots()),
-          _leaves(edges.leaves()) {
+    AdjacencyArrayGraph() = default;
+    AdjacencyArrayGraph(EdgeListGraph& edges, bool sorted = false) {
+        initialize(edges, sorted);
+    }
+
+    // Not using a constructor enables easier serialization
+    void initialize(EdgeListGraph& edges, bool sorted = false) {
+        _num_edges = 0;
+        _roots     = edges.roots();
+        _leaves    = edges.leaves();
+
         if (!sorted) {
             edges.sort_edges(EdgeListGraph::SortBy::FromVertex);
         }
@@ -25,7 +33,7 @@ public:
         // TODO Check if node ids are consecutive
         auto nodes        = edges.nodes();
         auto num_vertices = nodes.size();
-        _adjacency_array.resize(num_vertices);
+        _adjacency_array.resize(asserting_cast<uint32_t>(num_vertices));
 
         for (auto const& edge: edges) {
             _adjacency_array[edge.from()].push_back(edge.to());

@@ -22,3 +22,5 @@ register_test(test-compressed-forest FILES test-compressed-forest.cpp tskit-test
 register_test(
     test-tskit-site-to-tree-mapper FILES test-tskit-site-to-tree-mapper.cpp tskit-testlib/testlib.cpp LIBRARIES tskit
 )
+
+register_test(test-compressed-forest-serialization FILES test-compressed-forest-serialization.cpp LIBRARIES tskit)

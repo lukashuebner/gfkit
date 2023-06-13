@@ -14,6 +14,7 @@
 #include "tskit-testlib/testlib.hpp"
 // TODO Rename forest-compressor.hpp to compressed-forest.hpp
 #include "tdt/load/forest-compressor.hpp"
+#include "tdt/graph/compressed-forest.hpp"
 
 using namespace ::Catch::Matchers;
 
