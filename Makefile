@@ -39,14 +39,25 @@ plot-sf-vs-ts-speed: $(PLOT_DIR)/sf-vs-ts-speed.pdf
 
 # Using $(BENCHMARK_BIN) as a dependency here, would lead to re-running the benchmarks on every invocation of Make 
 # as $(BENCHMARK_BIN) is a phony target.
-$(DATA_DIR)/%.csv: data/%.trees
+$(DATA_DIR)/%.csv: data/%.forest
 	$(BENCHMARK_BIN) \
 		--warmup-iterations $(WARMUP_ITERATIONS) \
 		--iterations $(ITERATIONS) \
 		--file "$<" \
 		--revision $(file < .git-rev) \
 		--machine $(shell hostname) \
+		--input "$<"
 		> "$@"
+
+data/%.forest: data/%.trees
+	$(BENCHMARK_BIN) \
+		--warmup-iterations 0 \
+		--iterations 1 \
+		--file "$<" \
+		--revision $(file < .git-rev) \
+		--machine $(shell hostname) \
+		--output "data/$*.forest" \
+		> "$(DATA_DIR)/$*-compress-trees.csv"
 
 .PHONY: .git-rev
 .git-rev:
