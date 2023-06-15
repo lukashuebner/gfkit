@@ -4,6 +4,7 @@ PLOT_DIR = experiments/plots
 SCRIPT_DIR = experiments/scripts
 DATA_DIR = experiments/data
 TREES_FILES ?= $(wildcard data/*_chr*.trees)
+FOREST_FILES = $(patsubst data/%.trees, data/%.forest, $(TREES_FILES))
 MEASUREMENT_FILES = $(patsubst data/%.trees, $(DATA_DIR)/%.csv, $(TREES_FILES))
 BENCHMARK_BIN = build/release/benchmarks/benchmark
 
@@ -57,7 +58,11 @@ data/%.forest: data/%.trees
 		--revision $(file < .git-rev) \
 		--machine $(shell hostname) \
 		--output "data/$*.forest" \
-		> "$(DATA_DIR)/$*-compress-trees.csv"
+		> "$(DATA_DIR)/$*-compress-tree-sequence.csv"
+
+.PHONY: compress-all-tree-sequences
+compress-all-tree-sequences: $(FOREST_FILES)
+
 
 .PHONY: .git-rev
 .git-rev:
