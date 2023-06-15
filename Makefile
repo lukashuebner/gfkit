@@ -62,8 +62,8 @@ data/%.forest: data/%.trees
 .PHONY: .git-rev
 .git-rev:
 	git rev-parse --short HEAD > .git-rev
-	@status=$$(git status --porcelain);
-	test "x$${status}" = x || sed -i "s/$$/-dirty/" .git-rev
+	git update-index --refresh
+	git diff-index --quiet HEAD || sed -i "s/$$/-dirty/" .git-rev
 
 .PHONY: $(BENCHMARK_BIN)
 $(BENCHMARK_BIN): .git-rev
