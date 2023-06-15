@@ -60,11 +60,18 @@ data <- read_csv(
         walltime_ms = ns2ms(walltime_ns)
     )
 
-dataset_levels <- levels(data$dataset) %>%
-    str_replace("tgp_chr", "") %>%
-    as.numeric() %>%
-    sort() %>%
-    paste("tgp_chr", ., sep = "")
+dataset_levels <- expand.grid(
+        c("tgp_chr", "1kg_chr", "sgdp_chr", "unified_chr", "anderson_chr"),
+        seq(1, 22)
+    ) %>%
+    unite("levels", 1:2, sep = "") %>%
+    pull(levels)
+
+# dataset_levels <- levels(data$dataset) %>%
+#     str_replace("tgp_chr", "") %>%
+#     as.numeric() %>%
+#     sort() %>%
+#     paste("tgp_chr", ., sep = "")
 data$dataset <- factor(data$dataset, levels = dataset_levels)
 
 tskit_data <- data %>%
@@ -129,6 +136,7 @@ ggplot(sf_data) +
         aes(
             y = speedup_median,
             x = dataset,
+            #color = algorithm,
         ),
         position = position_dodge(width = 0.3),
         size = style$point_size
