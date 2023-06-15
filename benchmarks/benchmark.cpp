@@ -1,3 +1,7 @@
+#include <fstream>
+#include <sstream>
+#include <string>
+
 #include <tdt/load/forest-compressor.hpp>
 #include <tdt/tskit.hpp>
 
@@ -9,90 +13,7 @@
 #include "tdt/load/compressed-forest-serialization.hpp"
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
-
-// TODO Switch to Celero or my own benchmarking framework
-class Timer {
-public:
-    Timer() {
-        start();
-    }
-
-    uint64_t stop() {
-        asm("" ::: "memory");
-        auto end = std::chrono::steady_clock::now();
-        asm("" ::: "memory");
-
-        return duration_cast<std::chrono::nanoseconds>(end - _start).count();
-    }
-
-    void start() {
-        asm("" ::: "memory"); // prevent compiler reordering
-        _start = std::chrono::steady_clock::now();
-        asm("" ::: "memory");
-    }
-
-    template <class Func>
-    static uint64_t time_func(Func func) {
-        Timer timer;
-        func();
-        return timer.stop();
-    }
-
-private:
-    std::chrono::time_point<std::chrono::steady_clock> _start;
-};
-
-// This assembly magic is from Google Benchmark
-// see https://github.com/google/benchmark/blob/v1.7.1/include/benchmark/benchmark.h#L443-L446
-template <typename T>
-void do_not_optimize(T const& val) {
-    asm volatile("" : : "r,m"(val) : "memory");
-}
-
-template <typename T>
-void do_not_optimize(T& val) {
-#if defined(__clang__)
-    asm volatile("" : "+r,m"(val) : : "memory");
-#else
-    asm volatile("" : "+m,r"(val) : : "memory");
-#endif
-}
-
-class ResultsPrinter {
-public:
-    ResultsPrinter(std::ostream& stream, std::string const& revision, std::string const& machine_id)
-        : _stream(stream),
-          _revision(revision),
-          _machine_id(machine_id) {}
-
-    void print_header() {
-        _stream << "algorithm,variant,dataset,revision,machine_id,iteration,walltime_ns\n";
-    }
-
-    void print(
-        bool const         warmup,
-        std::string const& algorithm,
-        std::string const& variant,
-        std::string const& dataset,
-        uint64_t           time_ns,
-        size_t             iteration
-    ) {
-        if (!warmup) {
-            _stream << algorithm << ",";
-            _stream << variant << ",";
-            _stream << dataset << ",";
-            _stream << _revision << ",";
-            _stream << _machine_id << ",";
-            _stream << iteration << ",";
-            _stream << time_ns << "\n";
-        }
-    }
-
-private:
-    std::ostream& _stream;
-    std::string   _revision;
-    std::string   _machine_id;
-};
+#include "timer.hpp"
 
 void benchmark(
     bool const                 warmup,
@@ -102,57 +23,112 @@ void benchmark(
     std::optional<std::string> sf_input_file,
     std::optional<std::string> sf_output_file
 ) {
+    auto log_time = [&results_printer, iteration, &ts_file](
+                        bool const         warmup,
+                        std::string const& section,
+                        std::string const& variant,
+                        Timer::duration    duration
+                    ) {
+        results_printer.print_timer(warmup, section, variant, ts_file, duration, iteration);
+    };
+
+    auto log_mem = [&results_printer, iteration, &ts_file](
+                       bool const                 warmup,
+                       std::string const&         section,
+                       std::string const&         variant,
+                       MemoryUsage::Report const& report
+                   ) {
+        results_printer.print_memory(warmup, section, variant, ts_file, report, iteration);
+    };
+
     // Benchmark tree sequence loading
     Timer             timer;
+    MemoryUsage       memory_usage;
     TSKitTreeSequence tree_sequence(ts_file);
     do_not_optimize(tree_sequence);
     if (!warmup) {
-        results_printer.print(warmup, "load", "tskit", ts_file, timer.stop(), iteration);
+        log_time(warmup, "load", "tskit", timer.stop());
     }
 
     // Benchmark building the DAG from the tree sequence
     CompressedForest       compressed_forest;
     GenomicSequenceStorage sequence_store;
     if (sf_input_file) {
-        CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
-    } else {
+        memory_usage.start();
         timer.start();
+
+        CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
+
+        log_time(warmup, "load_forest_file", "sf", timer.stop());
+        log_mem(warmup, "load_forest_file", "sf", memory_usage.stop());
+    } else {
+        memory_usage.start();
+        timer.start();
+
         ForestCompressor forest_compressor(tree_sequence);
         compressed_forest = forest_compressor.compress();
-        if (!warmup) {
-            results_printer.print(warmup, "compress_forest", "sf", ts_file, timer.stop(), iteration);
-        }
 
+        log_time(warmup, "compress_forest", "sf", timer.stop());
+        log_mem(warmup, "compress_forest", "sf", memory_usage.stop());
+
+        memory_usage.start();
         timer.start();
-        sequence_store = GenomicSequenceStorage(tree_sequence, forest_compressor);
-        if (!warmup) {
-            results_printer
-                .print(warmup, "initialize_genomic_sequence_storage", "sf", ts_file, timer.stop(), iteration);
-        }
 
-        if (sf_output_file) {
-            CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
-        }
+        sequence_store = GenomicSequenceStorage(tree_sequence, forest_compressor);
+
+        log_time(warmup, "init_genomic_sequence_storage", "sf", timer.stop());
+        log_mem(warmup, "init_genomic_sequence_storage", "sf", memory_usage.stop());
+    }
+
+    if (sf_output_file) {
+        memory_usage.start();
+        timer.start();
+
+        CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
+
+        log_time(warmup, "save_forest_file", "sf", timer.stop());
+        log_mem(warmup, "save_forest_file_delta_rss", "sf", memory_usage.stop());
     }
 
     // Benchmark computing subtree sizes
-    // Compute the number of samples below each root.
+    memory_usage.start();
+    timer.start();
+
     EdgeListGraph const& dag = compressed_forest.postorder_edges();
     compressed_forest.compute_num_samples_below();
     do_not_optimize(compressed_forest.num_samples_below());
-    results_printer.print(warmup, "compute_subtree_sizes", "sf", ts_file, timer.stop(), iteration);
+
+    log_time(warmup, "compute_subtree_sizes", "sf", timer.stop());
+    log_mem(warmup, "compute_subtree_sizes", "sf", memory_usage.stop());
 
     // Benchmark computing the AFS
-    // Compute the number of samples below each root.
+    memory_usage.start();
     timer.start();
+
     AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
     do_not_optimize(afs);
-    results_printer.print(warmup, "compute_afs", "sf", ts_file, timer.stop(), iteration);
 
+    log_time(warmup, "compute_afs", "sf", timer.stop());
+    log_mem(warmup, "compute_afs", "sf", memory_usage.stop());
+
+    memory_usage.start();
     timer.start();
+
     auto reference_afs = tree_sequence.allele_frequency_spectrum();
     do_not_optimize(reference_afs);
-    results_printer.print(warmup, "compute_afs", "tskit", ts_file, timer.stop(), iteration);
+
+    log_time(warmup, "compute_afs", "tskit", timer.stop());
+    log_mem(warmup, "compute_afs", "tskit", memory_usage.stop());
+
+    // Does our AFS match the one computed by tskit?
+    bool const equal = std::ranges::equal(
+        std::span(afs).subspan(1, afs.num_samples() - 1),
+        std::span(reference_afs).subspan(1, afs.num_samples() - 1)
+    );
+    if (!equal) {
+        std::cerr << "ERROR !! AFS mismatch between tskit and sf" << std::endl;
+        std::exit(1);
+    }
 }
 
 int main(int argc, char** argv) {

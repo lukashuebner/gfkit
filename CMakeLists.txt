@@ -208,6 +208,9 @@ option(BUILD_SANDBOX "" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "" ON)
 add_subdirectory("extern/cereal")
 
+# malloc_count for analyzing memory usage
+add_subdirectory("extern/malloc_count")
+
 # Google SparseHash for fast hash tables TODO Add as submodule
 
 # Add xxHash for fast non-cryptographic hashing

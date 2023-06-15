@@ -28,3 +28,6 @@
 [submodule "extern/cereal"]
 	path = extern/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "extern/malloc_count"]
+	path = extern/malloc_count
+	url = https://github.com/bingmann/malloc_count.git
