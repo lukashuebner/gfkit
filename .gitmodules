@@ -3,7 +3,8 @@
 	url = https://github.com/tskit-dev/tskit.git
 [submodule "extern/kassert"]
 	path = extern/kassert
-	url = https://github.com/kamping-site/kassert/
+    #url = https://github.com/kamping-site/kassert/
+    url = ../../kamping-site/kassert/
 [submodule "extern/Catch2"]
 	path = extern/Catch2
 	url = https://github.com/catchorg/Catch2.git
