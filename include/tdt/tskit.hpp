@@ -80,6 +80,20 @@ public:
         return tsk_treeseq_get_discrete_genome(&_tree_sequence);
     }
 
+    double diversity() {
+        double                pi;
+        std::vector<tsk_id_t> samples;
+        samples.resize(num_samples());
+        std::iota(samples.begin(), samples.end(), 0);
+        tsk_size_t sample_set_sizes[] = {num_samples()};
+
+        auto ret =
+            tsk_treeseq_diversity(&_tree_sequence, 1, sample_set_sizes, samples.data(), 0, NULL, TSK_STAT_SITE, &pi);
+        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+
+        return pi;
+    }
+
     std::vector<double> allele_frequency_spectrum() {
         std::vector<double>   results;
         std::vector<tsk_id_t> samples;

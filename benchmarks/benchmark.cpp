@@ -3,11 +3,13 @@
 #include <string>
 
 #include <tdt/load/forest-compressor.hpp>
+#include <tdt/sequence-forest.hpp>
 #include <tdt/tskit.hpp>
 
 #include "CLI/App.hpp"
 #include "CLI/Config.hpp"
 #include "CLI/Formatter.hpp"
+#include "catch2/catch_approx.hpp"
 #include "perf.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/compressed-forest-serialization.hpp"
@@ -59,8 +61,8 @@ void benchmark(
 
         CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
 
-        log_time(warmup, "load_forest_file", "sf", timer.stop());
-        log_mem(warmup, "load_forest_file", "sf", memory_usage.stop());
+        log_time(warmup, "load_forest_file", "sfkit", timer.stop());
+        log_mem(warmup, "load_forest_file", "sfkit", memory_usage.stop());
     } else {
         memory_usage.start();
         timer.start();
@@ -68,16 +70,16 @@ void benchmark(
         ForestCompressor forest_compressor(tree_sequence);
         compressed_forest = forest_compressor.compress();
 
-        log_time(warmup, "compress_forest", "sf", timer.stop());
-        log_mem(warmup, "compress_forest", "sf", memory_usage.stop());
+        log_time(warmup, "compress_forest", "sfkit", timer.stop());
+        log_mem(warmup, "compress_forest", "sfkit", memory_usage.stop());
 
         memory_usage.start();
         timer.start();
 
         sequence_store = GenomicSequenceStorage(tree_sequence, forest_compressor);
 
-        log_time(warmup, "init_genomic_sequence_storage", "sf", timer.stop());
-        log_mem(warmup, "init_genomic_sequence_storage", "sf", memory_usage.stop());
+        log_time(warmup, "init_genomic_sequence_storage", "sfkit", timer.stop());
+        log_mem(warmup, "init_genomic_sequence_storage", "sfkit", memory_usage.stop());
     }
 
     if (sf_output_file) {
@@ -86,8 +88,8 @@ void benchmark(
 
         CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
 
-        log_time(warmup, "save_forest_file", "sf", timer.stop());
-        log_mem(warmup, "save_forest_file_delta_rss", "sf", memory_usage.stop());
+        log_time(warmup, "save_forest_file", "sfkit", timer.stop());
+        log_mem(warmup, "save_forest_file_delta_rss", "sfkit", memory_usage.stop());
     }
 
     // Benchmark computing subtree sizes
@@ -98,8 +100,8 @@ void benchmark(
     compressed_forest.compute_num_samples_below();
     do_not_optimize(compressed_forest.num_samples_below());
 
-    log_time(warmup, "compute_subtree_sizes", "sf", timer.stop());
-    log_mem(warmup, "compute_subtree_sizes", "sf", memory_usage.stop());
+    log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
+    log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
 
     // Benchmark computing the AFS
     memory_usage.start();
@@ -108,8 +110,8 @@ void benchmark(
     AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
     do_not_optimize(afs);
 
-    log_time(warmup, "compute_afs", "sf", timer.stop());
-    log_mem(warmup, "compute_afs", "sf", memory_usage.stop());
+    log_time(warmup, "compute_afs", "sfkit", timer.stop());
+    log_mem(warmup, "compute_afs", "sfkit", memory_usage.stop());
 
     memory_usage.start();
     timer.start();
@@ -127,6 +129,33 @@ void benchmark(
     );
     if (!equal) {
         std::cerr << "ERROR !! AFS mismatch between tskit and sf" << std::endl;
+        std::exit(1);
+    }
+
+    // Benchmark computing the diversity
+    SequenceForest sequence_forest(compressed_forest, sequence_store);
+    memory_usage.start();
+    timer.start();
+
+    double const sfkit_diversity = sequence_forest.diversity();
+    do_not_optimize(sfkit_diversity);
+
+    log_time(warmup, "diversity", "sfkit", timer.stop());
+    log_mem(warmup, "diversity", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_diversity = tree_sequence.diversity();
+    do_not_optimize(tskit_diversity);
+
+    log_time(warmup, "diversity", "tskit", timer.stop());
+    log_mem(warmup, "diversity", "tskit", memory_usage.stop());
+
+    // Does our AFS match the one computed by tskit?
+    if (sfkit_diversity == Catch::Approx(tskit_diversity).epsilon(1e-6)) {
+        std::cerr << "ERROR !! Diversity mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_diversity << " vs. " << sfkit_diversity << " (tskit vs. sfkit)" << std::endl;
         std::exit(1);
     }
 }

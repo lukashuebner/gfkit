@@ -4,10 +4,15 @@ include(EasyCatch)
 
 # Registering tests:
 register_test(test-edge-list-graph FILES test-edge-list-graph.cpp)
+
 register_test(test-adjacency-array-graph FILES test-adjacency-array-graph.cpp)
+
 register_test(test-load-from-tree-sequence FILES test-load-from-tree-sequence.cpp LIBRARIES tskit)
+
 register_test(test-xxhash FILES test-xxhash.cpp)
+
 register_test(test-genomic-sequence-storage FILES test-genomic-sequence-storage.cpp LIBRARIES tskit)
+
 register_test(
     test-allele-frequency-spectrum
     FILES
@@ -17,6 +22,16 @@ register_test(
     tskit
     fmt::fmt
 )
+
+register_test(
+    test-allele-frequencies
+    FILES
+    test-allele-frequencies.cpp
+    tskit-testlib/testlib.cpp
+    LIBRARIES
+    tskit
+)
+
 register_test(test-compressed-forest FILES test-compressed-forest.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
 register_test(
@@ -24,3 +39,12 @@ register_test(
 )
 
 register_test(test-compressed-forest-serialization FILES test-compressed-forest-serialization.cpp LIBRARIES tskit)
+
+register_test(
+    test-diversity
+    FILES
+    test-diversity.cpp
+    tskit-testlib/testlib.cpp
+    LIBRARIES
+    tskit
+)

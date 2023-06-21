@@ -61,16 +61,30 @@
     ],
     "testPresets": [
         {
+            "name": "default",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
             "name": "release",
-            "configurePreset": "release"
+            "configurePreset": "release",
+            "inherits": "default"
         },
         {
             "name": "relwithdeb",
-            "configurePreset": "relwithdeb"
+            "configurePreset": "relwithdeb",
+            "inherits": "default"
         },
         {
             "name": "debug",
-            "configurePreset": "debug"
+            "configurePreset": "debug",
+            "inherits": "default"
         }
     ]
 }

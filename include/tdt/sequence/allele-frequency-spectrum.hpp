@@ -81,7 +81,7 @@ public:
                     "AFS histogram does not have enough bins.",
                     tdt::assert::light
                 );
-                // TODO Decide on an document what we're doing with sites with no mutations
+                // TODO Decide on and document what we're doing with sites with no mutations
                 if (num_derived_samples != 0) {
                     _afs[num_derived_samples] += 1;
                 }

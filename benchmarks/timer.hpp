@@ -28,6 +28,10 @@ void do_not_optimize(T& val) {
 #endif
 }
 
+[[nodiscard]] inline bool approx_eq(double a, double b, double eps = 1e-6) {
+    return std::abs(a - b) < eps;
+}
+
 // TODO Enable the use of timer labels and timers which can be paused and restarted
 class Timer {
 public:
@@ -100,8 +104,8 @@ public:
         report.heap_delta_byte      = malloc_count_current() - _malloc_count_start;
         report.heap_current_byte    = malloc_count_current();
         auto [virtual_kib, rss_kib] = virtual_and_rss_kib();
-        report.virtmem_delta_byte = kib_to_byte(_virtual_base_kib - virtual_kib);
-        report.rss_delta_byte     = kib_to_byte(_rss_base_kib - rss_kib);
+        report.virtmem_delta_byte   = kib_to_byte(_virtual_base_kib - virtual_kib);
+        report.rss_delta_byte       = kib_to_byte(_rss_base_kib - rss_kib);
         asm("" ::: "memory");
         return report;
     }
