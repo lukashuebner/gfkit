@@ -158,6 +158,47 @@ void benchmark(
         std::cerr << "    " << tskit_diversity << " vs. " << sfkit_diversity << " (tskit vs. sfkit)" << std::endl;
         std::exit(1);
     }
+
+    // Benchmark computing the number of segregating sites
+    memory_usage.start();
+    timer.start();
+
+    uint64_t const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();
+    do_not_optimize(sfkit_num_seg_sites);
+
+    log_time(warmup, "num_segregating_sites", "sfkit", timer.stop());
+    log_mem(warmup, "num_segregating_sites", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_num_seg_sites = tree_sequence.diversity();
+    do_not_optimize(tskit_num_seg_sites);
+
+    log_time(warmup, "num_segregating_sites", "tskit", timer.stop());
+    log_mem(warmup, "num_segregating_sites", "tskit", memory_usage.stop());
+
+    // Does our AFS match the one computed by tskit?
+    if (sfkit_num_seg_sites == Catch::Approx(tskit_num_seg_sites).epsilon(1e-6)) {
+        std::cerr << "ERROR !! Number of segregating sites mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_num_seg_sites << " vs. " << sfkit_num_seg_sites << " (tskit vs. sfkit)"
+                  << std::endl;
+        std::exit(1);
+    }
+
+    // Benchmark computing Tajima's D. tskit does implement this only in Python, not in C. We're using
+    // experiments/scripts/benchmark-tskits-tajimas-d.py to measure tskit's performance.
+    memory_usage.start();
+    timer.start();
+
+    double const tajimas_d = sequence_forest.tajimas_d();
+    do_not_optimize(tajimas_d);
+
+    log_time(warmup, "tajimas_d", "sfkit", timer.stop());
+    log_mem(warmup, "tajimas_d", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
 }
 
 int main(int argc, char** argv) {

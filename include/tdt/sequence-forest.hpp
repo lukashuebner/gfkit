@@ -105,10 +105,27 @@ public:
             uint64_t           num_samples_in_ancestral_state = num_samples();
             AllelicState const ancestral_state                = _sequence.ancestral_state(_site);
 
-            // TODO KASSERT() for biallelicity
+#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_NORMAL)
+            AllelicState derived_state = InvalidAllelicState;
+#endif
             for (auto const& mutation: _sequence.mutations_at_site(_site)) {
                 auto const num_samples_below_this_mutation = _forest.num_samples_below(mutation.subtree_id());
                 auto const this_mutations_state            = mutation.allelic_state();
+
+#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_NORMAL)
+                if (derived_state == InvalidAllelicState) {
+                    derived_state = this_mutations_state;
+                } else {
+                    std::cout << "derived_state: " << derived_state << std::endl;
+                    std::cout << "this_mutations_state: " << this_mutations_state << std::endl;
+                    std::cout << "ancestral_state: " << ancestral_state << std::endl;
+                    KASSERT(
+                        (derived_state == this_mutations_state || derived_state == ancestral_state),
+                        "Site is multiallelic. Allele frequency iterator only supports biallelic sites.",
+                        tdt::assert::normal
+                    );
+                }
+#endif
 
                 AllelicState parent_state;
                 // TODO this should be encapsulated in the GenomicSequenceStorage
@@ -123,7 +140,7 @@ public:
                 if (this_mutations_state != parent_state) {
                     if (this_mutations_state == ancestral_state) {
                         KASSERT(
-                            num_samples_in_ancestral_state + num_samples_below_this_mutation < num_samples(),
+                            num_samples_in_ancestral_state + num_samples_below_this_mutation <= num_samples(),
                             "There should never be more samples in the ancestral state than total samples.",
                             tdt::assert::light
                         );
@@ -169,6 +186,37 @@ public:
         }
 
         return pi / (0.5 * static_cast<double>(n * (n - 1)));
+    }
+
+    // TODO Make this const
+    [[nodiscard]] uint64_t num_segregating_sites() {
+        size_t num_segregating_sites = 0;
+        for (uint64_t frequency: allele_frequencies()) {
+            if (frequency < num_samples()) {
+                num_segregating_sites++;
+            }
+        }
+        return num_segregating_sites;
+    }
+
+    [[nodiscard]] double tajimas_d() {
+        double const n = static_cast<double>(num_samples());
+        // TODO Does the compiler optimize the following two loops into one?
+        double const T = diversity();
+        double const S = static_cast<double>(num_segregating_sites());
+
+        double h = 0;
+        double g = 0;
+        // TODO are there formulas for computing these for efficiently?
+        for (uint64_t i = 1; i < num_samples(); i++) {
+            h += 1.0 / static_cast<double>(i);
+            g += 1.0 / static_cast<double>(i * i);
+        }
+        double const a = (n + 1) / (3 * (n - 1) * h) - 1 / (h * h);
+        double const b = 2 * (n * n + n + 3) / (9 * n * (n - 1)) - (n + 2) / (h * n) + g / (h * h);
+        double const D = (T - S / h) / sqrt(a * S + (b / (h * h + g)) * S * (S - 1));
+
+        return D;
     }
 
     [[nodiscard]] uint64_t num_sites() const {

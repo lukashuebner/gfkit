@@ -94,6 +94,28 @@ public:
         return pi;
     }
 
+    double num_segregating_sites() {
+        double                num_seg_sites;
+        std::vector<tsk_id_t> samples;
+        samples.resize(num_samples());
+        std::iota(samples.begin(), samples.end(), 0);
+        tsk_size_t sample_set_sizes[] = {num_samples()};
+
+        auto ret = tsk_treeseq_segregating_sites(
+            &_tree_sequence,
+            1,
+            sample_set_sizes,
+            samples.data(),
+            0,
+            NULL,
+            TSK_STAT_SITE,
+            &num_seg_sites
+        );
+        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+
+        return num_seg_sites;
+    }
+
     std::vector<double> allele_frequency_spectrum() {
         std::vector<double>   results;
         std::vector<tsk_id_t> samples;

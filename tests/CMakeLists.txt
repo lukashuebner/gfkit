@@ -23,14 +23,7 @@ register_test(
     fmt::fmt
 )
 
-register_test(
-    test-allele-frequencies
-    FILES
-    test-allele-frequencies.cpp
-    tskit-testlib/testlib.cpp
-    LIBRARIES
-    tskit
-)
+register_test(test-allele-frequencies FILES test-allele-frequencies.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
 register_test(test-compressed-forest FILES test-compressed-forest.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
@@ -40,11 +33,8 @@ register_test(
 
 register_test(test-compressed-forest-serialization FILES test-compressed-forest-serialization.cpp LIBRARIES tskit)
 
-register_test(
-    test-diversity
-    FILES
-    test-diversity.cpp
-    tskit-testlib/testlib.cpp
-    LIBRARIES
-    tskit
-)
+register_test(test-diversity FILES test-diversity.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
+
+register_test(test-segregating-sites FILES test-segregating-sites.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
+
+register_test(test-tajimas-d FILES test-tajimas-d.cpp LIBRARIES tskit)
