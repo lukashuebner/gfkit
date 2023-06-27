@@ -42,22 +42,24 @@ data <- read_csv(
     args$input,
     col_names = TRUE,
     col_types <- cols(
-        algorithm = col_character(),
+        section = col_character(),
         variant = col_character(),
         dataset = col_character(),
         iteration = col_double(),
-        walltime_ns = col_double()
+        variable = col_character()
+        value = col_double()
+        unit = col_character()
     )
 ) %>%
     filter(
-        algorithm %in% c("compute_subtree_sizes", "compute_afs")
+        section %in% c("compute_subtree_sizes", "compute_afs")
     ) %>%
     mutate(
-        algorithm = factor(algorithm),
+        section = factor(section),
         variant = factor(variant),
         dataset = factor(dataset_from_filename(dataset)),
         iteration = factor(iteration),
-        walltime_ms = ns2ms(walltime_ns)
+        variable = factor(variable)
     )
 
 dataset_levels <- expand.grid(
@@ -78,7 +80,7 @@ tskit_data <- data %>%
     filter(
         variant == "tskit",
     ) %>%
-    group_by(algorithm, dataset) %>%
+    group_by(section, dataset) %>%
     summarize(
         walltime_ms_median = median(walltime_ms),
         .groups = "drop"
@@ -89,11 +91,11 @@ sf_data <- right_join(
     data %>%
         filter(
             variant == "sf",
-            algorithm == "compute_afs"
+            section == "compute_afs"
         ),
-    by = c("algorithm", "dataset")
+    by = c("section", "dataset")
 ) %>%
-    group_by(algorithm, variant, dataset) %>%
+    group_by(section, variant, dataset) %>%
     summarize(
         walltime_ms_median = median(walltime_ms),
         walltime_ms_min = min(walltime_ms),
@@ -114,14 +116,14 @@ pretty_print_tgp <- function(tgp_filename) {
         str_replace("tgp_chr", "TGP Chr. ")
 }
 
-algorithm_colors <- c(
+section_colors <- c(
     "load" = "#ff7f0e",
     "build_sf" = "#d62728",
     "compute_subtree_sizes" = "#1f77b4",
     "compute_afs" = "#2ca02c"
 )
 
-algorithm_labels <- c(
+section_labels <- c(
     "load" = "Load SF from TS file",
     "build_sf" = "Build SF from TS",
     "compute_subtree_sizes" = "Compute subtree sizes",
@@ -136,7 +138,7 @@ ggplot(sf_data) +
         aes(
             y = speedup_median,
             x = dataset,
-            #color = algorithm,
+            #color = section,
         ),
         position = position_dodge(width = 0.3),
         size = style$point_size
@@ -164,8 +166,8 @@ ggplot(sf_data) +
         labels = pretty_print_tgp,
     ) +
     scale_color_shape_manual(
-        color_values = algorithm_colors,
-        labels = algorithm_labels
+        color_values = section_colors,
+        labels = section_labels
     ) +
     gg_eps()
 

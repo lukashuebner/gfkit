@@ -20,33 +20,33 @@
 void benchmark(
     bool const                 warmup,
     uint8_t const              iteration,
-    std::string const&         ts_file,
+    std::string const&         trees_file,
     ResultsPrinter&            results_printer,
     std::optional<std::string> sf_input_file,
     std::optional<std::string> sf_output_file
 ) {
-    auto log_time = [&results_printer, iteration, &ts_file](
+    auto log_time = [&results_printer, iteration, &trees_file](
                         bool const         warmup,
                         std::string const& section,
                         std::string const& variant,
                         Timer::duration    duration
                     ) {
-        results_printer.print_timer(warmup, section, variant, ts_file, duration, iteration);
+        results_printer.print_timer(warmup, section, variant, trees_file, duration, iteration);
     };
 
-    auto log_mem = [&results_printer, iteration, &ts_file](
+    auto log_mem = [&results_printer, iteration, &trees_file](
                        bool const                 warmup,
                        std::string const&         section,
                        std::string const&         variant,
                        MemoryUsage::Report const& report
                    ) {
-        results_printer.print_memory(warmup, section, variant, ts_file, report, iteration);
+        results_printer.print_memory(warmup, section, variant, trees_file, report, iteration);
     };
 
     // Benchmark tree sequence loading
     Timer             timer;
     MemoryUsage       memory_usage;
-    TSKitTreeSequence tree_sequence(ts_file);
+    TSKitTreeSequence tree_sequence(trees_file);
     do_not_optimize(tree_sequence);
     if (!warmup) {
         log_time(warmup, "load", "tskit", timer.stop());
@@ -153,7 +153,7 @@ void benchmark(
     log_mem(warmup, "diversity", "tskit", memory_usage.stop());
 
     // Does our AFS match the one computed by tskit?
-    if (sfkit_diversity == Catch::Approx(tskit_diversity).epsilon(1e-6)) {
+    if (sfkit_diversity != Catch::Approx(tskit_diversity).epsilon(1e-6)) {
         std::cerr << "ERROR !! Diversity mismatch between tskit and sfkit" << std::endl;
         std::cerr << "    " << tskit_diversity << " vs. " << sfkit_diversity << " (tskit vs. sfkit)" << std::endl;
         std::exit(1);
@@ -209,8 +209,8 @@ int main(int argc, char** argv) {
         ->check(CLI::PositiveNumber)
         ->default_val(1);
 
-    std::string ts_file = "";
-    app.add_option("file,-f,--file", ts_file, "The tree sequence file to benchmark on. If not specified.")
+    std::string trees_file = "";
+    app.add_option("-f,--trees-file", trees_file, "The tree sequence file to benchmark on. If not specified.")
         ->check(CLI::ExistingFile)
         ->required();
 
@@ -222,10 +222,11 @@ int main(int argc, char** argv) {
     app.add_option("-m,--machine", machine_id, "Identifier of this computer (e.g. hostname)")->default_val("undefined");
 
     std::optional<std::string> sf_output_file = std::nullopt;
-    auto sf_output_file_opt = app.add_option("-o,--output", sf_output_file, "Output file for the compressed forest");
+    auto                       sf_output_file_opt =
+        app.add_option("-o,--forest-output", sf_output_file, "Output file for the compressed forest");
 
     std::optional<std::string> sf_input_file = std::nullopt;
-    auto sf_input_file_opt = app.add_option("-i,--input", sf_input_file, "Input file for the compressed forest")
+    auto sf_input_file_opt = app.add_option("-i,--forest-input", sf_input_file, "Input file for the compressed forest")
                                  ->check(CLI::ExistingFile)
                                  ->excludes(sf_output_file_opt);
 
@@ -250,10 +251,11 @@ int main(int argc, char** argv) {
         uint8_t const iteration = warmup ? _iteration : _iteration - num_warmup_iterations;
 
         if (warmup) {
-            std::cerr << "Running warmup iteration " << static_cast<int>(iteration) << " for file " << ts_file << "\n";
+            std::cerr << "Running warmup iteration " << static_cast<int>(iteration) << " for file " << trees_file
+                      << "\n";
         } else {
-            std::cerr << "Running iteration " << static_cast<int>(iteration) << " on file " << ts_file << "\n";
+            std::cerr << "Running iteration " << static_cast<int>(iteration) << " on file " << trees_file << "\n";
         }
-        benchmark(warmup, iteration, ts_file, results_printer, sf_input_file, sf_output_file);
+        benchmark(warmup, iteration, trees_file, results_printer, sf_input_file, sf_output_file);
     }
 }
