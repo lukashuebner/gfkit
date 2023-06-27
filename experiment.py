@@ -185,7 +185,7 @@ class DatasetStatusTable:
 @click.option("--redo", is_flag=True, help="Redo existing measurements?", default=False)
 @click.option("--warmup-iterations", help="Number of warmup iterations to run", default=DEFAULT_WARMUP_ITERATIONS)
 @click.option("--iterations", help="Number of iterations to run", default=DEFAULT_ITERATIONS)
-@click.option("--dry-run", help="Print the commands without running them.", default=False)
+@click.option("--dry-run", is_flag=True, help="Print the commands without running them.", default=False)
 def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool):
 
     sfkit_bench = lambda : None
@@ -203,7 +203,6 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
     num_warnings = 0
     error_msgs = list()
     console = Console(log_path=False)
-    #with console.status("[bold green]Running benchmarks...") as status:
     progress_bar_columns = (
         rich.progress.SpinnerColumn(),
         rich.progress.TextColumn("[progress.description]{task.description}"),
@@ -256,6 +255,48 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
             print(msg)
     if num_warnings == 0 and num_errors == 0:
         print(f"[bold green]Everything okay :smiley:")
+
+def convert_trees_to_forest(dataset, console):
+    try:
+        convert = sh.Command(BENCHMARK_BIN)(
+                "--warmup-iterations=0",
+                "--iterations=1",
+                f"--forest-output={dataset.forest_file()}",
+                f"--trees-file={dataset.trees_file()}",
+                revision=git_rev(),
+                machine=machine_id(),
+                _out=dataset.conversion_bench_file()
+        )
+        console.log("[bold green] Converted {dataset.basename()}")
+    except sh.ErrorReturnCode as e:
+        console.log(
+            f"""
+            [bold red]FAILED with exit code {e.exit_code}"
+            [bold]{e.full_cmd}[/bold] failed with exit code [bold]{e.exit_code}[/bold].
+            [lightgrey]{e.stdout}[/lightgrey]
+            [red]{e.stderr}[/red]
+            """
+        )
+
+@cli.command()
+@click.option("--parallel/-j", help="Number of conversions to run in parallel", default=1)
+def convert(parallel: int):
+    if not os.path.isfile(BENCHMARK_BIN):
+        error(f"{BENCHMARK_BIN} does not exist (did you compile?)")
+        sys.exit(1)
+
+    datasets = Datasets.from_csv(DATASETS_CSV)
+
+    console = Console(log_path=False)
+    with console.status("Converting datasets...") as status:
+        with ThreadPoolExecutor(max_workers=parallel) as pool:
+            for ds in datasets.all():
+                if os.path.isfile(ds.forest_file()):
+                    console.log(f"{ds.forest_file()} already exists")
+                elif os.path.exists(ds.conversion_bench_file()):
+                    console.log(f"[yellow]{ds.conversion_bench_file()} already exists")
+                else:
+                    pool.submit(convert_trees_to_forest, ds, console)
 
 @cli.command()
 @click.argument("config", default="release", type=click.Choice(['debug', 'release', 'relwithdeb']))
@@ -358,66 +399,29 @@ def plot():
         *datasets.trees_files()
     )
 
-class FileDownloader:
-    def __init__(self, files, dl_workers, postprocess_workers, postprocess_text, postprocess_fn, console):
-        self._dl_workers = dl_workers
-        self._postprocess_workers = postprocess_workers
-        self._dl_pool = ThreadPoolExecutor(max_workers=self._dl_workers)
-        self._post_pool = ThreadPoolExecutor(max_workers=self._postprocess_workers)
-        self._dl_futures = []
-        self._post_futures = []
-        self._postprocess_test = postprocess_text
-
-        progress_bar_columns = (
-            rich.progress.SpinnerColumn(),
-            rich.progress.TextColumn("[progress.description]{task.description}"),
-            rich.progress.BarColumn(),
-            rich.progress.MofNCompleteColumn()
-        )
-        self._progress = Progress(*progress_bar_columns, console=console)
-        self._progress.__enter__()
-        self._dl_task = self._progress.add_task("Downloading...", total=len(files))
-        self._postprocess_task = self._progress.add_task(f"{postprocess_text}...", total=len(files))
-        self._dl_futures = [
-            self._dl_pool.submit(self._download, url, dest, postprocess_fn)
-            for url, dest in files
-        ]
-
-    def _download(self, url, dest, postprocess):
-        urllib.request.urlretrieve(url, dest)
-        self._progress.log(f"Download of {dst} finished")
-        self._progress.advance(self._dl_task)
-        self._progress.refresh()
-        self._post_futures.append(self._post_pool.submit(_postprocess(postprocess, dest)))
-
-    def _postprocess(self, postprocess, dest):
-        postprocess(dest)
-        self._progress.log(f"{self._postprocess_text} of {dest} finished")
-        self._progress.advance(self._postprocess_task)
-        self._progress.refresh()
-
-    def wait(self):
-        wait(self._dl_futures)
-        wait(self._post_futures)
-        self._progress.__exit__()
-
-# TODO Rework the download manager to have access to the datasets and thus the trees file name
-def tsunzip(tsz_file, trees_file = None):
-    sh.tsunzip(decompress=tsz_file)
-
 @cli.command()
 def download():
     console = Console(log_path=False)
     datasets = Datasets.from_csv(DATASETS_CSV)
-    downloader = FileDownloader(
-        files = [(ds.tsz_url(), ds.tsz_file()) for ds in datasets.all()],
-        dl_workers = 2,
-        postprocess_workers = 4,
-        postprocess_text = "Extracting",
-        postprocess_fn = tsunzip,
-        console = console
-    )
-    downloader.wait()
+
+    with console.status("Downloading and extracting datasets...") as status:
+        for ds in datasets.all():
+            if os.path.isfile(ds.trees_file()) and os.path.getsize(ds.trees_file()) > 0:
+                console.log(f"{ds.trees_file()} already exists, skipping")
+            else:
+                if os.path.isfile(ds.tsz_file()) and os.path.getsize(ds.tsz_file()) > 0:
+                    console.log(f"{ds.tsz_file()} already exists, skipping download")
+                else:
+                    sh.curl(
+                        "--location",
+                        "--progress-bar",
+                        "--output", ds.tsz_file(),
+                        ds.tsz_url()
+                    )
+                    console.log(f"[green]Downloaded {ds.basename()}")
+
+                sh.tsunzip("--decompress", ds.tsz_file(), _out=ds.trees_file())
+                console.log(f"[green]Extracted {ds.basename()}")
 
 if __name__ == "__main__":
     cli()
