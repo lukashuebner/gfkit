@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sparsehash/dense_hash_map>
+// #include <sparsehash/dense_hash_map>
 #include <unordered_set>
 
 #include <kassert/kassert.hpp>
@@ -54,12 +54,18 @@ public:
         _dag_postorder_edges.num_nodes(num_nodes);
     }
 
-    size_t num_samples_below(SubtreeId subtree_id) const {
+    size_t num_samples_below(SubtreeId subtree_id) {
+        if (_subtree_sizes.size() == 0) {
+            this->compute_num_samples_below();
+        }
         KASSERT(subtree_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
         return _subtree_sizes[subtree_id];
     }
 
-    auto& num_samples_below() const {
+    auto& num_samples_below() {
+        if (_subtree_sizes.size() == 0) {
+            this->compute_num_samples_below();
+        }
         return _subtree_sizes;
     }
 

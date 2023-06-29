@@ -36,7 +36,7 @@ public:
         // For each site, compute how many of the samples have which derived or ancestral state and build the histogram
         // of the number of derived states per site.
         std::array<size_t, AllelicStatePerfectHasher::num_states> num_samples_in_state;
-        for (size_t site = 0; site < _num_sites; ++site) {
+        for (SiteId site = 0; site < _num_sites; ++site) {
             KASSERT(site < sequence_store.num_sites(), "Site out of bounds", tdt::assert::light);
             num_samples_in_state.fill(0);
 

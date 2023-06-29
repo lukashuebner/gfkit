@@ -1,11 +1,18 @@
+#pragma once
+
+#include <string>
 
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
 #include "assertion_levels.hpp"
 #include "graph/compressed-forest.hpp"
+#include "load/forest-compressor.hpp"
+#include "sequence/genomic-sequence-storage-factory.hpp"
 #include "sequence/genomic-sequence-storage.hpp"
+#include "tskit.hpp"
 
+// TODO This should reside in its own file
 // TODO This class shares functionality with the AlleleFrequencySpectrum class. We should refactor this.
 // The historical reason for this duplication is that AlleleFrequencySpectrum was written under the assumption of
 // multiallelicity and this class was written under the assumption of biallelicity when I implemented the diversity
@@ -95,7 +102,7 @@ public:
     private:
         CompressedForest&             _forest;
         GenomicSequenceStorage const& _sequence;
-        size_t                        _site;
+        SiteId                        _site;
         uint64_t                      _frequency;
 
         void _update_state() {
@@ -169,9 +176,23 @@ private:
 class SequenceForest {
 public:
     // TODO Rename to GenomicSequenceStore
-    SequenceForest(CompressedForest& compressed_forest, GenomicSequenceStorage& genomic_sequence)
-        : _forest(compressed_forest),
+    SequenceForest(
+        TSKitTreeSequence&&      tree_sequence,
+        CompressedForest&&       compressed_forest,
+        GenomicSequenceStorage&& genomic_sequence
+    )
+        : _tree_sequence(std::move(tree_sequence)),
+          _forest(compressed_forest),
           _sequence(genomic_sequence) {}
+
+    SequenceForest(tsk_treeseq_t&& ts_tree_sequence) : SequenceForest(TSKitTreeSequence(ts_tree_sequence)) {}
+
+    SequenceForest(TSKitTreeSequence&& tree_sequence) : _tree_sequence(std::move(tree_sequence)) {
+        ForestCompressor              forest_compressor(_tree_sequence);
+        GenomicSequenceStorageFactory sequence_factory(_tree_sequence);
+        _forest   = forest_compressor.compress(sequence_factory);
+        _sequence = sequence_factory.move_storage();
+    }
 
     AlleleFrequencies allele_frequencies() {
         return AlleleFrequencies(_forest, _sequence);
@@ -227,7 +248,20 @@ public:
         return _forest.num_samples();
     }
 
+    [[nodiscard]] GenomicSequenceStorage const& sequence() const {
+        return _sequence;
+    }
+
+    [[nodiscard]] CompressedForest const& forest() const {
+        return _forest;
+    }
+
+    [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
+        return _tree_sequence;
+    }
+
 private:
-    CompressedForest&       _forest;
-    GenomicSequenceStorage& _sequence;
+    TSKitTreeSequence      _tree_sequence;
+    CompressedForest       _forest;
+    GenomicSequenceStorage _sequence;
 };

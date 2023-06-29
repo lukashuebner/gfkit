@@ -32,12 +32,7 @@ TEST_CASE("AlleleFrequencies example multi tree no back no recurrent", "[AlleleF
         0
     );
 
-    TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
-    ForestCompressor  forest_compressor(tdt_tree_sequence);
-    CompressedForest  compressed_forest = forest_compressor.compress();
-
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, forest_compressor);
-    SequenceForest         sequence_forest(compressed_forest, sequence_store);
+    SequenceForest sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     std::vector<uint64_t> expected = {3, 3, 1};

@@ -12,6 +12,8 @@
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/common.hpp"
 
+using TskMutationView = std::span<tsk_mutation_t const>;
+
 class TSKitTreeSequence {
 public:
     TSKitTreeSequence(std::string const& trees_file) : _trees_file(trees_file) {
@@ -26,6 +28,22 @@ public:
 
     ~TSKitTreeSequence() {
         tsk_treeseq_free(&_tree_sequence);
+    }
+
+    TSKitTreeSequence(TSKitTreeSequence const& other)            = delete;
+    TSKitTreeSequence& operator=(TSKitTreeSequence const& other) = delete;
+
+    TSKitTreeSequence(TSKitTreeSequence&& other) noexcept : _tree_sequence(other._tree_sequence) {
+        other._tree_sequence = tsk_treeseq_t();
+    }
+
+    TSKitTreeSequence& operator=(TSKitTreeSequence&& other) {
+        if (this != &other) {
+            tsk_treeseq_free(&_tree_sequence);
+            _tree_sequence       = other._tree_sequence;
+            other._tree_sequence = tsk_treeseq_t();
+        }
+        return *this;
     }
 
     std::size_t num_nodes() const {
@@ -141,7 +159,7 @@ public:
         return results;
     }
 
-    std::span<tsk_mutation_t const> mutations() const {
+    TskMutationView mutations() const {
         return std::span(_tree_sequence.site_mutations_mem, num_mutations());
     }
 
@@ -179,6 +197,7 @@ public:
 
         // Load the first tree
         first();
+        _tree_id = 0;
     }
 
     ~TSKitTree() {
@@ -193,8 +212,13 @@ public:
 
     bool next() {
         _state = tsk_tree_next(&_tree);
+        ++_tree_id;
         KASSERT(_state >= 0, "Failed to goto the next tree.", tdt::assert::light);
         return _state == TSK_TREE_OK;
+    }
+
+    tsk_id_t tree_id() const {
+        return _tree_id;
     }
 
     bool is_valid() const {
@@ -208,7 +232,7 @@ public:
     }
 
     std::size_t max_node_id() const {
-        // +1 to account for th virtual root
+        // +1 to account for the virtual root
         return _tree_sequence.num_nodes();
     }
 
@@ -354,6 +378,7 @@ private:
 
     TSKitTreeSequence&    _tree_sequence;
     tsk_tree_t            _tree;
+    tsk_id_t              _tree_id;
     int                   _state = -1;
     std::vector<tsk_id_t> _postorder_nodes;
 };

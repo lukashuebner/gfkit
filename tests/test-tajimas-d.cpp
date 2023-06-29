@@ -37,12 +37,8 @@ TEST_CASE("Tajima's D tskit example", "[Diversity]") {
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    auto             reference_afs = tree_sequence.allele_frequency_spectrum();
-    ForestCompressor forest_compressor(tree_sequence);
-    CompressedForest compressed_forest = forest_compressor.compress();
-
-    GenomicSequenceStorage sequence_store(tree_sequence, forest_compressor);
-    SequenceForest         sequence_forest(compressed_forest, sequence_store);
+    auto           reference_afs = tree_sequence.allele_frequency_spectrum();
+    SequenceForest sequence_forest(std::move(tree_sequence));
 
     CHECK(Approx(sequence_forest.tajimas_d()).epsilon(1e-6) == expected);
 }

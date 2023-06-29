@@ -51,12 +51,16 @@ public:
     };
 
     TSKitSiteToTreeMapper(TSKitTreeSequence const& tree_sequence) {
-        _breakpoints.reserve(tree_sequence.breakpoints().size() + 1);
-        TreeId tree_id = 0;
+        tsk_id_t const num_sites = asserting_cast<tsk_id_t>(tree_sequence.num_sites());
+        size_t const num_breakpoints = tree_sequence.breakpoints().size();
+
+        _breakpoints.reserve(num_breakpoints + 1);
         _breakpoints.emplace_back(0, 0);
+        TreeId tree_id = 0;
         tsk_id_t site = 0;
+
         for (auto breakpoint: tree_sequence.breakpoints()) {
-            while (tree_sequence.position_of(site) < breakpoint) {
+            while (site < num_sites && tree_sequence.position_of(site) < breakpoint) {
                 ++site;
             }
             _breakpoints.emplace_back(site, tree_id);

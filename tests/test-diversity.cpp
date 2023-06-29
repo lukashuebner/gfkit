@@ -55,16 +55,12 @@ TEST_CASE("Diversity tskit example", "[Diversity]") {
     REQUIRE(reference_pi == Approx(1.5).epsilon(1e-6));
 
     // Test our wrapper around tskit
-    TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
-    CHECK(tdt_tree_sequence.diversity() == Approx(reference_pi).epsilon(1e-6));
+    TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
+    CHECK(tree_sequence.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    ForestCompressor forest_compressor(tdt_tree_sequence);
-    CompressedForest compressed_forest = forest_compressor.compress();
+    SequenceForest sequence_forest(std::move(tree_sequence));
 
-    GenomicSequenceStorage sequence_store(tdt_tree_sequence, forest_compressor);
-    // TODO: Move the genomic sequence storage into the compressed forest (or create a common wrapper class)
-    SequenceForest sequence_forest(compressed_forest, sequence_store);
     CHECK(sequence_forest.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.

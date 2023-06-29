@@ -53,12 +53,14 @@ void benchmark(
     }
 
     // Benchmark building the DAG from the tree sequence
-    CompressedForest       compressed_forest;
-    GenomicSequenceStorage sequence_store;
+    CompressedForest              compressed_forest;
+    GenomicSequenceStorageFactory sequence_store_factory(tree_sequence);
+    GenomicSequenceStorage        sequence_store = sequence_store_factory.move_storage();
     if (sf_input_file) {
         memory_usage.start();
         timer.start();
 
+        // TODO Write IO functionality for the SequenceForest class
         CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
 
         log_time(warmup, "load_forest_file", "sfkit", timer.stop());
@@ -68,18 +70,10 @@ void benchmark(
         timer.start();
 
         ForestCompressor forest_compressor(tree_sequence);
-        compressed_forest = forest_compressor.compress();
+        compressed_forest = forest_compressor.compress(sequence_store_factory);
 
-        log_time(warmup, "compress_forest", "sfkit", timer.stop());
-        log_mem(warmup, "compress_forest", "sfkit", memory_usage.stop());
-
-        memory_usage.start();
-        timer.start();
-
-        sequence_store = GenomicSequenceStorage(tree_sequence, forest_compressor);
-
-        log_time(warmup, "init_genomic_sequence_storage", "sfkit", timer.stop());
-        log_mem(warmup, "init_genomic_sequence_storage", "sfkit", memory_usage.stop());
+        log_time(warmup, "compress_forest_and_sequence", "sfkit", timer.stop());
+        log_mem(warmup, "compress_forest_and_sequence", "sfkit", memory_usage.stop());
     }
 
     if (sf_output_file) {
@@ -89,7 +83,7 @@ void benchmark(
         CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
 
         log_time(warmup, "save_forest_file", "sfkit", timer.stop());
-        log_mem(warmup, "save_forest_file_delta_rss", "sfkit", memory_usage.stop());
+        log_mem(warmup, "save_forest_file", "sfkit", memory_usage.stop());
     }
 
     // Benchmark computing subtree sizes
@@ -133,7 +127,8 @@ void benchmark(
     }
 
     // Benchmark computing the diversity
-    SequenceForest sequence_forest(compressed_forest, sequence_store);
+    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction. (Check this!)
+    SequenceForest sequence_forest(std::move(tree_sequence), std::move(compressed_forest), std::move(sequence_store));
     memory_usage.start();
     timer.start();
 

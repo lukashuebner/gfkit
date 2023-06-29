@@ -212,6 +212,8 @@ add_subdirectory("extern/cereal")
 add_subdirectory("extern/malloc_count")
 
 # Google SparseHash for fast hash tables TODO Add as submodule
+# Hopscotch Map as HashTable
+add_subdirectory("extern/hopscotch-map")
 
 # Add xxHash for fast non-cryptographic hashing
 set(BUILD_SHARED_LIBS OFF)

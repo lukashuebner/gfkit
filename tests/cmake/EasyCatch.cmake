@@ -22,7 +22,9 @@ function (register_test TARGET_NAME)
     cmake_parse_arguments("TDT" "NO_EXCEPTION_MODE" "" "FILES;LIBRARIES" ${ARGN})
     add_executable(${TARGET_NAME} ${BACKWARD_ENABLE} ${TDT_FILES})
     add_backward(${TARGET_NAME})
-    target_link_libraries(${TARGET_NAME} PRIVATE Catch2::Catch2WithMain tdt::tdt cereal "${TDT_LIBRARIES}")
+    target_link_libraries(
+        ${TARGET_NAME} PRIVATE Catch2::Catch2WithMain tdt::tdt cereal "${TDT_LIBRARIES}" tsl::hopscotch_map
+    )
     target_compile_options(${TARGET_NAME} PRIVATE ${TDT_WARNING_FLAGS})
     catch_discover_tests(${TARGET_NAME} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     easycatch_set_kassert_flags(${TARGET_NAME} ${ARGN})
@@ -32,6 +34,6 @@ function (register_test TARGET_NAME)
     # TODO Enable sanitizers
     if (TDT_EXPENSIVE_TESTS)
         target_compile_definitions(${TARGET_NAME} PRIVATE -DTDT_EXPENSIVE_TESTS)
-    endif()
+    endif ()
 
 endfunction ()

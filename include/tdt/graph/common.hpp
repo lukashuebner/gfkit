@@ -6,9 +6,9 @@
 
 #include "tdt/assertion_levels.hpp"
 
-using NodeId    = std::size_t;
-using SubtreeId = NodeId;
-using TreeId    = NodeId;
+using NodeId    = uint32_t; 
+using SubtreeId = uint32_t;
+using TreeId    = uint32_t;
 
 constexpr NodeId INVALID_NODE_ID = static_cast<NodeId>(-1);
 
