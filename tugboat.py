@@ -98,7 +98,7 @@ class Datasets:
         except OSError:
             error(f"Cannot open datasets description: {DATASETS_CSV}")
 
-    def __init__(self, datasets: list[str]):
+    def __init__(self, datasets):
         self._datasets = datasets
 
     def all(self):
@@ -279,7 +279,7 @@ def convert_trees_to_forest(dataset, console):
         )
 
 @cli.command()
-@click.option("--parallel/-j", help="Number of conversions to run in parallel", default=1)
+@click.option("--parallel", help="Number of conversions to run in parallel", default=1)
 def convert(parallel: int):
     if not os.path.isfile(BENCHMARK_BIN):
         error(f"{BENCHMARK_BIN} does not exist (did you compile?)")
