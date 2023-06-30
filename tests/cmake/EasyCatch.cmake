@@ -38,10 +38,4 @@ function (register_test TARGET_NAME)
         target_link_options(${TARGET_NAME} PRIVATE -fsanitize=address)
         target_link_options(${TARGET_NAME} PRIVATE -fsanitize=undefined)
     endif ()
-
-    # TODO Enable sanitizers
-    if (TDT_EXPENSIVE_TESTS)
-        target_compile_definitions(${TARGET_NAME} PRIVATE -DTDT_EXPENSIVE_TESTS)
-    endif ()
-
 endfunction ()

@@ -13,7 +13,6 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "TDT_EXPENSIVE_TESTS": "Off",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },

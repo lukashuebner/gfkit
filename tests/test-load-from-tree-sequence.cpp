@@ -30,13 +30,7 @@ std::string const ts_file4          = "data/generated-pop10000-seq10000000-ind20
 std::string const ts_file5          = "data/generated-pop100-seq100000-ind100-seed0001.trees";
 std::string const ts_file6          = "data/generated-pop10000-seq100000-ind1000-seed0001.trees";
 
-// TODO Use custom main to parse the command line arguments and set the expensive tests flag at runtime
-// TODO Remove expensive tests as we have test in the benchmarks
-#ifdef TDT_EXPENSIVE_TESTS
-std::vector<std::string> ts_files = load_file_names_from_file("data/expensive_test_files.txt")
-#else
 std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
-#endif
 
     // TEST_CASE("Build tree sequence and tree from tgp_chr8.trees", "[LoadFromTreeSequence]") {
     //     TSKitTreeSequence tree_sequence(tgp_chr8_ts_file);
@@ -160,7 +154,6 @@ TEST_CASE("TSKitTree.children()", "[LoadFromTreeSequence]") {
     }
 }
 
-// TODO Add sanitizers to test binaries
 TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
     REQUIRE(std::filesystem::exists(ts_file));
