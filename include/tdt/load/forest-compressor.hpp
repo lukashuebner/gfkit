@@ -32,7 +32,7 @@ public:
     ForestCompressor(TSKitTreeSequence& tree_sequence) : _tree_sequence(tree_sequence) {}
 
     // TODO Decide on vertex vs node and use it consistently
-    CompressedForest compress(GenomicSequenceStorageFactory& genomic_sequence_storage_factory) {
+    CompressedForest compress(GenomicSequenceFactory& genomic_sequence_storage_factory) {
         CompressedForest         compressed_forest;
         TSKitTree                ts_tree(_tree_sequence);
         SuccinctSubtreeIdFactory succinct_subtree_id_factory;

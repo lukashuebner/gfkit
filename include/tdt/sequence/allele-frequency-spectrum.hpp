@@ -7,8 +7,8 @@
 #include <kassert/kassert.hpp>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/load/forest-compressor.hpp"
 #include "tdt/graph/compressed-forest.hpp"
+#include "tdt/load/forest-compressor.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 
 // We store the number of sites without a mutation in af[0], the number of singletons (sites with one mutation) in
@@ -21,13 +21,12 @@ public:
     using iterator       = std::vector<value_type>::iterator;
     using const_iterator = std::vector<value_type>::const_iterator;
 
-    AlleleFrequencySpectrum(GenomicSequenceStorage const& sequence_store, CompressedForest& compressed_forest) {
-        auto const num_samples = compressed_forest.num_leaves();
-        _num_sites             = sequence_store.num_sites();
+    AlleleFrequencySpectrum(GenomicSequence& sequence, CompressedForest& forest) {
+        auto const num_samples = forest.num_leaves();
+        _num_sites             = sequence.num_sites();
 
-        // TODO where to put this line?
-        compressed_forest.compute_num_samples_below();
-        // compressed_forest.compute_samples_below();
+        // TODO where to put this line? How do we benchmark it?
+        forest.compute_num_samples_below();
 
         // There are at most \c num_samples many derived samples per site.
         // +1 because there might also be /no/ derived samples.
@@ -37,15 +36,15 @@ public:
         // of the number of derived states per site.
         std::array<size_t, AllelicStatePerfectHasher::num_states> num_samples_in_state;
         for (SiteId site = 0; site < _num_sites; ++site) {
-            KASSERT(site < sequence_store.num_sites(), "Site out of bounds", tdt::assert::light);
+            KASSERT(site < sequence.num_sites(), "Site out of bounds", tdt::assert::light);
             num_samples_in_state.fill(0);
 
-            AllelicState const ancestral_state             = sequence_store.ancestral_state(site);
+            AllelicState const ancestral_state             = sequence.ancestral_state(site);
             auto const         state_of_ancestral_state    = AllelicStatePerfectHasher::to_idx(ancestral_state);
             num_samples_in_state[state_of_ancestral_state] = num_samples;
 
-            for (auto const& mutation: sequence_store.mutations_at_site(site)) {
-                auto const num_samples_below_this_mutation = compressed_forest.num_samples_below(mutation.subtree_id());
+            for (auto const& mutation: sequence.mutations_at_site(site)) {
+                auto const num_samples_below_this_mutation = forest.num_samples_below(mutation.subtree_id());
                 auto const state_of_this_mutation = AllelicStatePerfectHasher::to_idx(mutation.allelic_state());
 
                 size_t state_of_parent_mutation = 0;
@@ -54,7 +53,7 @@ public:
                     state_of_parent_mutation = state_of_ancestral_state;
                 } else {
                     auto parent_mutation =
-                        sequence_store.mutation_by_id(asserting_cast<size_t>(mutation.parent_mutation_id()));
+                        sequence.mutation_by_id(asserting_cast<size_t>(mutation.parent_mutation_id()));
                     state_of_parent_mutation = AllelicStatePerfectHasher::to_idx(parent_mutation.allelic_state());
                 }
 

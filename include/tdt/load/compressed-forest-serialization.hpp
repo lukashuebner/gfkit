@@ -7,19 +7,18 @@
 
 class CompressedForestIO {
 public:
-    static void
-    load(std::string const& filename, CompressedForest& compressed_forest, GenomicSequenceStorage& sequence_store) {
+    static void load(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
         std::ifstream              is(filename, std::ios::binary | std::ios::in);
         cereal::BinaryInputArchive archive(is);
 
-        archive(compressed_forest, sequence_store);
+        archive(forest, sequence);
+        sequence.build_mutation_indices();
     }
 
-    static void
-    save(std::string const& filename, CompressedForest& compressed_forest, GenomicSequenceStorage& sequence_store) {
+    static void save(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
         std::ofstream               os(filename, std::ios::binary | std::ios::out);
         cereal::BinaryOutputArchive archive(os);
 
-        archive(compressed_forest, sequence_store);
+        archive(forest, sequence);
     }
 };

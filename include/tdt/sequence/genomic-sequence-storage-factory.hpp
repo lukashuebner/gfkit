@@ -14,10 +14,10 @@
 // If we were to build the forest first, we would need to store this mapping for all trees, which takes up hundreds
 // of gigabytes of memory. We therefore iterate over the trees only once, first extending the forest, then
 // processing the mutations for the current tree and only then advancing to the next tree in the tree sequence.
-class GenomicSequenceStorageFactory {
+class GenomicSequenceFactory {
 public:
     // Rename storage to store?
-    GenomicSequenceStorageFactory(TSKitTreeSequence const& tree_sequence)
+    GenomicSequenceFactory(TSKitTreeSequence const& tree_sequence)
         : _storage(tree_sequence.num_sites(), tree_sequence.num_mutations()),
           _site2tree(tree_sequence),
           _mutation_it(tree_sequence.mutations().begin()),
@@ -62,7 +62,7 @@ public:
         return true;
     }
 
-    GenomicSequenceStorage&& move_storage() {
+    GenomicSequence&& move_storage() {
         KASSERT(
             _finalized,
             "Storage has not been finalized yet (we need to build the mutation indiced).",
@@ -80,7 +80,7 @@ public:
     }
 
 private:
-    GenomicSequenceStorage    _storage;
+    GenomicSequence           _storage;
     TskMutationView           _tsk_mutations;
     TSKitSiteToTreeMapper     _site2tree;
     TskMutationView::iterator _mutation_it;

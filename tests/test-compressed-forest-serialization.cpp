@@ -36,17 +36,17 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    auto                          reference_afs = tree_sequence.allele_frequency_spectrum();
-    ForestCompressor              forest_compressor(tree_sequence);
-    GenomicSequenceStorageFactory sequence_store_factory(tree_sequence);
-    CompressedForest              compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequenceStorage        sequence_store = sequence_store_factory.move_storage();
+    auto                   reference_afs = tree_sequence.allele_frequency_spectrum();
+    ForestCompressor       forest_compressor(tree_sequence);
+    GenomicSequenceFactory sequence_store_factory(tree_sequence);
+    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
+    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
 
     // Serialize and deserialize the compressed forest and genome sequence storage
     CompressedForestIO::save(ARCHIVE_FILE_NAME, compressed_forest, sequence_store);
 
-    CompressedForest       compressed_forest_deserialized;
-    GenomicSequenceStorage sequence_store_deserialized;
+    CompressedForest compressed_forest_deserialized;
+    GenomicSequence  sequence_store_deserialized;
     CompressedForestIO::load(ARCHIVE_FILE_NAME, compressed_forest_deserialized, sequence_store_deserialized);
 
     std::filesystem::remove(ARCHIVE_FILE_NAME);

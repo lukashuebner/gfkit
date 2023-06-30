@@ -28,7 +28,7 @@ TEST_CASE("GenomicSequenceStorage Basics", "[GenomicSequenceStorage]") {
     size_t const num_sites_hint    = 10;
     size_t const num_subtrees_hint = 10;
 
-    GenomicSequenceStorage sequence_storage(num_sites_hint, num_subtrees_hint);
+    GenomicSequence sequence_storage(num_sites_hint, num_subtrees_hint);
 
     // push_back() and get() a few sites
     CHECK(sequence_storage.num_sites() == 0);
@@ -70,7 +70,7 @@ TEST_CASE("GenomicSequenceStorage Basics", "[GenomicSequenceStorage]") {
 }
 
 TEST_CASE("GenomicSequenceStorage Mutations", "[GenomicSequenceStorage]") {
-    GenomicSequenceStorage sequence_storage;
+    GenomicSequence sequence_storage;
 
     // Adding sites does not affect the number of mutations.
     sequence_storage.push_back('A');

@@ -53,15 +53,15 @@ void benchmark(
     }
 
     // Benchmark building the DAG from the tree sequence
-    CompressedForest              compressed_forest;
-    GenomicSequenceStorageFactory sequence_store_factory(tree_sequence);
-    GenomicSequenceStorage        sequence_store = sequence_store_factory.move_storage();
+    CompressedForest       forest;
+    GenomicSequenceFactory sequence_factory(tree_sequence);
+    GenomicSequence        sequence;
     if (sf_input_file) {
         memory_usage.start();
         timer.start();
 
         // TODO Write IO functionality for the SequenceForest class
-        CompressedForestIO::load(*sf_input_file, compressed_forest, sequence_store);
+        CompressedForestIO::load(*sf_input_file, forest, sequence);
 
         log_time(warmup, "load_forest_file", "sfkit", timer.stop());
         log_mem(warmup, "load_forest_file", "sfkit", memory_usage.stop());
@@ -70,17 +70,18 @@ void benchmark(
         timer.start();
 
         ForestCompressor forest_compressor(tree_sequence);
-        compressed_forest = forest_compressor.compress(sequence_store_factory);
+        forest = forest_compressor.compress(sequence_factory);
 
         log_time(warmup, "compress_forest_and_sequence", "sfkit", timer.stop());
         log_mem(warmup, "compress_forest_and_sequence", "sfkit", memory_usage.stop());
     }
+    sequence = sequence_factory.move_storage();
 
     if (sf_output_file) {
         memory_usage.start();
         timer.start();
 
-        CompressedForestIO::save(*sf_output_file, compressed_forest, sequence_store);
+        CompressedForestIO::save(*sf_output_file, forest, sequence);
 
         log_time(warmup, "save_forest_file", "sfkit", timer.stop());
         log_mem(warmup, "save_forest_file", "sfkit", memory_usage.stop());
@@ -90,9 +91,9 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    EdgeListGraph const& dag = compressed_forest.postorder_edges();
-    compressed_forest.compute_num_samples_below();
-    do_not_optimize(compressed_forest.num_samples_below());
+    EdgeListGraph const& dag = forest.postorder_edges();
+    forest.compute_num_samples_below();
+    do_not_optimize(forest.num_samples_below());
 
     log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
     log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
@@ -101,7 +102,7 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
+    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence, forest);
     do_not_optimize(afs);
 
     log_time(warmup, "compute_afs", "sfkit", timer.stop());
@@ -127,8 +128,9 @@ void benchmark(
     }
 
     // Benchmark computing the diversity
-    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction. (Check this!)
-    SequenceForest sequence_forest(std::move(tree_sequence), std::move(compressed_forest), std::move(sequence_store));
+    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
+    // (Check this!)
+    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
     memory_usage.start();
     timer.start();
 

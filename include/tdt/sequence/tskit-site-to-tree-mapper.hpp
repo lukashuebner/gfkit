@@ -55,16 +55,16 @@ public:
         size_t const num_breakpoints = tree_sequence.breakpoints().size();
 
         _breakpoints.reserve(num_breakpoints + 1);
-        _breakpoints.emplace_back(0, 0);
-        TreeId tree_id = 0;
         tsk_id_t site = 0;
+        TreeId tree = 0;
+        _breakpoints.emplace_back(site, tree);
 
         for (auto breakpoint: tree_sequence.breakpoints()) {
             while (site < num_sites && tree_sequence.position_of(site) < breakpoint) {
                 ++site;
             }
-            _breakpoints.emplace_back(site, tree_id);
-            ++tree_id;
+            _breakpoints.emplace_back(site, tree);
+            ++tree;
         }
 
         _current_breakpoint = _breakpoints.begin();

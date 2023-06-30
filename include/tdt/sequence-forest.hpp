@@ -19,7 +19,7 @@
 // statistics.
 class AlleleFrequencies {
 public:
-    AlleleFrequencies(CompressedForest& compressed_forest, GenomicSequenceStorage const& sequence_store)
+    AlleleFrequencies(CompressedForest& compressed_forest, GenomicSequence const& sequence_store)
         : _forest(compressed_forest),
           _sequence(sequence_store) {}
 
@@ -48,7 +48,7 @@ public:
         using reference         = value_type&;
         struct sentinel {};
 
-        allele_frequency_iterator(CompressedForest& compressed_forest, GenomicSequenceStorage const& sequence_store)
+        allele_frequency_iterator(CompressedForest& compressed_forest, GenomicSequence const& sequence_store)
             : _forest(compressed_forest),
               _sequence(sequence_store),
               _site(0) {
@@ -100,10 +100,10 @@ public:
         }
 
     private:
-        CompressedForest&             _forest;
-        GenomicSequenceStorage const& _sequence;
-        SiteId                        _site;
-        uint64_t                      _frequency;
+        CompressedForest&      _forest;
+        GenomicSequence const& _sequence;
+        SiteId                 _site;
+        uint64_t               _frequency;
 
         void _update_state() {
             // TODO Generalize this to multiallelic sites
@@ -168,8 +168,8 @@ public:
     };
 
 private:
-    CompressedForest&             _forest;
-    GenomicSequenceStorage const& _sequence;
+    CompressedForest&      _forest;
+    GenomicSequence const& _sequence;
 };
 
 // TODO encapsulate CompresedForest and GenomicSequence functions in this class
@@ -177,9 +177,7 @@ class SequenceForest {
 public:
     // TODO Rename to GenomicSequenceStore
     SequenceForest(
-        TSKitTreeSequence&&      tree_sequence,
-        CompressedForest&&       compressed_forest,
-        GenomicSequenceStorage&& genomic_sequence
+        TSKitTreeSequence&& tree_sequence, CompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
     )
         : _tree_sequence(std::move(tree_sequence)),
           _forest(compressed_forest),
@@ -188,8 +186,8 @@ public:
     SequenceForest(tsk_treeseq_t&& ts_tree_sequence) : SequenceForest(TSKitTreeSequence(ts_tree_sequence)) {}
 
     SequenceForest(TSKitTreeSequence&& tree_sequence) : _tree_sequence(std::move(tree_sequence)) {
-        ForestCompressor              forest_compressor(_tree_sequence);
-        GenomicSequenceStorageFactory sequence_factory(_tree_sequence);
+        ForestCompressor       forest_compressor(_tree_sequence);
+        GenomicSequenceFactory sequence_factory(_tree_sequence);
         _forest   = forest_compressor.compress(sequence_factory);
         _sequence = sequence_factory.move_storage();
     }
@@ -248,7 +246,7 @@ public:
         return _forest.num_samples();
     }
 
-    [[nodiscard]] GenomicSequenceStorage const& sequence() const {
+    [[nodiscard]] GenomicSequence const& sequence() const {
         return _sequence;
     }
 
@@ -261,7 +259,7 @@ public:
     }
 
 private:
-    TSKitTreeSequence      _tree_sequence;
-    CompressedForest       _forest;
-    GenomicSequenceStorage _sequence;
+    TSKitTreeSequence _tree_sequence;
+    CompressedForest  _forest;
+    GenomicSequence   _sequence;
 };
