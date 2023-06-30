@@ -52,6 +52,7 @@ option(TDT_WARNINGS_ARE_ERRORS OFF)
 option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF)
 option(TDT_TESTS_DISCOVER OFF)
 option(TDT_EXPENSIVE_TESTS "Enable expensive tests?" OFF)
+option(TDT_TEST_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
 
 # Enable compilation with ccache. Defaults to ON if this is the main project.
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

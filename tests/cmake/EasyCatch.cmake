@@ -28,8 +28,16 @@ function (register_test TARGET_NAME)
     target_compile_options(${TARGET_NAME} PRIVATE ${TDT_WARNING_FLAGS})
     catch_discover_tests(${TARGET_NAME} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     easycatch_set_kassert_flags(${TARGET_NAME} ${ARGN})
+
     target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG)
     target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG_PEDANTIC)
+
+    if (TDT_TEST_ENABLE_SANITIZERS)
+        target_compile_options(${TARGET_NAME} PRIVATE -fsanitize=address)
+        target_compile_options(${TARGET_NAME} PRIVATE -fsanitize=undefined)
+        target_link_options(${TARGET_NAME} PRIVATE -fsanitize=address)
+        target_link_options(${TARGET_NAME} PRIVATE -fsanitize=undefined)
+    endif ()
 
     # TODO Enable sanitizers
     if (TDT_EXPENSIVE_TESTS)

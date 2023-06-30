@@ -41,7 +41,8 @@
             "inherits": "default",
             "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "TDT_TEST_ENABLE_SANITIZERS": "ON"
             }
         }
     ],
