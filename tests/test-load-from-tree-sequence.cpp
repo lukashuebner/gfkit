@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <numeric>
+#include <filesystem>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
@@ -28,14 +29,9 @@ std::string const ts_file3          = "data/generated-pop10000-seq10000-ind20-se
 std::string const ts_file4          = "data/generated-pop10000-seq10000000-ind20-seed0001.trees";
 std::string const ts_file5          = "data/generated-pop100-seq100000-ind100-seed0001.trees";
 std::string const ts_file6          = "data/generated-pop10000-seq100000-ind1000-seed0001.trees";
-std::string const tgp_chr8_ts_file  = "data/tgp_chr8.trees";
-std::string const tgp_chr14_ts_file = "data/tgp_chr14.trees";
-std::string const tgp_chr19_ts_file = "data/tgp_chr19.trees";
-std::string const tgp_chr20_ts_file = "data/tgp_chr20.trees";
-std::string const tgp_chr21_ts_file = "data/tgp_chr21.trees";
-std::string const tgp_chr22_ts_file = "data/tgp_chr22.trees";
 
 // TODO Use custom main to parse the command line arguments and set the expensive tests flag at runtime
+// TODO Remove expensive tests as we have test in the benchmarks
 #ifdef TDT_EXPENSIVE_TESTS
 std::vector<std::string> ts_files = load_file_names_from_file("data/expensive_test_files.txt")
 #else
@@ -64,6 +60,8 @@ std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
 
     TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
     auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+
+    REQUIRE(std::filesystem::exists(ts_file));
     TSKitTreeSequence tree_sequence(ts_file);
     TSKitTree         tree(tree_sequence);
 
@@ -104,6 +102,8 @@ std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
 
 TEST_CASE("TSKitTree.postorder()", "[LoadFromTreeSequence]") {
     auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+    REQUIRE(std::filesystem::exists(ts_file));
+
     TSKitTreeSequence tree_sequence(ts_file);
     TSKitTree         tree(tree_sequence);
 
@@ -128,6 +128,8 @@ TEST_CASE("TSKitTree.postorder()", "[LoadFromTreeSequence]") {
 
 TEST_CASE("TSKitTree.children()", "[LoadFromTreeSequence]") {
     auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+    REQUIRE(std::filesystem::exists(ts_file));
+
     TSKitTreeSequence tree_sequence(ts_file);
     TSKitTree         tree(tree_sequence);
 
@@ -161,6 +163,7 @@ TEST_CASE("TSKitTree.children()", "[LoadFromTreeSequence]") {
 // TODO Add sanitizers to test binaries
 TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
+    REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);
     SequenceForest    sequence_forest(std::move(tree_sequence));
