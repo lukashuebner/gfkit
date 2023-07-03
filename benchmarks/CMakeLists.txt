@@ -6,10 +6,10 @@ if (TDT_BENCHMARK_DEBUG)
     add_backward(sfkit)
 else ()
     add_executable(sfkit sfkit.cpp)
-    target_compile_definitions(sfkit "HAS_MALLOC_COUNT")
+    target_compile_definitions(sfkit PRIVATE "HAS_MALLOC_COUNT")
 endif ()
 
-target_link_libraries(sfkit PRIVATE tdt CLI11 Catch2::Catch2 "$<$<BOOL:${TDT_BENCHMARK_DEBUG}>:malloc_count;dl>")
+target_link_libraries(sfkit PRIVATE tdt CLI11 Catch2::Catch2 "$<$<NOT:$<BOOL:${TDT_BENCHMARK_DEBUG}>>:malloc_count;dl>")
 
 if (TDT_BENCHMARK_DEBUG)
     add_address_sanitizer(sfkit)
