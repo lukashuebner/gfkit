@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+include(CCache)
+include(Sanitizers)
 
 # Project setup
 project(
@@ -49,9 +51,10 @@ if (EXISTS "${LOC_PATH}")
 endif ()
 
 option(TDT_WARNINGS_ARE_ERRORS OFF)
-option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF)
+option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF) # They are also built if this is the main project.
 option(TDT_TESTS_DISCOVER OFF)
 option(TDT_TEST_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
+option(TDT_BENCHMARK_DEBUG "Enable backward-cpp, ASan, and UBSan for benchmarks" OFF)
 
 # Enable compilation with ccache. Defaults to ON if this is the main project.
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -61,7 +64,7 @@ else ()
 endif ()
 
 if (TDT_USE_CCACHE)
-    include(CCache)
+    enable_ccache()
 endif ()
 
 add_subdirectory(extern)
@@ -130,13 +133,14 @@ target_link_libraries(tdt INTERFACE tdt_base)
 
 # If enabled, use exceptions, otherwise use KASSERT()
 option(TDT_EXCEPTION_MODE "Use exceptions to report recoverable errors." ON)
+
 if (TDT_EXCEPTION_MODE)
     set(KASSERT_EXCEPTION_MODE 1)
     target_compile_definitions(tdt INTERFACE -DKASSERT_EXCEPTION_MODE)
     message(STATUS "Build with exceptions enabled.")
 else ()
     set(KASSERT_EXCEPTION_MODE 0)
-    message(STATUS "Build with exceptions disabled. Assertions are used instead.")
+    message(STATUS "Build with exceptions disabled.  Assertions are used instead.")
 endif ()
 
 # TODO Remove the communication assertions. TODO Unify the assertion levels with the C preprocessor definitions The
@@ -181,8 +185,27 @@ add_subdirectory("extern/kassert")
 target_include_directories(tdt_base INTERFACE "extern/kassert/include")
 target_link_libraries(tdt_base INTERFACE kassert)
 
-# Add the tskit (succinct tree sequences) libary
+# Add the tskit (succinct tree sequences) library
 add_subdirectory("extern/tskit/c" "extern/tskit")
+target_link_libraries(tdt_base INTERFACE tskit)
+
+# Hopscotch Map as HashTable
+add_subdirectory("extern/hopscotch-map")
+target_link_libraries(tdt_base INTERFACE tsl::hopscotch_map)
+
+# Add xxHash for fast non-cryptographic hashing
+set(BUILD_SHARED_LIBS OFF)
+set(XXHASH_BUILD_ENABLE_INLINE_API ON)
+set(XXHASH_BUILD_XXHSUM OFF)
+add_subdirectory("extern/xxHash/cmake_unofficial" EXCLUDE_FROM_ALL)
+target_link_libraries(tdt_base INTERFACE xxhash)
+
+# Add cereal for serialization
+option(BUILD_DOC "" OFF)
+option(BUILD_SANDBOX "" OFF)
+option(SKIP_PERFORMANCE_COMPARISON "" ON)
+add_subdirectory("extern/cereal")
+target_link_libraries(tdt_base INTERFACE cereal)
 
 # Add Catch2 (testing and benchmarking)
 add_subdirectory("extern/Catch2")
@@ -190,38 +213,16 @@ add_subdirectory("extern/Catch2")
 # Add backward-cpp for pretty stack traces
 add_subdirectory("extern/backward-cpp")
 
-# Add nanobench for benchmarking
-add_subdirectory("extern/nanobench")
+# Add fmt for std::format for older libstdc++
+# TODO Remove this at least for the Release mode
+add_subdirectory("extern/fmt")
+target_link_libraries(tdt_base INTERFACE fmt)
 
 # Add CLI11 for command line parsing
 add_subdirectory("extern/CLI11")
 
-# Add fmt for std::format for older libstdc++
-add_subdirectory("extern/fmt")
-
-# Add pasta::bit_vector for bitsets
-add_subdirectory("extern/bit_vector")
-
-# Add cereal for serialization
-option(BUILD_DOC "" OFF)
-option(BUILD_SANDBOX "" OFF)
-option(SKIP_PERFORMANCE_COMPARISON "" ON)
-add_subdirectory("extern/cereal")
-
 # malloc_count for analyzing memory usage
 add_subdirectory("extern/malloc_count")
-
-# Google SparseHash for fast hash tables TODO Add as submodule
-# Hopscotch Map as HashTable
-add_subdirectory("extern/hopscotch-map")
-
-# Add xxHash for fast non-cryptographic hashing
-set(BUILD_SHARED_LIBS OFF)
-set(XXHASH_BUILD_ENABLE_INLINE_API ON)
-set(XXHASH_BUILD_XXHSUM OFF)
-add_subdirectory("extern/xxHash/cmake_unofficial" EXCLUDE_FROM_ALL)
-# TODO Clean up, which libraries do we really need?
-target_link_libraries(tdt_base INTERFACE xxhash pasta_bit_vector fmt)
 
 # Tests, benchamrks, and examples are only built if this is the main project or if
 # TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS is set (OFF by default)

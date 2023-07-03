@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fmt/core.h"
 #include <cstddef>
 #include <vector>
 
@@ -126,12 +125,3 @@ private:
     std::vector<value_type> _afs;
     size_t                  _num_sites;
 };
-
-// inline std::ostream& operator<<(std::ostream& os, AlleleFrequencySpectrum const& afs) {
-//     os << "{";
-//     for (auto freq_it = afs.cbegin(); freq_it != afs.cend(); ++freq_it) {
-//         os << fmt::format("{}, ", *freq_it);
-//     }
-//     os << "}";
-//     return os;
-// }

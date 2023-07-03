@@ -11,8 +11,6 @@
 #include <tsl/hopscotch_map.h>
 #pragma GCC diagnostic pop
 
-// TODO Remove pasta::bit_set from the repo again
-
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/adjacency-array-graph.hpp"

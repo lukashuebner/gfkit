@@ -1,5 +1,3 @@
-#include "fmt/format.h"
-
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
@@ -13,7 +11,6 @@
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
-// TODO Rename forest-compressor.hpp to compressed-forest.hpp
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
 

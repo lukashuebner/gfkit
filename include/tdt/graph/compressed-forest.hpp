@@ -4,7 +4,6 @@
 #include <unordered_set>
 
 #include <kassert/kassert.hpp>
-// TODO Remove pasta::bit_set from the repo again
 
 #include "edge-list-graph.hpp"
 #include "tdt/assertion_levels.hpp"

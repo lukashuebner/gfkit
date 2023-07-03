@@ -13,7 +13,9 @@
             "hidden": true,
             "generator": "Ninja",
             "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "TDT_TEST_ENABLE_SANITIZERS": "OFF",
+                "TDT_BENCHMARK_DEBUG": "OFF"
             }
         },
         {

@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
-#include <numeric>
 #include <filesystem>
+#include <numeric>
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
@@ -24,36 +24,16 @@
 
 using namespace ::Catch::Matchers;
 
-std::string const ts_file1          = "data/generated-pop100-seq100000000-ind10-seed0001.trees";
-std::string const ts_file3          = "data/generated-pop10000-seq10000-ind20-seed0001.trees";
-std::string const ts_file4          = "data/generated-pop10000-seq10000000-ind20-seed0001.trees";
-std::string const ts_file5          = "data/generated-pop100-seq100000-ind100-seed0001.trees";
-std::string const ts_file6          = "data/generated-pop10000-seq100000-ind1000-seed0001.trees";
+std::string const ts_file1 = "data/generated-pop100-seq100000000-ind10-seed0001.trees";
+std::string const ts_file3 = "data/generated-pop10000-seq10000-ind20-seed0001.trees";
+std::string const ts_file4 = "data/generated-pop10000-seq10000000-ind20-seed0001.trees";
+std::string const ts_file5 = "data/generated-pop100-seq100000-ind100-seed0001.trees";
+std::string const ts_file6 = "data/generated-pop10000-seq100000-ind1000-seed0001.trees";
 
 std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
 
-    // TEST_CASE("Build tree sequence and tree from tgp_chr8.trees", "[LoadFromTreeSequence]") {
-    //     TSKitTreeSequence tree_sequence(tgp_chr8_ts_file);
-    //     TSKitTree         current_tree(tree_sequence);
-
-    //     CHECK(tree_sequence.num_nodes() == 44910);
-    //     CHECK(tree_sequence.num_edges() == 382351);
-    //     CHECK(tree_sequence.num_sites() == 106678);
-    //     CHECK(tree_sequence.num_mutations() == 391346);
-    //     CHECK(tree_sequence.num_trees() == 9973);
-    //     CHECK(tree_sequence.num_individuals() == 2504);
-    //     CHECK(tree_sequence.num_populations() == 26);
-    //     CHECK(tree_sequence.num_samples() == 5008);
-    //     CHECK(tree_sequence.num_samples() == tree_sequence.num_individuals() * 2); // humans are diploid
-    //     CHECK(tree_sequence.sequence_length() == 146364024.0);
-
-    //     for (current_tree.first(); current_tree.is_valid(); current_tree.next()) {
-    //         CHECK(current_tree.num_roots() == 1);
-    //     }
-    // }
-
-    TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
-    auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
+    auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     REQUIRE(std::filesystem::exists(ts_file));
     TSKitTreeSequence tree_sequence(ts_file);
@@ -95,7 +75,7 @@ std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
 }
 
 TEST_CASE("TSKitTree.postorder()", "[LoadFromTreeSequence]") {
-    auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+    auto const& ts_file = GENERATE_REF(from_range(ts_files));
     REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);
@@ -121,7 +101,7 @@ TEST_CASE("TSKitTree.postorder()", "[LoadFromTreeSequence]") {
 }
 
 TEST_CASE("TSKitTree.children()", "[LoadFromTreeSequence]") {
-    auto const&       ts_file = GENERATE_REF(from_range(ts_files));
+    auto const& ts_file = GENERATE_REF(from_range(ts_files));
     REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);

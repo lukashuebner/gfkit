@@ -98,7 +98,7 @@ public:
         return tsk_treeseq_get_discrete_genome(&_tree_sequence);
     }
 
-    double diversity() {
+    double diversity() const {
         double                pi;
         std::vector<tsk_id_t> samples;
         samples.resize(num_samples());
@@ -112,10 +112,11 @@ public:
         return pi;
     }
 
-    double num_segregating_sites() {
+    double num_segregating_sites() const {
         double                num_seg_sites;
         std::vector<tsk_id_t> samples;
         samples.resize(num_samples());
+
         std::iota(samples.begin(), samples.end(), 0);
         tsk_size_t sample_set_sizes[] = {num_samples()};
 
