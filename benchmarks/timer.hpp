@@ -7,7 +7,9 @@
 #include <optional>
 #include <tuple>
 
-#include <malloc_count.h>
+#ifdef HAS_MALLOC_COUNT
+    #include <malloc_count.h>
+#endif
 #include <stack_count.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
@@ -88,10 +90,12 @@ public:
     }
 
     void start() {
+#ifdef HAS_MALLOC_COUNT
         asm("" ::: "memory"); // prevent compiler reordering
         _stack_count_base   = stack_count_clear();
         _malloc_count_start = malloc_count_current();
         malloc_count_reset_peak();
+#endif
         std::tie(_virtual_base_kib, _rss_base_kib) = virtual_and_rss_kib();
     }
 
@@ -99,10 +103,12 @@ public:
         Report report;
 
         asm("" ::: "memory");
-        report.stack_peak_byte      = stack_count_usage(_stack_count_base);
-        report.heap_peak_byte       = malloc_count_peak();
-        report.heap_delta_byte      = malloc_count_current() - _malloc_count_start;
-        report.heap_current_byte    = malloc_count_current();
+#ifdef HAS_MALLOC_COUNT
+        report.stack_peak_byte   = stack_count_usage(_stack_count_base);
+        report.heap_peak_byte    = malloc_count_peak();
+        report.heap_delta_byte   = malloc_count_current() - _malloc_count_start;
+        report.heap_current_byte = malloc_count_current();
+#endif
         auto [virtual_kib, rss_kib] = virtual_and_rss_kib();
         report.virtmem_delta_byte   = kib_to_byte(_virtual_base_kib - virtual_kib);
         report.rss_delta_byte       = kib_to_byte(_rss_base_kib - rss_kib);
@@ -129,21 +135,26 @@ private:
                 iss >> key >> value >> unit;
 
                 if (unit != "kB") {
-                    throw std::runtime_error("Unit of VmSize: in /proc/self/status is not 'kB'");
+                    std::cerr << "WARNING ! Unit of VmSize: in /proc/self/status is not 'kB'" << std::endl;
                 }
 
-                if (key == "VmSize:") {
-                    virtual_kib = std::stoi(value);
-                } else if (key == "VmRSS:") {
-                    rss_kib = std::stoi(value);
+                try {
+                    if (key == "VmSize:") {
+                        virtual_kib = std::stoul(value);
+                    } else if (key == "VmRSS:") {
+                        rss_kib = std::stoul(value);
+                    }
+                } catch (std::exception& e) {
+                    std::cerr << "WARNING ! Failed to parse VmSize or VmRSS from /proc/self/status (" << key << ": " << value
+                              << ")." << std::endl;
                 }
             }
         } else {
-            throw std::runtime_error("Could not open /proc/self/status");
+            std::cerr << "WARNING ! Failed to open /proc/self/status" << std::endl;
         }
 
         if (!virtual_kib || !rss_kib) {
-            throw std::runtime_error("Failed to read VmSize or VmRSS from /proc/self/status");
+            std::cerr << "WARNING ! Failed to read VmSize or VmRSS from /proc/self/status" << std::endl;
         }
 
         return std::make_tuple(*virtual_kib, *rss_kib);
@@ -157,10 +168,12 @@ private:
         return kib * 1024;
     }
 
+#ifdef HAS_MALLOC_COUNT
     void*   _stack_count_base   = nullptr;
     int64_t _malloc_count_start = 0;
-    int64_t _virtual_base_kib   = 0;
-    int64_t _rss_base_kib       = 0;
+#endif
+    int64_t _virtual_base_kib = 0;
+    int64_t _rss_base_kib     = 0;
 };
 
 class ResultsPrinter {
@@ -226,12 +239,14 @@ public:
 
         _print("virtmem_delta", report.virtmem_delta_byte);
         _print("rss_delta", report.rss_delta_byte);
+#ifdef HAS_MALLOC_COUNT
         _print("stack_peak", report.heap_current_byte);
         _print("heap_peak", report.heap_peak_byte);
         _print("heap_delta", report.heap_delta_byte);
         _print("stack_peak", report.stack_peak_byte);
+#endif
         if (report.data_structrue_byte.has_value()) {
-            _print("data_structrue", report.data_structrue_byte.value());
+            _print("data_structure", report.data_structrue_byte.value());
         }
     }
 

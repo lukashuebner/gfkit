@@ -23,9 +23,6 @@
 [submodule "extern/fmt"]
 	path = extern/fmt
 	url = https://github.com/fmtlib/fmt
-[submodule "extern/bit_vector"]
-	path = extern/bit_vector
-	url = https://github.com/pasta-toolbox/bit_vector
 [submodule "extern/cereal"]
 	path = extern/cereal
 	url = https://github.com/USCiLab/cereal.git
