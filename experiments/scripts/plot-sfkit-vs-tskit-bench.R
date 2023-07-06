@@ -3,7 +3,7 @@
 source("experiments/scripts/common.R")
 library(argparse)
 
-# Command Line Parsing
+# --- Parse command line arguments ---
 parser <- ArgumentParser()
 
 # by default ArgumentParser will add an help option
@@ -21,14 +21,51 @@ parser$add_argument(
 )
 args <- parser$parse_args()
 
+# --- For running in RStudio/VSCode/Emacs ---
 # args <- list()
-# args$input <- "experiments/data/sf-vs-ts-speed.csv"
-# args$output <- "experiments/plots/sf-vs-ts-speed.pdf"
+# args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
+# args$output <- "experiments/plots/sfkit-vs-tskit-bench.pdf"
 
+# --- Helper functions ---
+
+# Extract the dataset name from the filename; e.g. "data/1kg_chr1.trees" -> "1kg_chr1"
 dataset_from_filename <- function(filename) {
     tools::file_path_sans_ext(basename(filename))
 }
 
+# Pretty printing of dataset labels
+pretty_print_datasets <- function(filename) {
+    filename %>%
+        str_replace("1kg_chr", "1KG Chr. ") %>%
+        str_replace("sgdp_chr", "SGDP Chr. ") %>%
+        str_replace("unified_chr", "Unified Chr. ") %>%
+        str_replace("anderson_chr", "Anderson Chr. ")
+}
+
+section_colors <- c(
+    "load" = "#ff7f0e",
+    "build_sf" = "#d62728",
+    "compute_subtree_sizes" = "#1f77b4",
+    "afs" = "#2ca02c"
+)
+
+section_labels <- c(
+    "compute_subtree_sizes" = "Compute Subtree Sizes",
+    "afs" = "AFS",
+    "diversity" = "Diversity",
+    "tajimas_d" = "Tajima's D",
+    "num_segregating_sits" = "Number of Segregating Sites"
+)
+
+# The datasets are sorted by chromosome first and collection second.
+dataset_levels <- expand.grid(
+    c("1kg_chr", "sgdp_chr", "unified_chr", "anderson_chr"),
+    seq(1, 22)
+) %>%
+    unite("levels", 1:2, sep = "") %>%
+    pull(levels)
+
+# --- Plotting style ---
 style <- c()
 style$height <- 60
 style$width <- 85
@@ -37,7 +74,7 @@ style$text_size <- 8
 style$legend.key.size <- unit(3, "mm")
 style$point_size <- 1
 
-### Data loading ###
+# --- Load the measurements from the CSV file ---
 data <- read_csv(
     args$input,
     col_names = TRUE,
@@ -45,130 +82,141 @@ data <- read_csv(
         section = col_character(),
         variant = col_character(),
         dataset = col_character(),
-        iteration = col_double(),
-        variable = col_character()
-        value = col_double()
+        revision = col_character(),
+        machine_id = col_character(),
+        iteration = col_integer(),
+        variable = col_character(),
+        value = col_double(),
         unit = col_character()
     )
 ) %>%
-    filter(
-        section %in% c("compute_subtree_sizes", "compute_afs")
-    ) %>%
     mutate(
         section = factor(section),
         variant = factor(variant),
-        dataset = factor(dataset_from_filename(dataset)),
+        dataset = factor(dataset_from_filename(dataset), levels = dataset_levels),
         iteration = factor(iteration),
         variable = factor(variable)
+    ) %>%
+    separate(
+        col = dataset,
+        into = c("collection", "chromosome"),
+        sep = "_chr",
+        remove = FALSE,
+    ) %>%
+    mutate(
+        collection = factor(collection),
+        chromosome = factor(chromosome, levels = seq(1, 22))
     )
 
-dataset_levels <- expand.grid(
-        c("tgp_chr", "1kg_chr", "sgdp_chr", "unified_chr", "anderson_chr"),
-        seq(1, 22)
-    ) %>%
-    unite("levels", 1:2, sep = "") %>%
-    pull(levels)
+# Check that the assumptions made in this plotting script are correct.
+# If this fails, then the plotting script needs to be updated.
+stopifnot(data %>% filter(variable == "runtime") %>% pull(unit) == "ns")
+stopifnot(data %>% filter(variable %in% c("virtmem_delta", "rss_delta", "stack_peak", "heap_peak", "heap_delta")) %>% pull(unit) == "byte")
+stopifnot(data %>% pull(section) %in% c("load_trees_file", "compute_subtree_sizes", "afs", "diversity", "num_segregating_sites", "tajimas_d", "compress_forest_and_sequence", "save_forest_file", "load_forest_file"))
 
-# dataset_levels <- levels(data$dataset) %>%
-#     str_replace("tgp_chr", "") %>%
-#     as.numeric() %>%
-#     sort() %>%
-#     paste("tgp_chr", ., sep = "")
-data$dataset <- factor(data$dataset, levels = dataset_levels)
-
-tskit_data <- data %>%
+# --- Analysis of the Runtime of sfkit vs tskit ---
+runtime_data <- data %>%
     filter(
-        variant == "tskit",
+        variable == "walltime",
     ) %>%
-    group_by(section, dataset) %>%
+    group_by(section, variant, dataset, collection, chromosome, revision, machine_id, variable) %>%
+    rename(walltime_ns = value) %>%
     summarize(
-        walltime_ms_median = median(walltime_ms),
+        walltime_ns_median = median(walltime_ns),
+        walltime_ns_min = min(walltime_ns),
+        walltime_ns_max = max(walltime_ns),
+        walltime_ns_q10 = quantile(walltime_ns, 0.1),
+        walltime_ns_q90 = quantile(walltime_ns, 0.9),
         .groups = "drop"
     )
 
-sf_data <- right_join(
-    tskit_data %>% rename(reference_walltime_ms = walltime_ms_median),
-    data %>%
-        filter(
-            variant == "sf",
-            section == "compute_afs"
-        ),
-    by = c("section", "dataset")
+speedup_data <- inner_join(
+    # Reference (tskit)
+    runtime_data %>% 
+        filter(variant == "tskit") %>%
+        rename(
+            ref_walltime_ns_median = walltime_ns_median,
+            ref_walltime_ns_min = walltime_ns_min,
+            ref_walltime_ns_max = walltime_ns_max,
+            ref_walltime_ns_q10 = walltime_ns_q10,
+            ref_walltime_ns_q90 = walltime_ns_q90,
+    ),
+    # sfkit
+    runtime_data %>% filter(variant == "sfkit"),
+    by = c("section", "dataset", "collection", "chromosome", "revision", "machine_id", "variable")
 ) %>%
-    group_by(section, variant, dataset) %>%
-    summarize(
-        walltime_ms_median = median(walltime_ms),
-        walltime_ms_min = min(walltime_ms),
-        walltime_ms_max = max(walltime_ms),
-        walltime_ms_q10 = quantile(walltime_ms, 0.1),
-        walltime_ms_q90 = quantile(walltime_ms, 0.9),
-        speedup_median = reference_walltime_ms / walltime_ms_median,
-        speedup_min = reference_walltime_ms / walltime_ms_min,
-        speedup_max = reference_walltime_ms / walltime_ms_max,
-        speedup_q10 = reference_walltime_ms / walltime_ms_q10,
-        speedup_q90 = reference_walltime_ms / walltime_ms_q90,
+    mutate(
+        speedup_median = ref_walltime_ns_median / walltime_ns_median,
+        speedup_min = ref_walltime_ns_median / walltime_ns_min,
+        speedup_max = ref_walltime_ns_median / walltime_ns_max,
+        speedup_q10 = ref_walltime_ns_median / walltime_ns_q10,
+        speedup_q90 = ref_walltime_ns_median / walltime_ns_q90,
         .groups = "drop"
     )
 
-# Dataset labels
-pretty_print_tgp <- function(tgp_filename) {
-    tgp_filename %>%
-        str_replace("tgp_chr", "TGP Chr. ")
-}
+speedup_y_breaks <- seq(0, max(speedup_data$speedup_median * 1.05), 1)
+speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
-section_colors <- c(
-    "load" = "#ff7f0e",
-    "build_sf" = "#d62728",
-    "compute_subtree_sizes" = "#1f77b4",
-    "compute_afs" = "#2ca02c"
-)
-
-section_labels <- c(
-    "load" = "Load SF from TS file",
-    "build_sf" = "Build SF from TS",
-    "compute_subtree_sizes" = "Compute subtree sizes",
-    "compute_afs" = "Compute AFS"
-)
-
-x_breaks <- seq(0, max(sf_data$speedup_median * 1.05), 1)
-x_limits <- c(0, max(sf_data$speedup_median * 1.05))
-
-ggplot(sf_data) +
-    geom_point(
+# --- Speedup of sfkit over tskit ---
+speedup_data %>%
+    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d")) %>%
+    select(-dataset) %>%
+    ggplot(
         aes(
             y = speedup_median,
-            x = dataset,
-            #color = section,
-        ),
-        position = position_dodge(width = 0.3),
-        size = style$point_size
-    ) +
-    geom_errorbar(
-        aes(
             ymin = speedup_q10,
             ymax = speedup_q90,
-            x = dataset,
+            x = chromosome,
         ),
-        width = 0.1
     ) +
+    geom_points_with_errorbars() +
+    facet_grid(rows = vars(section), cols = vars(collection), scales = "fixed") +
     theme_husky(
         style = style,
-        legend.position = "none",
+        # legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.key.size = style$legend.key.size,
     ) +
     ylab("speedup over tskit") +
-    scale_y_continuous(
-        breaks = x_breaks,
-        limits = x_limits
-    ) +
-    scale_x_discrete(
-        labels = pretty_print_tgp,
-    ) +
-    scale_color_shape_manual(
-        color_values = section_colors,
-        labels = section_labels
-    ) +
+    scale_y_continuous() +
+    scale_x_discrete( labels = pretty_print_datasets) +
+    # scale_color_shape_manual(
+    #     color_values = section_colors,
+    #     labels = section_labels
+    # ) +
     gg_eps()
 
+# --- Runtime of sfkit over tskit ---
+runtime_data %>%
+    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d")) %>%
+    select(-dataset) %>%
+    ggplot(
+        aes(
+            y = ns2ms(walltime_ns_median),
+            ymin = ns2ms(walltime_ns_q10),
+            ymax = ns2ms(walltime_ns_q90),
+            x = chromosome,
+            color = variant,
+            shape = variant
+        ),
+    ) +
+    geom_points_with_errorbars() +
+    facet_grid(rows = vars(section), cols = vars(collection), scales = "fixed") +
+    theme_husky(
+        style = style,
+        # legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.key.size = style$legend.key.size,
+    ) +
+    ylab("speedup over tskit") +
+    scale_y_continuous() +
+    scale_x_discrete( labels = pretty_print_datasets) +
+    # scale_color_shape_manual(
+    #     color_values = section_colors,
+    #     labels = section_labels
+    # ) +
+    gg_eps()
+
+style$height <- 400
+style$width <- 600
 ggsave(args$output, width = style$width, height = style$height, units = style$unit)

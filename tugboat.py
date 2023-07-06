@@ -373,7 +373,7 @@ def collect_datasets():
         else:
             pass
 
-    merged = pd.concat([pd.read_csv(file) for file in files])
+    merged = pd.concat([pd.read_csv(file, header=0) for file in files])
     merged.to_csv(SFKIT_VS_TSKIT_BENCH_CSV, index=False)
 
 @cli.command()

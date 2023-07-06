@@ -129,8 +129,8 @@ void benchmark(
     AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence, forest);
     do_not_optimize(afs);
 
-    log_time(warmup, "compute_afs", "sfkit", timer.stop());
-    log_mem(warmup, "compute_afs", "sfkit", memory_usage.stop());
+    log_time(warmup, "afs", "sfkit", timer.stop());
+    log_mem(warmup, "afs", "sfkit", memory_usage.stop());
 
     memory_usage.start();
     timer.start();
@@ -138,8 +138,8 @@ void benchmark(
     auto reference_afs = tree_sequence.allele_frequency_spectrum();
     do_not_optimize(reference_afs);
 
-    log_time(warmup, "compute_afs", "tskit", timer.stop());
-    log_mem(warmup, "compute_afs", "tskit", memory_usage.stop());
+    log_time(warmup, "afs", "tskit", timer.stop());
+    log_mem(warmup, "afs", "tskit", memory_usage.stop());
 
     // Does our AFS match the one computed by tskit?
     bool const equal = std::ranges::equal(
