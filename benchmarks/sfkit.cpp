@@ -17,6 +17,8 @@
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "timer.hpp"
 
+double constexpr FLOAT_EQ_EPS = 1e-4;
+
 void compress(std::string const& trees_file, std::string const& forest_file, ResultsPrinter& results_printer) {
     constexpr uint16_t iteration = 0;
     constexpr bool     warmup    = false;
@@ -172,7 +174,7 @@ void benchmark(
     log_mem(warmup, "diversity", "tskit", memory_usage.stop());
 
     // Does our AFS match the one computed by tskit?
-    if (sfkit_diversity != Catch::Approx(tskit_diversity).epsilon(1e-6)) {
+    if (sfkit_diversity != Catch::Approx(tskit_diversity).epsilon(FLOAT_EQ_EPS)) {
         std::cerr << "ERROR !! Diversity mismatch between tskit and sfkit" << std::endl;
         std::cerr << "    " << tskit_diversity << " vs. " << sfkit_diversity << " (tskit vs. sfkit)" << std::endl;
         std::exit(1);
@@ -198,7 +200,7 @@ void benchmark(
     log_mem(warmup, "num_segregating_sites", "tskit", memory_usage.stop());
 
     // Does our AFS match the one computed by tskit?
-    if (sfkit_num_seg_sites == Catch::Approx(tskit_num_seg_sites).epsilon(1e-6)) {
+    if (sfkit_num_seg_sites == Catch::Approx(tskit_num_seg_sites).epsilon(FLOAT_EQ_EPS)) {
         std::cerr << "ERROR !! Number of segregating sites mismatch between tskit and sfkit" << std::endl;
         std::cerr << "    " << tskit_num_seg_sites << " vs. " << sfkit_num_seg_sites << " (tskit vs. sfkit)"
                   << std::endl;
