@@ -38,3 +38,5 @@ register_test(test-diversity FILES test-diversity.cpp tskit-testlib/testlib.cpp 
 register_test(test-segregating-sites FILES test-segregating-sites.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
 register_test(test-tajimas-d FILES test-tajimas-d.cpp LIBRARIES tskit)
+
+register_test(test-num-samples-below FILES test-num-samples-below.cpp)

@@ -49,7 +49,7 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         CHECK(graph.num_nodes() == 3);
     }
 
-    SECTION("Graph with tree edges") {
+    SECTION("Graph with three edges") {
         graph.add_edge(0, 2);
         graph.add_edge(1, 2);
         graph.add_edge(2, 2);
