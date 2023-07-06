@@ -21,7 +21,8 @@ import pandas as pd
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, wait
 
-BENCHMARK_BIN = "build/release/benchmarks/benchmark"
+BENCHMARK_BIN = "build/release/benchmarks/sfkit"
+BENCHMARK_TSKITS_TAJIMAS_D_PY = "experiments/scripts/benchmark-tskits-tajimas-d.py"
 DEFAULT_ITERATIONS = 10
 DEFAULT_WARMUP_ITERATIONS = 1
 DATA_DIR = "data/"
@@ -70,6 +71,9 @@ class Dataset:
     def ops_bench_file(self):
         return fs.path.combine(MEASUREMENTS_DIR, self.basename() + ".ops_bench.csv")
 
+    def tajimasD_bench_file(self):
+        return fs.path.combine(MEASUREMENTS_DIR, self.basename() + ".tajimasD_bench.csv")
+
     def conversion_bench_file(self):
         return fs.path.combine(MEASUREMENTS_DIR, self.basename() + ".conversion_bench.csv")
 
@@ -108,9 +112,11 @@ class Datasets:
         return filterfalse(lambda ds: ds.collection == collection, self.datasets)
 
     # TODO Add existing flag
-    # TODO Add the other file types
     def trees_files(self):
         return [ds.trees_file() for ds in self._datasets]
+
+    def forest_files(self):
+        return [ds.forest_file() for ds in self._datasets]
 
     def ops_bench_files(self):
         return [ds.ops_bench_file() for ds in self._datasets]
@@ -176,7 +182,7 @@ class DatasetStatusTable:
         self._table.add_column("status")
 
     def append(self, dataset, status):
-        self._table.add_row(dataset.collection, dataset.chromosome, dataset.basename, status)
+        self._table.add_row(dataset.collection(), dataset.chromosome(), dataset.basename(), status)
 
     def __rich_console__(self, console, options):
         return self._table.__rich_console__(console, options)
@@ -188,14 +194,22 @@ class DatasetStatusTable:
 @click.option("--dry-run", is_flag=True, help="Print the commands without running them.", default=False)
 def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool):
 
+    # TODO Wrap the possible_dryrun() functionality
     sfkit_bench = lambda : None
+    tajimasD_bench = lambda : None
     if dry_run:
-        sfkit_bench = lambda *args, **kwargs : dry_run_cmd(BENCHMARK_BIN, *args, **kwargs)
+        sfkit_bench = lambda *args, **kwargs : dry_run_cmd(BENCHMARK_BIN, "benchmark", *args, **kwargs)
+        tajimasD_bench = lambda *args, **kwargs : dry_run_cmd(BENCHMARK_TSKITS_TAJIMASD_PY, *args, **kwargs)
     else:
         if os.path.isfile(BENCHMARK_BIN):
-            sfkit_bench = sh.Command(BENCHMARK_BIN)
+            sfkit_bench = sh.Command(BENCHMARK_BIN).benchmark
         else:
             error(f"{BENCHMARK_BIN} does not exist (did you compile?)")
+
+        if os.path.isfile(BENCHMARK_TSKITS_TAJIMAS_D_PY):
+            tajimasD_bench = sh.Command(BENCHMARK_TSKITS_TAJIMAS_D_PY)
+        else:
+            error(f"{BENCHMARK_TSKITS_TAJIMAS_D_PY} does not exist")
 
     datasets = Datasets.from_csv(DATASETS_CSV)
 
@@ -213,22 +227,37 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
         task = progress.add_task("Running benchmarks...", total=len(datasets.all()))
         for ds in datasets.all():#, description = "Running benchmarks..."):
             status = None
-            if not os.path.isfile(ds.forest_file()):
-                num_warnings += 1
-                status = f"[yellow]{ds.forest_file()} does not exists or is not a file"
-            elif not redo and os.path.exists(ds.ops_bench_file()):
-                num_warnings += 1
-                status = f"[yellow]{ds.ops_bench_file()} already exists"
+            # if not os.path.isfile(ds.trees_file()):
+            #     num_warnings += 1
+            #     status = f"[yellow]{ds.trees_file()} does not exists or is not a file"
+            # elif not os.path.isfile(ds.forest_file()):
+            #     num_warnings += 1
+            #     status = f"[yellow]{ds.forest_file()} does not exists or is not a file"
+            # elif not redo and os.path.exists(ds.ops_bench_file()):
+            #     num_warnings += 1
+            #     status = f"[yellow]{ds.ops_bench_file()} already exists"
+            # elif not redo and os.path.exists(ds.ops_bench_file()):
+            #     num_warnings += 1
+            #     status = f"[yellow]{ds.tajimasD_bench_file()} already exists"
+            if False:
+                pass
             else:
                 try:
-                    sfkit_bench(
-                            f"--warmup-iterations={warmup_iterations}",
-                            f"--forest-input={ds.forest_file()}",
-                            f"--trees-file={ds.trees_file()}",
+                    # sfkit_bench(
+                    #         f"--warmup-iterations={warmup_iterations}",
+                    #         f"--forest-input={ds.forest_file()}",
+                    #         f"--trees-file={ds.trees_file()}",
+                    #         iterations=iterations,
+                    #         revision=git_rev(),
+                    #         machine=machine_id(),
+                    #         _out=ds.ops_bench_file()
+                    # )
+                    tajimasD_bench(
+                            file=ds.trees_file(),
                             iterations=iterations,
                             revision=git_rev(),
                             machine=machine_id(),
-                            _out=ds.ops_bench_file()
+                            _out=ds.tajimasD_bench_file()
                     )
                     status = "[bold green]OK"
                 except sh.ErrorReturnCode as e:
@@ -243,7 +272,7 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
                     )
 
             assert status is not None
-            progress.log(f"\[[bold cyan]{ds.basename}[/bold cyan]] {status}")
+            progress.log(f"\[[bold cyan]{ds.basename()}[/bold cyan]] {status}")
             progress.advance(task)
 
     assert num_errors == len(error_msgs)
