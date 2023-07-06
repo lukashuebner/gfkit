@@ -7,7 +7,7 @@
 #include <optional>
 #include <tuple>
 
-#ifdef HAS_MALLOC_COUNT
+#ifdef ENABLE_MALLOC_COUNT
     #include <malloc_count.h>
 #endif
 #include <stack_count.h>
@@ -90,7 +90,7 @@ public:
     }
 
     void start() {
-#ifdef HAS_MALLOC_COUNT
+#ifdef ENABLE_MALLOC_COUNT
         asm("" ::: "memory"); // prevent compiler reordering
         _stack_count_base   = stack_count_clear();
         _malloc_count_start = malloc_count_current();
@@ -103,7 +103,7 @@ public:
         Report report;
 
         asm("" ::: "memory");
-#ifdef HAS_MALLOC_COUNT
+#ifdef ENABLE_MALLOC_COUNT
         report.stack_peak_byte   = stack_count_usage(_stack_count_base);
         report.heap_peak_byte    = malloc_count_peak();
         report.heap_delta_byte   = malloc_count_current() - _malloc_count_start;
@@ -168,7 +168,7 @@ private:
         return kib * 1024;
     }
 
-#ifdef HAS_MALLOC_COUNT
+#ifdef ENABLE_MALLOC_COUNT
     void*   _stack_count_base   = nullptr;
     int64_t _malloc_count_start = 0;
 #endif
@@ -239,7 +239,7 @@ public:
 
         _print("virtmem_delta", report.virtmem_delta_byte);
         _print("rss_delta", report.rss_delta_byte);
-#ifdef HAS_MALLOC_COUNT
+#ifdef ENABLE_MALLOC_COUNT
         _print("stack_peak", report.heap_current_byte);
         _print("heap_peak", report.heap_peak_byte);
         _print("heap_delta", report.heap_delta_byte);

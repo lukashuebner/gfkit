@@ -54,7 +54,9 @@ option(TDT_WARNINGS_ARE_ERRORS OFF)
 option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF) # They are also built if this is the main project.
 option(TDT_TESTS_DISCOVER OFF)
 option(TDT_TEST_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
-option(TDT_BENCHMARK_DEBUG "Enable backward-cpp, ASan, and UBSan for benchmarks" OFF)
+option(TDT_BENCHMARK_ENABLE_BACKWARD_CPP "Enable backward-cpp for the benchmarks" OFF)
+option(TDT_BENCHMARK_ENABLE_MALLOC_COUNT "Enable malloc_count for the benchmarks" OFF)
+option(TDT_BENCHMARK_ENABLE_SANITIZERS "Enable ASan and UBSan for the benchmarks" OFF)
 
 # Enable compilation with ccache. Defaults to ON if this is the main project.
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
