@@ -166,7 +166,7 @@ def ls():
     table.add_column("source")
 
     for ds in datasets.all():
-        table.add_row(ds.collection, ds.chromosome, ds.basename, ds.tsz_url)
+        table.add_row(ds.collection(), ds.chromosome(), ds.basename(), ds.tsz_url())
 
     Console().print(table)
 
@@ -227,31 +227,29 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
         task = progress.add_task("Running benchmarks...", total=len(datasets.all()))
         for ds in datasets.all():#, description = "Running benchmarks..."):
             status = None
-            # if not os.path.isfile(ds.trees_file()):
-            #     num_warnings += 1
-            #     status = f"[yellow]{ds.trees_file()} does not exists or is not a file"
-            # elif not os.path.isfile(ds.forest_file()):
-            #     num_warnings += 1
-            #     status = f"[yellow]{ds.forest_file()} does not exists or is not a file"
-            # elif not redo and os.path.exists(ds.ops_bench_file()):
-            #     num_warnings += 1
-            #     status = f"[yellow]{ds.ops_bench_file()} already exists"
-            # elif not redo and os.path.exists(ds.ops_bench_file()):
-            #     num_warnings += 1
-            #     status = f"[yellow]{ds.tajimasD_bench_file()} already exists"
-            if False:
-                pass
+            if not os.path.isfile(ds.trees_file()):
+                num_warnings += 1
+                status = f"[yellow]{ds.trees_file()} does not exists or is not a file"
+            elif not os.path.isfile(ds.forest_file()):
+                num_warnings += 1
+                status = f"[yellow]{ds.forest_file()} does not exists or is not a file"
+            elif not redo and os.path.exists(ds.ops_bench_file()):
+                num_warnings += 1
+                status = f"[yellow]{ds.ops_bench_file()} already exists"
+            elif not redo and os.path.exists(ds.ops_bench_file()):
+                num_warnings += 1
+                status = f"[yellow]{ds.tajimasD_bench_file()} already exists"
             else:
                 try:
-                    # sfkit_bench(
-                    #         f"--warmup-iterations={warmup_iterations}",
-                    #         f"--forest-input={ds.forest_file()}",
-                    #         f"--trees-file={ds.trees_file()}",
-                    #         iterations=iterations,
-                    #         revision=git_rev(),
-                    #         machine=machine_id(),
-                    #         _out=ds.ops_bench_file()
-                    # )
+                    sfkit_bench(
+                            f"--warmup-iterations={warmup_iterations}",
+                            f"--forest-input={ds.forest_file()}",
+                            f"--trees-file={ds.trees_file()}",
+                            iterations=iterations,
+                            revision=git_rev(),
+                            machine=machine_id(),
+                            _out=ds.ops_bench_file()
+                    )
                     tajimasD_bench(
                             file=ds.trees_file(),
                             iterations=iterations,
