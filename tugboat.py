@@ -243,7 +243,7 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int, dry_run: bool
                 try:
                     sfkit_bench(
                             f"--warmup-iterations={warmup_iterations}",
-                            f"--forest-input={ds.forest_file()}",
+                            f"--forest-file={ds.forest_file()}",
                             f"--trees-file={ds.trees_file()}",
                             iterations=iterations,
                             revision=git_rev(),
