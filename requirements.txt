@@ -1,5 +1,5 @@
 tskit==0.5.4
 tszip==0.2.2
 sh==2.0.4
-fs=2.4.16
-returns=0.21.0
+fs==2.4.16
+returns==0.21.0
