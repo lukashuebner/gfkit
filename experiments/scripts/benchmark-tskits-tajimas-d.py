@@ -13,13 +13,13 @@ argparser = argparse.ArgumentParser(
                     description='Benchmarks tskits Tajima\'s D (which is Python only)')
 
 argparser.add_argument('-n', '--iterations', type=int, help='The number of times to run each benchmark', default=1)
-argparser.add_argument('-f', '--file', type=str, help='The tree sequence file to benchmark on. If not specified.', required=True)
+argparser.add_argument('-f', '--trees-file', type=str, help='The tree sequence file to benchmark on. If not specified.', required=True)
 argparser.add_argument('-r', '--revision', type=str, help='Revision of the benchmarked program (unique id, e.g. git commit hash)', default='undefined')
 argparser.add_argument('-m', '--machine', type=str, help='Identifier of this computer (e.g. hostname)', default='undefined')
 
 args = argparser.parse_args()
 num_iterations = args.iterations
-ts_file = args.file
+ts_file = args.trees_file
 revision = args.revision
 machine_id = args.machine
 
