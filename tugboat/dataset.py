@@ -97,6 +97,9 @@ class Datasets:
     def conversion_bench_files(self):
         return [ds.conversion_bench_file() for ds in self._datasets]
 
+    def tajimasD_bench_files(self):
+        return [ds.tajimasD_bench_file() for ds in self._datasets]
+
     def tsz_files(self):
         return [ds.tsz_file() for ds in self._datasets]
 
