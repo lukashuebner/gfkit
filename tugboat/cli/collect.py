@@ -12,11 +12,12 @@ def cmd_collect():
         log = deps.log
         config = deps.config
 
-        ops_bench_files = [ds.ops_bench_file() for ds in datasets.all()]
-        conversion_bench_files = [ds.conversion_bench_file() for ds in datasets.all()]
+        ops_bench_files = datasets.ops_bench_files()
+        conversion_bench_files = datasets.conversion_bench_files()
+        tajimasD_bench_files = datasets.tajimasD_bench_files()
 
         files: List[str] = []
-        for file in chain(ops_bench_files, conversion_bench_files):
+        for file in chain(ops_bench_files, conversion_bench_files, tajimasD_bench_files):
             if isfile(file):
                 if getsize(file) == 0:
                     log.warn(f"{file} is empty")
