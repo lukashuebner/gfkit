@@ -30,7 +30,7 @@ function (register_test TARGET_NAME)
     target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG)
     target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG_PEDANTIC)
 
-    if (TDT_TEST_ENABLE_SANITIZERS)
+    if (TDT_TESTS_ENABLE_SANITIZERS)
         add_address_sanitizer(${TARGET_NAME})
         add_undefined_sanitizer(${TARGET_NAME})
     endif ()

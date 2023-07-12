@@ -9,8 +9,8 @@
 
 #ifdef ENABLE_MALLOC_COUNT
     #include <malloc_count.h>
+    #include <stack_count.h>
 #endif
-#include <stack_count.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 
@@ -145,8 +145,8 @@ private:
                         rss_kib = std::stoul(value);
                     }
                 } catch (std::exception& e) {
-                    std::cerr << "WARNING ! Failed to parse VmSize or VmRSS from /proc/self/status (" << key << ": " << value
-                              << ")." << std::endl;
+                    std::cerr << "WARNING ! Failed to parse VmSize or VmRSS from /proc/self/status (" << key << ": "
+                              << value << ")." << std::endl;
                 }
             }
         } else {

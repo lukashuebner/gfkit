@@ -12,7 +12,7 @@ if (TDT_BENCHMARK_ENABLE_MALLOC_COUNT)
     target_compile_definitions(sfkit PRIVATE "ENABLE_MALLOC_COUNT")
 endif ()
 
-set(MALLOC_COUNT_LIBS "$<$<NOT:$<BOOL:${TDT_BENCHMARK_ENABLE_MALLOC_COUNT}>>:malloc_count;dl>")
+set(MALLOC_COUNT_LIBS "$<$<BOOL:${TDT_BENCHMARK_ENABLE_MALLOC_COUNT}>:malloc_count;dl>")
 target_link_libraries(sfkit PRIVATE tdt CLI11 Catch2::Catch2 "${MALLOC_COUNT_LIBS}")
 
 if (TDT_BENCHMARK_ENABLE_SANITIZERS)

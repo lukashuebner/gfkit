@@ -53,7 +53,7 @@ endif ()
 option(TDT_WARNINGS_ARE_ERRORS OFF)
 option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF) # They are also built if this is the main project.
 option(TDT_TESTS_DISCOVER OFF)
-option(TDT_TEST_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
+option(TDT_TESTS_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
 option(TDT_BENCHMARK_ENABLE_BACKWARD_CPP "Enable backward-cpp for the benchmarks" OFF)
 option(TDT_BENCHMARK_ENABLE_MALLOC_COUNT "Enable malloc_count for the benchmarks" OFF)
 option(TDT_BENCHMARK_ENABLE_SANITIZERS "Enable ASan and UBSan for the benchmarks" OFF)
@@ -215,8 +215,7 @@ add_subdirectory("extern/Catch2")
 # Add backward-cpp for pretty stack traces
 add_subdirectory("extern/backward-cpp")
 
-# Add fmt for std::format for older libstdc++
-# TODO Remove this at least for the Release mode
+# Add fmt for std::format for older libstdc++ TODO Remove this at least for the Release mode
 add_subdirectory("extern/fmt")
 target_link_libraries(tdt_base INTERFACE fmt)
 
@@ -224,7 +223,9 @@ target_link_libraries(tdt_base INTERFACE fmt)
 add_subdirectory("extern/CLI11")
 
 # malloc_count for analyzing memory usage
-add_subdirectory("extern/malloc_count")
+if (TDT_BENCHMARK_ENABLE_MALLOC_COUNT)
+    add_subdirectory("extern/malloc_count")
+endif ()
 
 # Tests, benchamrks, and examples are only built if this is the main project or if
 # TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS is set (OFF by default)
