@@ -34,4 +34,4 @@ for iteration in range(0, num_iterations):
     end = perf_counter()
 
     walltime = s_to_ns(end - start)
-    print(f'tajimas_d,tskit,{dataset},{revision},{machine_id},{iteration},{walltime},ns')
+    print(f'tajimas_d,tskit,{dataset},{revision},{machine_id},{iteration},walltime,{walltime},ns')

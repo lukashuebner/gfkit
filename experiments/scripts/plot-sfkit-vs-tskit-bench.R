@@ -208,7 +208,7 @@ runtime_data %>%
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.key.size = style$legend.key.size,
     ) +
-    ylab("speedup over tskit") +
+    ylab("runtime [ms]") +
     scale_y_continuous() +
     scale_x_discrete( labels = pretty_print_datasets) +
     # scale_color_shape_manual(
@@ -217,6 +217,6 @@ runtime_data %>%
     # ) +
     gg_eps()
 
-style$height <- 400
-style$width <- 600
+style$height <- 150
+style$width <- 225
 ggsave(args$output, width = style$width, height = style$height, units = style$unit)
