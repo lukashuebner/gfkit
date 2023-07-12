@@ -4,3 +4,4 @@ sgdp_chr*.trees
 anderson_chr*.trees
 unified_chr*.trees
 *.forest
+.nobackup
