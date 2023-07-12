@@ -298,9 +298,9 @@ int main(int argc, char** argv) {
 
     benchmark_sub->callback(
         [&trees_file, &forest_file, &num_iterations, &num_warmup_iterations, &setup_results_printer]() {
-            for (uint8_t _iteration = 0; _iteration < num_iterations + num_warmup_iterations; ++_iteration) {
-                auto results_printer = setup_results_printer();
+            auto results_printer = setup_results_printer();
 
+            for (uint8_t _iteration = 0; _iteration < num_iterations + num_warmup_iterations; ++_iteration) {
                 bool const    warmup    = _iteration < num_warmup_iterations;
                 uint8_t const iteration = warmup ? _iteration : _iteration - num_warmup_iterations;
 
