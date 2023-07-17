@@ -49,15 +49,12 @@ void tsk_treeseq_from_text(
     char const*    provenance,
     tsk_flags_t    tc_options
 );
-tsk_treeseq_t* caterpillar_tree(tsk_size_t num_samples, tsk_size_t num_sites, tsk_size_t num_mutations);
 
 void parse_nodes(char const* text, tsk_node_table_t* node_table);
 void parse_edges(char const* text, tsk_edge_table_t* edge_table);
 void parse_sites(char const* text, tsk_site_table_t* site_table);
 void parse_mutations(char const* text, tsk_mutation_table_t* mutation_table);
 void parse_individuals(char const* text, tsk_individual_table_t* individual_table);
-
-void unsort_edges(tsk_edge_table_t* edges, size_t start);
 
 extern char const* single_tree_ex_nodes;
 extern char const* single_tree_ex_edges;
