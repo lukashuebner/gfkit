@@ -114,4 +114,9 @@ extern char const* multi_derived_states_sites;
 extern char const* multi_derived_states_mutations;
 extern char const* multi_derived_states_individuals;
 
+extern char const* single_tree_multi_derived_states_nodes;
+extern char const* single_tree_multi_derived_states_edges;
+extern char const* single_tree_multi_derived_states_sites;
+extern char const* single_tree_multi_derived_states_mutations;
+
 #endif

@@ -139,19 +139,12 @@ char const* multi_tree_back_recurrent_sites = "1      0\n"
                                               "8.5    0\n";
 
 /* site, node, derived_state, [parent, time] */
-// char const* multi_tree_back_recurrent_mutations = "0    6   1  -1\n"  // to derived state
-//                                                   "0    5   0   0\n"  // back to ancestral state
-//                                                   "0    3   1   1\n"  // and once more to the derived state
-//                                                   "1    5   1  -1\n"  // to derived state
-//                                                   "1    4   0   3\n"  // back to ancestral state
-//                                                   "2    4   1  -1\n"; // to derived state
-
-char const* multi_tree_back_recurrent_mutations = "0    6   1\n"  // to derived state
-                                                  "0    5   0\n"  // back to ancestral state
-                                                  "0    3   1\n"  // and once more to the derived state
-                                                  "1    5   1\n"  // to derived state
-                                                  "1    4   0\n"  // back to ancestral state
-                                                  "2    4   1\n"; // to derived state
+char const* multi_tree_back_recurrent_mutations = "0    6   1  -1\n"  // to derived state
+                                                  "0    5   0   0\n"  // back to ancestral state
+                                                  "0    3   1   1\n"  // and once more to the derived state
+                                                  "1    5   1  -1\n"  // to derived state
+                                                  "1    4   0   3\n"  // back to ancestral state
+                                                  "2    4   1  -1\n"; // to derived state
 
 /* Two (diploid) individuals */
 char const* multi_tree_back_recurrent_individuals = "0      0.2,1.5    -1,-1\n"
@@ -197,23 +190,44 @@ char const* multi_derived_states_sites = "1      0\n"
                                          "8.5    0\n";
 
 /* site, node, derived_state, [parent, time] */
-// char const* multi_tree_back_recurrent_mutations = "0    6   1  -1\n"  // to derived state
-//                                                   "0    5   0   0\n"  // back to ancestral state
-//                                                   "0    3   1   1\n"  // and once more to the derived state
-//                                                   "1    5   1  -1\n"  // to derived state
-//                                                   "1    4   0   3\n"  // back to ancestral state
-//                                                   "2    4   1  -1\n"; // to derived state
-
-char const* multi_derived_states_mutations = "0    6   1\n"  // to derived state
-                                             "0    5   0\n"  // back to ancestral state
-                                             "0    3   2\n"  // and once more to the derived state
-                                             "1    5   3\n"  // to derived state
-                                             "1    4   0\n"  // back to ancestral state
-                                             "2    4   1\n"; // to derived state
+char const* multi_derived_states_mutations = "0    6   1  -1\n"  // to derived state
+                                             "0    5   0   0\n"  // back to ancestral state
+                                             "0    3   2   1\n"  // and once more to the derived state
+                                             "1    5   3  -1\n"  // to derived state
+                                             "1    4   0   3\n"  // back to ancestral state
+                                             "2    4   1  -1\n"; // to derived state
 
 /* Two (diploid) individuals */
 char const* multi_derived_states_individuals = "0      0.2,1.5    -1,-1\n"
                                                "0      0.0,0.0    -1,-1\n";
+
+// Simple example with multiple derived states
+/* Simple single tree example. */
+char const* single_tree_multi_derived_states_nodes = 
+                                   /*          6          */
+    "1  0   -1   -1\n"             /*         / \         */
+    "1  0   -1   -1\n"             /*        /   \        */
+    "1  0   -1   -1\n"             /*       /     \       */
+    "1  0   -1   -1\n"             /*      /       5      */
+    "0  1   -1   -1\n"             /*     4       / \     */
+    "0  2   -1   -1\n"             /*    / \     /   \    */
+    "0  3   -1   -1\n";            /*   0   1   2     3   */
+    
+char const* single_tree_multi_derived_states_edges =
+    "0  1   4   0,1\n"
+    "0  1   5   2,3\n"
+    "0  1   6   4,5\n";
+
+char const* single_tree_multi_derived_states_sites = "0.5    0\n";
+
+/* site, node, derived_state, [parent, time] */
+char const* single_tree_multi_derived_states_mutations =
+    "0    1     1   -1\n"  // To derived state 1
+    "0    5     2   -1\n"; // To derived state 2
+// node 0: ancestral state 0
+// node 1: derived state 1
+// node 2: derived state 2
+// node 3: derived state 2
 
 /*** An example of a nonbinary tree sequence ***/
 /*
@@ -921,6 +935,8 @@ void tsk_treeseq_from_text(
         }
     }
 
+    ret = tsk_table_collection_sort(&tables, 0, 0);
+    KASSERT(ret == 0);
     ret = tsk_table_collection_build_index(&tables, 0);
     KASSERT(ret == 0);
     if (mutations != NULL) {
