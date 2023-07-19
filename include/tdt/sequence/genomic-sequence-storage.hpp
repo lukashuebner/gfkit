@@ -68,16 +68,12 @@ public:
 
     void push_back(Mutation const& mutation) {
         _mutations.push_back(mutation);
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_LIGHT)
-        _mutation_indicies_valid = false;
-#endif
+        _mutation_indices_valid = false;
     }
 
     void emplace_back(Mutation&& mutation) {
         _mutations.emplace_back(std::move(mutation));
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_LIGHT)
-        _mutation_indicies_valid = false;
-#endif
+        _mutation_indices_valid = false;
     }
 
     template <class... Args>
@@ -113,10 +109,11 @@ public:
         );
         // Add sentinel
         _mutation_indices.push_back(mutation_idx);
+        _mutation_indices_valid = true;
+    }
 
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_LIGHT)
-        _mutation_indicies_valid = true;
-#endif
+    [[nodiscard]] bool mutation_indices_are_built() const {
+        return _mutation_indices_valid;
     }
 
     [[nodiscard]] bool mutations_are_sorted_by_site() const {
@@ -133,7 +130,7 @@ public:
     }
 
     [[nodiscard]] MutationView mutations_at_site(SiteId const site_id) const {
-        KASSERT(_mutation_indicies_valid, "Mutations indices need to be rebuild first.", tdt::assert::light);
+        KASSERT(_mutation_indices_valid, "Mutations indices need to be rebuild first.", tdt::assert::light);
         KASSERT(site_id < _mutation_indices.size() + 1, "Site ID is out of bounds", tdt::assert::light);
         KASSERT(
             _mutations.size() == _mutation_indices.back(),
@@ -146,16 +143,15 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
-        // archive(_sites, _mutation_indices, _mutation_indicies_valid, _mutations, num_sites());
         build_mutation_indices();
-        archive(_sites, _mutation_indices, _mutations, num_sites());
+        archive(_sites, _mutation_indices, _mutation_indices_valid, _mutations);
     }
 
 private:
     std::vector<AllelicState> _sites;
     std::vector<size_t>       _mutation_indices; // Maps SiteId to MutationId
     std::vector<Mutation>     _mutations;
-    bool                      _mutation_indicies_valid = false;
+    bool                      _mutation_indices_valid = false;
 };
 
 inline std::ostream& operator<<(std::ostream& os, MutationView const& mutations) {

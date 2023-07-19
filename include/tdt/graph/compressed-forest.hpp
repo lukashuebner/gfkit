@@ -28,12 +28,16 @@ public:
         return _dag_postorder_edges;
     }
 
-    NodeId num_nodes() const {
+    [[nodiscard]] NodeId num_nodes() const {
         return _dag_postorder_edges.num_nodes();
     }
 
-    void num_nodes(NodeId const num_nodes) {
-        _dag_postorder_edges.num_nodes(num_nodes);
+    [[nodiscard]] bool nodes_are_computed() const {
+        return _dag_postorder_edges.nodes_are_computed();
+    }
+
+    void compute_nodes() const {
+        _dag_postorder_edges.compute_nodes();
     }
 
     NumSamplesBelow compute_num_samples_below(SampleSet const& sample_set) const {
@@ -94,6 +98,7 @@ public:
 
     template <class Archive>
     void serialize(Archive& ar) {
+        // The number of nodes in the DAG are computed during serialization of the EdgeListGraph object.
         ar(_dag_postorder_edges, _subtree_sizes);
     }
 

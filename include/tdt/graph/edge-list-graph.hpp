@@ -7,6 +7,12 @@
 #include <unordered_set>
 #include <vector>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#include <tsl/hopscotch_map.h>
+#pragma GCC diagnostic pop
+
 #include <kassert/kassert.hpp>
 
 #include "common.hpp"
@@ -18,8 +24,9 @@ using EdgeList = std::vector<Edge>;
 // TODO write unit tests
 class EdgeListGraph {
 public:
-    using iterator       = EdgeList::iterator;
-    using const_iterator = EdgeList::const_iterator;
+    using iterator         = EdgeList::iterator;
+    using const_iterator   = EdgeList::const_iterator;
+    using NodeOutdegreeMap = tsl::hopscotch_map<NodeId, NodeId>;
 
     EdgeListGraph() {}
 
@@ -27,53 +34,22 @@ public:
 
     void add_edge(NodeId from, NodeId to) {
         _edges.emplace_back(Edge(from, to));
-        _num_nodes.reset();
+        // TODO Think about incremental updates of the nodes array or a separate build phase for the graph.
+        _nodes_are_valid = false;
     }
 
     void add_root(NodeId root) {
         _roots.push_back(root);
-        _num_nodes.reset();
+        _nodes_are_valid = false;
     }
 
     void add_leaf(NodeId leaf) {
         _leaves.push_back(leaf);
-        _num_nodes.reset();
+        _nodes_are_valid = false;
     }
 
     EdgeId num_edges() const {
         return asserting_cast<EdgeId>(_edges.size());
-    }
-
-    // TODO Cache the result of this computation.
-    // TODO Write unit tests
-    // Return the vertices in the graph as well as their outdegree.
-    std::unordered_map<NodeId, NodeId> nodes() const {
-        std::unordered_map<NodeId, NodeId> nodes;
-
-        auto insert_or_increment = [&nodes](NodeId const vertex, bool increment = true) {
-            auto&& it = nodes.find(vertex);
-            if (it == nodes.end()) {
-                nodes.insert({vertex, increment});
-            } else if (increment) {
-                it++;
-            }
-        };
-
-        for (auto const& edge: _edges) {
-            insert_or_increment(edge.from(), true);
-            insert_or_increment(edge.to(), false);
-        }
-
-        for (auto const& root: _roots) {
-            insert_or_increment(root, false);
-        }
-
-        for (auto const& leaf: _leaves) {
-            insert_or_increment(leaf, false);
-        }
-
-        _num_nodes.emplace(nodes.size());
-        return nodes;
     }
 
     iterator begin() noexcept {
@@ -161,20 +137,51 @@ public:
         ToVertex,
     };
 
-    void num_nodes(NodeId num_nodes) {
-        _num_nodes = num_nodes;
+    void compute_nodes() const {
+        _nodes.clear();
+
+        auto insert_or_increment = [this](NodeId const vertex, bool increment = true) {
+            auto&& it = _nodes.find(vertex);
+            if (it == _nodes.end()) {
+                _nodes.insert({vertex, increment});
+            } else if (increment) {
+                it++;
+            }
+        };
+
+        for (auto const& edge: _edges) {
+            insert_or_increment(edge.from(), true);
+            insert_or_increment(edge.to(), false);
+        }
+
+        for (auto const& root: _roots) {
+            insert_or_increment(root, false);
+        }
+
+        for (auto const& leaf: _leaves) {
+            insert_or_increment(leaf, false);
+        }
+
+        _nodes_are_valid = true;
+    }
+
+    // TODO Write unit tests
+    // Return the vertices in the graph as well as their outdegree.
+    NodeOutdegreeMap nodes() const {
+        KASSERT(_nodes_are_valid, "The nodes are not computed yet", tdt::assert::light);
+        return _nodes;
     }
 
     // TODO introduce finalize step which computes this
     NodeId num_nodes() const {
-        if (_num_nodes.has_value()) {
-            // The value is cached -> O(1)
-            return _num_nodes.value();
-        } else {
-            // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
-            nodes();
-            return _num_nodes.value();
-        }
+        // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
+        KASSERT(_nodes_are_valid, "The nodes are not computed yet", tdt::assert::light);
+        return asserting_cast<NodeId>(_nodes.size());
+    }
+
+    // TODO The nodes might not be up to date. The proper way to solve this is to introduce a dirty flag.
+    [[nodiscard]] bool nodes_are_computed() const {
+        return !_nodes.empty();
     }
 
     bool check_postorder() const {
@@ -257,8 +264,16 @@ public:
     }
 
     template <class Archive>
-    void serialize(Archive& ar) {
-        ar(_edges, _roots, _leaves, _traversal_order);
+    void save(Archive& archive) const {
+        // Serialization of tsl::hopscotch_map is not trivial, thus we do not add it to the archive and recompute the
+        // nodes when loading instead.
+        archive(_edges, _roots, _leaves, _traversal_order);
+    }
+
+    template <class Archive>
+    void load(Archive& archive) {
+        archive(_edges, _roots, _leaves, _traversal_order);
+        compute_nodes();
     }
 
 private:
@@ -274,10 +289,14 @@ private:
         KASSERT(set.size() == nodes.size());
         return true;
     }
-    mutable std::optional<NodeId> _num_nodes = std::nullopt; // This get's updated when nodes() is called.
-    // TODO Cache the list of nodes?
-    EdgeList            _edges;
-    std::vector<NodeId> _roots;
-    std::vector<NodeId> _leaves;
-    TraversalOrder      _traversal_order = TraversalOrder::Unordered;
+
+    // TODO Should we? Would this provide a speedup?
+    // We're not assuming that node ids are consecutive
+    // TODO remove this mutable
+    mutable NodeOutdegreeMap _nodes;
+    mutable bool             _nodes_are_valid = true;
+    EdgeList                 _edges;
+    std::vector<NodeId>      _roots;
+    std::vector<NodeId>      _leaves;
+    TraversalOrder           _traversal_order = TraversalOrder::Unordered;
 };

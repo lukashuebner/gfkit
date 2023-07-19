@@ -14,12 +14,12 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
 
     SECTION("Empty graph") {
         CHECK(graph.num_edges() == 0);
-        CHECK(graph.num_nodes() == 0);
         CHECK(graph.begin() == graph.end());
     }
 
     SECTION("Graph with a single edge") {
         graph.add_edge(0, 1);
+        graph.compute_nodes();
         CHECK(graph.num_nodes() == 2);
         CHECK(graph.num_edges() == 1);
         CHECK(graph.begin() != graph.end());
@@ -34,18 +34,13 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
     SECTION("Set the number of nodes to a wrong value") {
         // If we add a single edge, the number of nodes should be autocomputed in O(|edges|) time.
         graph.add_edge(0, 1);
+        graph.compute_nodes();
         CHECK(graph.num_nodes() == 2);
         CHECK(graph.num_edges() == 1);
 
-        // Now, add more edges and set the number of nodes to a wrong value (so we can check the value is not
-        // autocomputed).
-        graph.add_edge(1, 0);
-        graph.num_nodes(1);
-        CHECK(graph.num_nodes() == 1);
-        CHECK(graph.num_edges() == 2);
-
         // Invalidate the num_nodes cache and check that the value is recomputed.
         graph.add_edge(0, 2);
+        graph.compute_nodes();
         CHECK(graph.num_nodes() == 3);
     }
 
@@ -53,6 +48,7 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         graph.add_edge(0, 2);
         graph.add_edge(1, 2);
         graph.add_edge(2, 2);
+        graph.compute_nodes();
         CHECK(graph.num_edges() == 3);
         // TODO
         // EXPECT_THAT(graph, (ElementsAre(Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 2))));
@@ -63,6 +59,7 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         // work.
         graph.add_edge(0, 1);
         graph.add_edge(0, 1);
+        graph.compute_nodes();
         CHECK(graph.num_edges() == 2);
         // TODO
         // EXPECT_THAT(graph, (ElementsAre(Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 2), Edge(0, 1), Edge(0, 1))));
