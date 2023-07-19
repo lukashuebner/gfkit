@@ -127,9 +127,9 @@ public:
                 if (derived_state == InvalidAllelicState) {
                     derived_state = this_mutations_state;
                 } else {
-                    std::cout << "derived_state: " << derived_state << std::endl;
-                    std::cout << "this_mutations_state: " << this_mutations_state << std::endl;
-                    std::cout << "ancestral_state: " << ancestral_state << std::endl;
+                    // std::cout << "derived_state: " << derived_state << std::endl;
+                    // std::cout << "this_mutations_state: " << this_mutations_state << std::endl;
+                    // std::cout << "ancestral_state: " << ancestral_state << std::endl;
                     KASSERT(
                         (derived_state == this_mutations_state || derived_state == ancestral_state),
                         "Site is multiallelic. Allele frequency iterator only supports biallelic sites.",

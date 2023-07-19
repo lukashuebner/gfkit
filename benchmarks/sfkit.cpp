@@ -17,7 +17,7 @@
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "timer.hpp"
 
-double constexpr FLOAT_EQ_EPS = 1e-4;
+constexpr double FLOAT_EQ_EPS = 1e-4;
 
 void compress(std::string const& trees_file, std::string const& forest_file, ResultsPrinter& results_printer) {
     constexpr uint16_t iteration = 0;
@@ -115,8 +115,8 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    EdgeListGraph const& dag = forest.postorder_edges();
-    auto num_samples_below = forest.compute_num_samples_below(forest.all_samples());
+    EdgeListGraph const& dag               = forest.postorder_edges();
+    auto                 num_samples_below = forest.compute_num_samples_below(forest.all_samples());
     do_not_optimize(num_samples_below);
 
     log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
@@ -155,9 +155,9 @@ void benchmark(
     // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
     // (Check this!)
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
-    SampleSet sample_set_1(forest.num_nodes());
-    SampleSet sample_set_2(forest.num_nodes());
-    bool flip = false;
+    SampleSet      sample_set_1(sequence_forest.forest().num_nodes());
+    SampleSet      sample_set_2(sequence_forest.forest().num_nodes());
+    bool           flip = false;
     for (SampleId sample: forest.leaves()) {
         if (flip) {
             sample_set_1.add(sample);
@@ -168,7 +168,7 @@ void benchmark(
     }
     memory_usage.start();
     timer.start();
-    
+
     double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
     do_not_optimize(sfkit_divergence);
 

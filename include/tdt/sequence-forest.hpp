@@ -136,6 +136,7 @@ public:
         return _forest;
     }
 
+    // TODO We should not store this!!
     [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
         return _tree_sequence;
     }

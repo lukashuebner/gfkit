@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
@@ -20,6 +21,7 @@
 #include "tdt/tskit.hpp"
 
 using namespace ::Catch::Matchers;
+using Catch::Approx;
 
 std::string const ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.forest";
 
@@ -120,4 +122,96 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
         std::span(afs).subspan(1, afs.num_samples() - 1),
         RangeEquals(std::span(reference_afs).subspan(1, afs.num_samples() - 1))
     );
+}
+
+void convert(std::string const& trees_file, std::string const& forest_file) {
+    TSKitTreeSequence      tree_sequence(trees_file);
+    ForestCompressor       forest_compressor(tree_sequence);
+    GenomicSequenceFactory sequence_store_factory(tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_store_factory);
+    GenomicSequence        sequence = sequence_store_factory.move_storage();
+
+    CompressedForestIO::save(forest_file, forest, sequence);
+}
+
+TEST_CASE("Statistics on .forest files", "[Serialization]") {
+    struct Dataset {
+        std::string forest_file;
+        std::string trees_file;
+    };
+
+    // TODO Re-enable the other datasets once sfkit is able to handle multiallelic sites.
+    // TODO Rename these sample datasets
+    // TODO Generate more sample datasets
+    std::vector<Dataset> const datasets = {
+        {"data/allele-frequency-spectrum-simple-example-0.forest",
+         "data/allele-frequency-spectrum-simple-example-0.trees"},
+        {"data/allele-frequency-spectrum-simple-example-1.forest",
+         "data/allele-frequency-spectrum-simple-example-1.trees"},
+        // {"data/allele-frequency-spectrum-simple-example-2.forest",
+        //  "data/allele-frequency-spectrum-simple-example-2.trees"},
+        // {"data/allele-frequency-spectrum-simple-example-3.forest",
+        //  "data/allele-frequency-spectrum-simple-example-3.trees"},
+        // {"data/allele-frequency-spectrum-simple-example-4.forest",
+        //  "data/allele-frequency-spectrum-simple-example-4.trees"},
+        // {"data/allele-frequency-spectrum-simple-example-6.forest",
+        //  "data/allele-frequency-spectrum-simple-example-6.trees"},
+    };
+
+    auto const& dataset     = GENERATE_REF(from_range(datasets));
+    auto const& forest_file = dataset.forest_file;
+    auto const& trees_file  = dataset.trees_file;
+
+    convert(trees_file, forest_file);
+
+    CompressedForest  forest;
+    GenomicSequence   sequence;
+    TSKitTreeSequence tree_sequence(trees_file);
+    CompressedForestIO::load(forest_file, forest, sequence);
+    CHECK(forest.num_nodes() == tree_sequence.num_nodes());
+    CHECK(forest.num_nodes() > 0);
+    CHECK(forest.num_nodes_is_set());
+
+    // --- AFS ---
+    auto reference_afs = tree_sequence.allele_frequency_spectrum();
+
+    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence, forest);
+
+    CHECK(afs.num_samples() == forest.postorder_edges().num_leaves());
+    CHECK(afs.num_sites() == sequence.num_sites());
+
+    // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
+    CHECK_THAT(
+        std::span(afs).subspan(1, afs.num_samples() - 1),
+        RangeEquals(std::span(reference_afs).subspan(1, afs.num_samples() - 1))
+    );
+
+    // --- Divergence ---
+    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+
+    SampleSet sample_set_1(sequence_forest.forest().num_nodes());
+    SampleSet sample_set_2(sequence_forest.forest().num_nodes());
+    bool      flip = false;
+    for (SampleId sample: forest.leaves()) {
+        if (flip) {
+            sample_set_1.add(sample);
+        } else {
+            sample_set_2.add(sample);
+        }
+        flip = !flip;
+    }
+
+    double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
+    double const tskit_divergence = sequence_forest.tree_sequence().divergence(sample_set_1, sample_set_2);
+    CHECK(sfkit_divergence == Approx(tskit_divergence).epsilon(1e-4));
+
+    // --- Diversity ---
+    double const sfkit_diversity = sequence_forest.diversity();
+    double const tskit_diversity = sequence_forest.tree_sequence().diversity();
+    CHECK(sfkit_diversity == Approx(tskit_diversity).epsilon(1e-4));
+
+    // Benchmark computing the number of segregating sites
+    uint64_t const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();
+    double const   tskit_num_seg_sites = sequence_forest.tree_sequence().num_segregating_sites();
+    CHECK(sfkit_num_seg_sites == Approx(tskit_num_seg_sites).epsilon(1e-4));
 }

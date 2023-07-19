@@ -27,7 +27,11 @@
 // TODO Separate this class into the construction and the storage
 class ForestCompressor {
 public:
-    ForestCompressor(TSKitTreeSequence& tree_sequence) : _tree_sequence(tree_sequence) {}
+    ForestCompressor(TSKitTreeSequence& tree_sequence) : _tree_sequence(tree_sequence) {
+        if (!tree_sequence.sample_ids_are_consecutive()) {
+            throw std::runtime_error("Sample IDs of the tree sequence are not consecutive.");
+        }
+    }
 
     // TODO Decide on vertex vs node and use it consistently
     CompressedForest compress(GenomicSequenceFactory& genomic_sequence_storage_factory) {
@@ -45,10 +49,41 @@ public:
         TsNode2SfSubtreeMapper ts_node2sf_subtree;
         // TODO reserve space?
 
-        bool first_tree = true;
+        // The sample ids are consecutive: 0 ... num_samples - 1
+        // Add them to the compressed forest first, so they have the same IDs there.
+        KASSERT(_tree_sequence.sample_ids_are_consecutive(), "Sample IDs are not consecutive.");
+        for (SampleId sample_id = 0; sample_id < _tree_sequence.num_samples(); sample_id++) {
+            KASSERT(_tree_sequence.is_sample(asserting_cast<tsk_id_t>(sample_id)));
+
+            // Compute the subtree id of this leaf node by hashing its label.
+            auto dag_subtree_id = succinct_subtree_id_factory.compute(sample_id);
+
+            // Cache the subtree id for this ts node
+            KASSERT(asserting_cast<size_t>(sample_id) < ts_node_to_dag_subtree_id_map.size());
+            ts_node_to_dag_subtree_id_map[asserting_cast<size_t>(sample_id)] = dag_subtree_id;
+
+            // Map the DAG subtree ID to the corresponding node ID in the DAG. The first tree should insert all
+            // the samples as the samples in all trees are identical.
+            KASSERT(
+                !_dag_subtree_to_node_map.contains(dag_subtree_id),
+                "A leaf is present twice in the first tree.",
+                tdt::assert::normal
+            );
+            NodeId dag_node_id = _dag_subtree_to_node_map.insert(dag_subtree_id);
+            compressed_forest.add_leaf(dag_node_id);
+            ts_node2sf_subtree[asserting_cast<tsk_id_t>(sample_id)] = dag_node_id;
+        }
+
         // TODO Rewrite this, once we have the tree_sequence iterator
         // TODO Add progress bar or progress report (for the large datasets)
-        for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next(), first_tree = false) {
+        size_t const num_trees            = _tree_sequence.num_trees();
+        size_t       tree_counter         = 0;
+        size_t       report_every_n_trees = num_trees / 100;
+        for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next()) {
+            tree_counter++;
+            if (report_every_n_trees == 0 || tree_counter % report_every_n_trees == 0) {
+                std::cerr << "Compressing tree " << tree_counter << "/" << num_trees << std::endl;
+            }
             // Reset the mapper for this tree
             // TODO Specify for which nodes we want mapping instead of computing and storing it for all nodes
             ts_node2sf_subtree.reset();
@@ -56,35 +91,18 @@ public:
             for (auto const ts_node_id: ts_tree.postorder()) {
                 // Prefetching the children of the next node slows down the code in benchmarks.
                 // TODO Use custom data structure for this, as the tskit one produces a lot of cache-misses
+                // E.g. a simple check if the node is in [0..num_samples-1] would be enough
                 if (ts_tree.is_sample(ts_node_id)) {
+                    // TODO We could use a separate mapper for the samples are these have the ids 0...n-1
                     // Compute the subtree id of this leaf node by hashing its label.
-                    // TODO Cache the result of this evaluation? There are a few thousand subtree IDs.
                     auto dag_subtree_id = succinct_subtree_id_factory.compute(ts_node_id);
-
-                    // Cache the subtree id for this ts node
-                    KASSERT(asserting_cast<size_t>(ts_node_id) < ts_node_to_dag_subtree_id_map.size());
-                    ts_node_to_dag_subtree_id_map[asserting_cast<size_t>(ts_node_id)] = dag_subtree_id;
-
-                    // Map the DAG subtree ID to the corresponding node ID in the DAG. The first tree should insert all
-                    // the samples as the samples in all trees are identical.
-                    if (first_tree) {
-                        KASSERT(
-                            !_dag_subtree_to_node_map.contains(dag_subtree_id),
-                            "A leaf is present twice in the first tree.",
-                            tdt::assert::normal
-                        );
-                        NodeId dag_node_id = _dag_subtree_to_node_map.insert(dag_subtree_id);
-                        compressed_forest.add_leaf(dag_node_id);
-                        ts_node2sf_subtree[ts_node_id] = dag_node_id;
-                    } else {
-                        KASSERT(
-                            _dag_subtree_to_node_map.contains(dag_subtree_id),
-                            "A leaf present in a later tree is missing from the first tree.",
-                            tdt::assert::light
-                        );
-                        NodeId dag_node_id             = _dag_subtree_to_node_map.get(dag_subtree_id);
-                        ts_node2sf_subtree[ts_node_id] = dag_node_id;
-                    }
+                    KASSERT(
+                        _dag_subtree_to_node_map.contains(dag_subtree_id),
+                        "A leaf present in a later tree is missing from the first tree.",
+                        tdt::assert::light
+                    );
+                    NodeId dag_node_id             = _dag_subtree_to_node_map.get(dag_subtree_id);
+                    ts_node2sf_subtree[ts_node_id] = dag_node_id;
                 } else { // Node is inner node
                     // Compute the subtree id of this inner node by hashing the subtree ids of it's children.
                     // TODO is there a more elegant solution?

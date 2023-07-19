@@ -9,6 +9,7 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
+#include "tdt/load/compressed-forest-serialization.hpp"
 #include "tdt/load/forest-compressor.hpp"
 #include "tdt/sequence-forest.hpp"
 #include "tdt/tskit.hpp"

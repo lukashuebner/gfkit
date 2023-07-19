@@ -91,6 +91,23 @@ public:
         return _tree_sequence;
     }
 
+    tsk_treeseq_t const& underlying() const {
+        return _tree_sequence;
+    }
+
+    [[nodiscard]] bool sample_ids_are_consecutive() const {
+        // According to the tskit documentation: The array is owned by the tree sequence and should not be modified
+        // or free’d.
+        tsk_id_t const*  samples     = tsk_treeseq_get_samples(&underlying());
+        tsk_size_t const num_samples = tsk_treeseq_get_num_samples(&underlying());
+        for (tsk_id_t id = 0; id < asserting_cast<tsk_id_t>(num_samples); ++id) {
+            if (id != *(samples + id)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     bool is_sample(tsk_id_t u) const {
         return tsk_treeseq_is_sample(&_tree_sequence, u);
     }
