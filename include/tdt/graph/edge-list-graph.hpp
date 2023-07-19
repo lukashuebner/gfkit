@@ -11,6 +11,7 @@
 
 #include "common.hpp"
 #include "tdt/assertion_levels.hpp"
+#include "tdt/samples/sample-set.hpp"
 
 using EdgeList = std::vector<Edge>;
 
@@ -39,15 +40,15 @@ public:
         _num_nodes.reset();
     }
 
-    std::size_t num_edges() const {
-        return _edges.size();
+    EdgeId num_edges() const {
+        return asserting_cast<EdgeId>(_edges.size());
     }
 
     // TODO Cache the result of this computation.
     // TODO Write unit tests
     // Return the vertices in the graph as well as their outdegree.
-    std::unordered_map<NodeId, std::size_t> nodes() const {
-        std::unordered_map<NodeId, std::size_t> nodes;
+    std::unordered_map<NodeId, NodeId> nodes() const {
+        std::unordered_map<NodeId, NodeId> nodes;
 
         auto insert_or_increment = [&nodes](NodeId const vertex, bool increment = true) {
             auto&& it = nodes.find(vertex);
@@ -104,12 +105,12 @@ public:
         return _roots;
     }
 
-    std::size_t num_roots() const {
+    NodeId num_roots() const {
         KASSERT(_unique_nodes(_roots), "Roots are not unique", tdt::assert::heavy);
-        return _roots.size();
+        return asserting_cast<NodeId>(_roots.size());
     }
 
-    std::size_t num_trees() const {
+    TreeId num_trees() const {
         return num_roots();
     }
 
@@ -118,9 +119,9 @@ public:
         return _leaves;
     }
 
-    std::size_t num_leaves() const {
+    SampleId num_leaves() const {
         KASSERT(_unique_nodes(_leaves), "Leaves are not unique", tdt::assert::heavy);
-        return _leaves.size();
+        return asserting_cast<SampleId>(_leaves.size());
     }
 
     bool directed() const {
@@ -160,17 +161,19 @@ public:
         ToVertex,
     };
 
-    void num_nodes(size_t num_nodes) {
+    void num_nodes(NodeId num_nodes) {
         _num_nodes = num_nodes;
     }
 
-    size_t num_nodes() const {
+    // TODO introduce finalize step which computes this
+    NodeId num_nodes() const {
         if (_num_nodes.has_value()) {
             // The value is cached -> O(1)
             return _num_nodes.value();
         } else {
             // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
-            return nodes().size();
+            nodes();
+            return _num_nodes.value();
         }
     }
 
@@ -271,7 +274,7 @@ private:
         KASSERT(set.size() == nodes.size());
         return true;
     }
-    mutable std::optional<size_t> _num_nodes = std::nullopt; // This get's updated when nodes() is called.
+    mutable std::optional<NodeId> _num_nodes = std::nullopt; // This get's updated when nodes() is called.
     // TODO Cache the list of nodes?
     EdgeList            _edges;
     std::vector<NodeId> _roots;

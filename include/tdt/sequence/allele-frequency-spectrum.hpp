@@ -24,9 +24,6 @@ public:
         auto const num_samples = forest.num_leaves();
         _num_sites             = sequence.num_sites();
 
-        // TODO where to put this line? How do we benchmark it?
-        forest.compute_num_samples_below();
-
         // There are at most \c num_samples many derived samples per site.
         // +1 because there might also be /no/ derived samples.
         _afs.resize(num_samples + 1, 0);
@@ -34,6 +31,7 @@ public:
         // For each site, compute how many of the samples have which derived or ancestral state and build the histogram
         // of the number of derived states per site.
         std::array<size_t, AllelicStatePerfectHasher::num_states> num_samples_in_state;
+        auto const num_samples_below = forest.compute_num_samples_below(forest.all_samples());
         for (SiteId site = 0; site < _num_sites; ++site) {
             KASSERT(site < sequence.num_sites(), "Site out of bounds", tdt::assert::light);
             num_samples_in_state.fill(0);
@@ -43,7 +41,7 @@ public:
             num_samples_in_state[state_of_ancestral_state] = num_samples;
 
             for (auto const& mutation: sequence.mutations_at_site(site)) {
-                auto const num_samples_below_this_mutation = forest.num_samples_below(mutation.subtree_id());
+                auto const num_samples_below_this_mutation = num_samples_below(mutation.subtree_id());
                 auto const state_of_this_mutation = AllelicStatePerfectHasher::to_idx(mutation.allelic_state());
 
                 size_t state_of_parent_mutation = 0;

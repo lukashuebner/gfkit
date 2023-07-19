@@ -1,176 +1,18 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "assertion_levels.hpp"
-#include "graph/compressed-forest.hpp"
-#include "load/forest-compressor.hpp"
-#include "sequence/genomic-sequence-storage-factory.hpp"
-#include "sequence/genomic-sequence-storage.hpp"
-#include "tskit.hpp"
-
-// TODO This should reside in its own file
-// TODO This class shares functionality with the AlleleFrequencySpectrum class. We should refactor this.
-// The historical reason for this duplication is that AlleleFrequencySpectrum was written under the assumption of
-// multiallelicity and this class was written under the assumption of biallelicity when I implemented the diversity
-// statistics.
-class AlleleFrequencies {
-public:
-    AlleleFrequencies(CompressedForest& compressed_forest, GenomicSequence const& sequence_store)
-        : _forest(compressed_forest),
-          _sequence(sequence_store) {}
-
-    auto begin() const {
-        return allele_frequency_iterator{_forest, _sequence};
-    }
-
-    auto end() const {
-        return allele_frequency_iterator::sentinel{};
-    }
-
-    auto cbegin() const {
-        return allele_frequency_iterator{_forest, _sequence};
-    }
-
-    auto cend() const {
-        return allele_frequency_iterator::sentinel{};
-    }
-
-    class allele_frequency_iterator {
-    public:
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type   = std::ptrdiff_t;
-        using value_type        = uint64_t;
-        using pointer           = value_type*;
-        using reference         = value_type&;
-        struct sentinel {};
-
-        allele_frequency_iterator(CompressedForest& compressed_forest, GenomicSequence const& sequence_store)
-            : _forest(compressed_forest),
-              _sequence(sequence_store),
-              _site(0) {
-            // TODO where to put this line? Cache the sample computation?
-            compressed_forest.compute_num_samples_below();
-            _update_state();
-        }
-
-        auto num_samples() const {
-            return _forest.num_samples();
-        }
-
-        auto num_sites() const {
-            return _sequence.num_sites();
-        }
-
-        allele_frequency_iterator& operator++() {
-            _site++;
-            if (_site < num_sites()) {
-                _update_state();
-            }
-            return *this;
-        }
-
-        allele_frequency_iterator operator++(int) {
-            allele_frequency_iterator tmp(*this);
-            this->                    operator++();
-            return tmp;
-        }
-
-        bool operator==(allele_frequency_iterator const& other) const {
-            return &_forest == &other._forest && &_sequence == &other._sequence;
-        }
-
-        bool operator!=(allele_frequency_iterator const& other) const {
-            return !(*this == other);
-        }
-
-        bool operator==(sentinel) {
-            return _site == num_sites();
-        }
-
-        reference operator*() {
-            return _frequency;
-        }
-
-        pointer operator->() {
-            return &_frequency;
-        }
-
-    private:
-        CompressedForest&      _forest;
-        GenomicSequence const& _sequence;
-        SiteId                 _site;
-        uint64_t               _frequency;
-
-        void _update_state() {
-            // TODO Generalize this to multiallelic sites
-            KASSERT(_site < num_sites(), "Site index out of bounds", tdt::assert::light);
-
-            uint64_t           num_samples_in_ancestral_state = num_samples();
-            AllelicState const ancestral_state                = _sequence.ancestral_state(_site);
-
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_NORMAL)
-            AllelicState derived_state = InvalidAllelicState;
-#endif
-            for (auto const& mutation: _sequence.mutations_at_site(_site)) {
-                auto const num_samples_below_this_mutation = _forest.num_samples_below(mutation.subtree_id());
-                auto const this_mutations_state            = mutation.allelic_state();
-
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_NORMAL)
-                if (derived_state == InvalidAllelicState) {
-                    derived_state = this_mutations_state;
-                } else {
-                    std::cout << "derived_state: " << derived_state << std::endl;
-                    std::cout << "this_mutations_state: " << this_mutations_state << std::endl;
-                    std::cout << "ancestral_state: " << ancestral_state << std::endl;
-                    KASSERT(
-                        (derived_state == this_mutations_state || derived_state == ancestral_state),
-                        "Site is multiallelic. Allele frequency iterator only supports biallelic sites.",
-                        tdt::assert::normal
-                    );
-                }
-#endif
-
-                AllelicState parent_state;
-                // TODO this should be encapsulated in the GenomicSequenceStorage
-                if (mutation.parent_mutation_id() == TSK_NULL) {
-                    parent_state = ancestral_state;
-                } else {
-                    parent_state =
-                        _sequence.mutation_by_id(asserting_cast<size_t>(mutation.parent_mutation_id())).allelic_state();
-                }
-
-                // TODO Make this branchless
-                if (this_mutations_state != parent_state) {
-                    if (this_mutations_state == ancestral_state) {
-                        KASSERT(
-                            num_samples_in_ancestral_state + num_samples_below_this_mutation <= num_samples(),
-                            "There should never be more samples in the ancestral state than total samples.",
-                            tdt::assert::light
-                        );
-                        num_samples_in_ancestral_state += num_samples_below_this_mutation;
-                    } else {
-                        KASSERT(
-                            num_samples_in_ancestral_state >= num_samples_below_this_mutation,
-                            "There should never be more samples in the derived state than total samples.",
-                            tdt::assert::light
-                        );
-                        num_samples_in_ancestral_state -= num_samples_below_this_mutation;
-                    }
-                }
-            }
-
-            _frequency = num_samples_in_ancestral_state;
-        }
-    };
-
-private:
-    CompressedForest&      _forest;
-    GenomicSequence const& _sequence;
-};
+#include "tdt/assertion_levels.hpp"
+#include "tdt/graph/compressed-forest.hpp"
+#include "tdt/load/forest-compressor.hpp"
+#include "tdt/sequence/allele-frequencies.hpp"
+#include "tdt/sequence/genomic-sequence-storage-factory.hpp"
+#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/tskit.hpp"
 
 // TODO encapsulate CompresedForest and GenomicSequence functions in this class
 class SequenceForest {
@@ -192,26 +34,62 @@ public:
         _sequence = sequence_factory.move_storage();
     }
 
-    AlleleFrequencies allele_frequencies() {
-        return AlleleFrequencies(_forest, _sequence);
+    AlleleFrequencies allele_frequencies(SampleSet const& sample_set) {
+        return AlleleFrequencies(_forest, _sequence, sample_set);
     }
 
     // TODO Make this const
     [[nodiscard]] double diversity() {
+        return diversity(_forest.all_samples());
+    }
+
+    [[nodiscard]] double diversity(SampleSet const& sample_set) {
         auto const n  = num_samples();
         double     pi = 0.0;
-        for (uint64_t frequency: allele_frequencies()) {
+        for (uint64_t frequency: allele_frequencies(sample_set)) {
             pi += static_cast<double>(frequency * (n - frequency));
         }
 
         return pi / (0.5 * static_cast<double>(n * (n - 1)));
     }
 
-    // TODO Make this const
+    [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+        auto const n1 = sample_set_1.popcount();
+        auto const n2 = sample_set_2.popcount();
+
+        double divergence = 0.0;
+        // TODO Combine both frequencies computations into one
+        auto allele_freq_1    = allele_frequencies(sample_set_1);
+        auto allele_freq_2    = allele_frequencies(sample_set_2);
+        auto allele_freq_1_it = allele_freq_1.cbegin();
+        auto allele_freq_2_it = allele_freq_2.cbegin();
+        while (allele_freq_1_it != allele_freq_1.cend()) {
+            KASSERT(
+                allele_freq_2_it != allele_freq_2.cend(),
+                "Allele frequency lists have different lengths (different number of sites).",
+                tdt::assert::light
+            );
+            auto const freq1 = *allele_freq_1_it;
+            auto const freq2 = *allele_freq_2_it;
+            // divergence += static_cast<double>(freq1 * (n2 - freq2));
+            divergence += static_cast<double>(freq1 * (n2 - freq2) + freq2 * (n1 - freq1));
+            allele_freq_1_it++;
+            allele_freq_2_it++;
+        }
+
+        return divergence / (static_cast<double>(n1 * n2));
+    }
+
     [[nodiscard]] uint64_t num_segregating_sites() {
+        return num_segregating_sites(_forest.all_samples());
+    }
+
+    // TODO Make this const
+    [[nodiscard]] uint64_t num_segregating_sites(SampleSet const& sample_set) {
         size_t num_segregating_sites = 0;
-        for (uint64_t frequency: allele_frequencies()) {
-            if (frequency < num_samples()) {
+        // TODO Pass sample set as shared_ptr? 
+        for (uint64_t frequency: allele_frequencies(sample_set)) {
+            if (frequency != 0 && frequency != num_samples()) {
                 num_segregating_sites++;
             }
         }
@@ -226,7 +104,7 @@ public:
 
         double h = 0;
         double g = 0;
-        // TODO are there formulas for computing these for efficiently?
+        // TODO are there formulas for computing these values more efficiently?
         for (uint64_t i = 1; i < num_samples(); i++) {
             h += 1.0 / static_cast<double>(i);
             g += 1.0 / static_cast<double>(i * i);
@@ -244,6 +122,10 @@ public:
 
     [[nodiscard]] uint64_t num_samples() const {
         return _forest.num_samples();
+    }
+
+    [[nodiscard]] SampleSet all_samples() const {
+        return _forest.all_samples();
     }
 
     [[nodiscard]] GenomicSequence const& sequence() const {

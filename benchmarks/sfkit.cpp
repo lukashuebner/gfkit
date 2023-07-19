@@ -116,8 +116,8 @@ void benchmark(
     timer.start();
 
     EdgeListGraph const& dag = forest.postorder_edges();
-    forest.compute_num_samples_below();
-    do_not_optimize(forest.num_samples_below());
+    auto num_samples_below = forest.compute_num_samples_below(forest.all_samples());
+    do_not_optimize(num_samples_below);
 
     log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
     log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
@@ -151,10 +151,49 @@ void benchmark(
         std::exit(1);
     }
 
-    // Benchmark computing the diversity
+    // Benchmark computing the divergence
     // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
     // (Check this!)
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    SampleSet sample_set_1(forest.num_nodes());
+    SampleSet sample_set_2(forest.num_nodes());
+    bool flip = false;
+    for (SampleId sample: forest.leaves()) {
+        if (flip) {
+            sample_set_1.add(sample);
+        } else {
+            sample_set_2.add(sample);
+        }
+        flip = !flip;
+    }
+    memory_usage.start();
+    timer.start();
+    
+    double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
+    do_not_optimize(sfkit_divergence);
+
+    log_time(warmup, "divergence", "sfkit", timer.stop());
+    log_mem(warmup, "divergence", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_divergence = sequence_forest.tree_sequence().divergence(sample_set_1, sample_set_2);
+    do_not_optimize(tskit_divergence);
+
+    log_time(warmup, "divergence", "tskit", timer.stop());
+    log_mem(warmup, "divergence", "tskit", memory_usage.stop());
+
+    // Does our divergence match the one computed by tskit?
+    if (sfkit_divergence != Catch::Approx(tskit_divergence).epsilon(FLOAT_EQ_EPS)) {
+        std::cerr << "ERROR !! Divergence mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_divergence << " vs. " << sfkit_divergence << " (tskit vs. sfkit)" << std::endl;
+        std::exit(1);
+    }
+
+    // Benchmark computing the diversity
+    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
+    // (Check this!)
     memory_usage.start();
     timer.start();
 
@@ -173,7 +212,7 @@ void benchmark(
     log_time(warmup, "diversity", "tskit", timer.stop());
     log_mem(warmup, "diversity", "tskit", memory_usage.stop());
 
-    // Does our AFS match the one computed by tskit?
+    // Does our diversity match the one computed by tskit?
     if (sfkit_diversity != Catch::Approx(tskit_diversity).epsilon(FLOAT_EQ_EPS)) {
         std::cerr << "ERROR !! Diversity mismatch between tskit and sfkit" << std::endl;
         std::cerr << "    " << tskit_diversity << " vs. " << sfkit_diversity << " (tskit vs. sfkit)" << std::endl;

@@ -11,7 +11,6 @@
 #include "tdt/checking_casts.hpp"
 #include "tdt/utils/concepts.hpp"
 
-// TODO Profile and check if a compressed bitset would be faster?
 using SampleId = uint32_t;
 
 class SampleSet {
@@ -77,8 +76,8 @@ public:
         }
     };
 
-    SampleSet(SampleId const overall_number_of_nodes) {
-        _samples.resize(overall_number_of_nodes, false);
+    SampleSet(SampleId const num_nodes_in_dag) {
+        _samples.resize(num_nodes_in_dag);
     };
 
     const_iterator begin() const {
@@ -122,7 +121,7 @@ public:
         return _samples[sample_id];
     }
 
-    SampleId overall_number_of_nodes() const {
+    SampleId num_nodes_in_dag() const {
         return asserting_cast<SampleId>(_samples.size());
     }
 
@@ -130,17 +129,18 @@ public:
         return asserting_cast<SampleId>(std::accumulate(_samples.begin(), _samples.end(), 0));
     }
 
-    SampleSet build_inverse() const {
-        // Let's see how well the compiler optimizes this and optimize if the profiler tells us that this is too slow.
-        SampleSet inverse(overall_number_of_nodes());
-        for (SampleId sample_id = 0; sample_id < _samples.size(); ++sample_id) {
-            if (!_samples[sample_id]) {
-                inverse.add(sample_id);
-            }
-        }
+    // Building the inverse is not that trivial, as we don't know which nodes are inner nodes and which are leaves.
+    // SampleSet build_inverse() const {
+    //     // Let's see how well the compiler optimizes this and optimize if the profiler tells us that this is too slow.
+    //     SampleSet inverse(overall_num_samples());
+    //     for (SampleId sample_id = 0; sample_id < _samples.size(); ++sample_id) {
+    //         if (!_samples[sample_id]) {
+    //             inverse.add(sample_id);
+    //         }
+    //     }
 
-        return inverse;
-    }
+    //     return inverse;
+    // }
 
     std::vector<tsk_id_t> as_tsk_id_t_vector() const {
         std::vector<tsk_id_t> result;
@@ -154,5 +154,6 @@ public:
     }
 
 private:
+    // TODO Profile and check if a compressed bitset would be faster?
     std::vector<bool> _samples;
 };

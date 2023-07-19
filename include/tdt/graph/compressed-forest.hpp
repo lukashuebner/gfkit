@@ -3,19 +3,20 @@
 // #include <sparsehash/dense_hash_map>
 #include <unordered_set>
 
+#include <cereal/types/memory.hpp>
+#include <cereal/types/vector.hpp>
 #include <kassert/kassert.hpp>
 
-#include "edge-list-graph.hpp"
+#include "tdt/graph/edge-list-graph.hpp"
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/adjacency-array-graph.hpp"
 #include "tdt/graph/edge-list-graph.hpp"
 #include "tdt/load/subtree-id.hpp"
+#include "tdt/samples/num-samples-below.hpp"
+#include "tdt/samples/sample-set.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/concepts.hpp"
-
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
 
 class CompressedForest {
 public:
@@ -27,60 +28,39 @@ public:
         return _dag_postorder_edges;
     }
 
-    void compute_num_samples_below() {
-        KASSERT(_dag_postorder_edges.check_postorder(), "DAG edges are not post-ordered.", tdt::assert::normal);
-        std::fill(_subtree_sizes.begin(), _subtree_sizes.end(), 0);
-        _subtree_sizes.resize(_dag_postorder_edges.num_nodes(), 0);
-        for (auto&& leaf: _dag_postorder_edges.leaves()) {
-            _subtree_sizes[leaf] = 1;
-        }
-        // TODO Try prefetching a few edges ahead
-        for (auto&& edge: _dag_postorder_edges) {
-            _subtree_sizes[edge.from()] += _subtree_sizes[edge.to()];
-            KASSERT(
-                _subtree_sizes[edge.from()] <= _dag_postorder_edges.num_leaves(),
-                "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                tdt::assert::light
-            );
-        }
-    }
-
-    size_t num_nodes() const {
+    NodeId num_nodes() const {
         return _dag_postorder_edges.num_nodes();
     }
 
-    void num_nodes(size_t const num_nodes) {
+    void num_nodes(NodeId const num_nodes) {
         _dag_postorder_edges.num_nodes(num_nodes);
     }
 
-    size_t num_samples_below(SubtreeId subtree_id) {
-        if (_subtree_sizes.size() == 0) {
-            this->compute_num_samples_below();
-        }
-        KASSERT(subtree_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
-        return _subtree_sizes[subtree_id];
-    }
-
-    auto& num_samples_below() {
-        if (_subtree_sizes.size() == 0) {
-            this->compute_num_samples_below();
-        }
-        return _subtree_sizes;
+    NumSamplesBelow compute_num_samples_below(SampleSet const& sample_set) const {
+        return NumSamplesBelow(_dag_postorder_edges, sample_set);
     }
 
     bool is_sample(NodeId const node_id) const {
         return _dag_postorder_edges.is_leaf(node_id);
     }
 
-    size_t num_samples() const {
+    SampleSet all_samples() const {
+        SampleSet sample_set(num_nodes());
+        for (NodeId const node_id : _dag_postorder_edges.leaves()) {
+            sample_set.add(node_id);
+        }
+        return sample_set;
+    }
+
+    SampleId num_samples() const {
         return _dag_postorder_edges.num_leaves();
     }
 
-    size_t num_trees() const {
+    TreeId num_trees() const {
         return _dag_postorder_edges.num_trees();
     }
 
-    size_t num_edges() const {
+    EdgeId num_edges() const {
         return _dag_postorder_edges.num_edges();
     }
 
@@ -100,7 +80,7 @@ public:
         return _dag_postorder_edges.roots();
     }
 
-    std::size_t num_roots() const {
+    NodeId num_roots() const {
         return _dag_postorder_edges.num_roots();
     }
 
@@ -108,7 +88,7 @@ public:
         return _dag_postorder_edges.leaves();
     }
 
-    std::size_t num_leaves() const {
+    SampleId num_leaves() const {
         return _dag_postorder_edges.num_leaves();
     }
 
@@ -119,5 +99,5 @@ public:
 
 private:
     EdgeListGraph       _dag_postorder_edges;
-    std::vector<size_t> _subtree_sizes;
+    std::vector<NodeId> _subtree_sizes;
 };

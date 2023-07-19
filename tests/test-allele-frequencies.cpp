@@ -36,7 +36,8 @@ TEST_CASE("AlleleFrequencies example multi tree no back no recurrent", "[AlleleF
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     std::vector<uint64_t> expected = {3, 3, 1};
-    CHECK_THAT(sequence_forest.allele_frequencies(), RangeEquals(expected));
+    auto const& all_samples = sequence_forest.all_samples();
+    CHECK_THAT(sequence_forest.allele_frequencies(all_samples), RangeEquals(expected));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
