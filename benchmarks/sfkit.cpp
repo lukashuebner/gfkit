@@ -2,14 +2,14 @@
 #include <sstream>
 #include <string>
 
+#include <CLI/App.hpp>
+#include <CLI/Config.hpp>
+#include <CLI/Formatter.hpp>
+#include <catch2/catch_approx.hpp>
 #include <tdt/load/forest-compressor.hpp>
 #include <tdt/sequence-forest.hpp>
 #include <tdt/tskit.hpp>
 
-#include "CLI/App.hpp"
-#include "CLI/Config.hpp"
-#include "CLI/Formatter.hpp"
-#include "catch2/catch_approx.hpp"
 #include "perf.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/compressed-forest-serialization.hpp"
