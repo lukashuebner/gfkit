@@ -139,7 +139,6 @@ public:
                     // it's children.  In the case that two trees in the tree sequence are exactly identical, we want
                     // two root nodes in the DAG -- one for each of the two trees.
                     bool const is_root = ts_tree.is_root(ts_node_id);
-                    // TODO We are querying the hash map twice here. Rewrite code to not do this.
                     if (!_dag_subtree_to_node_map.contains(dag_subtree_id) || is_root) {
                         NodeId dag_node_id;
                         // Root nodes can have the same ID (if both trees are identical), but don't have in edges. Thus,
