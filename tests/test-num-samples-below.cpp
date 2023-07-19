@@ -71,8 +71,8 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     }
 
     SECTION("Graph with a single edge") {
-        dag.add_edge(0, 1);
-        dag.add_leaf(1);
+        dag.add_edge(1, 0);
+        dag.add_leaf(0);
         dag.compute_num_nodes();
 
         SampleSet empty_samples(dag.num_leaves());
@@ -85,8 +85,8 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
         CHECK(empty_num_samples_below.num_samples_below(0) == 0);
         CHECK(empty_num_samples_below.num_samples_below(1) == 0);
 
-        SampleSet samples(dag.num_nodes());
-        samples.add(1);
+        SampleSet samples(dag.num_leaves());
+        samples.add(0);
         NumSamplesBelow num_samples_below(dag, samples);
         CHECK(num_samples_below.num_nodes_in_dag() == 2);
         CHECK(num_samples_below.num_samples_in_dag() == 1);
@@ -96,13 +96,13 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     }
 
     SECTION("Graph with three leaves") {
+        dag.add_leaf(0);
+        dag.add_leaf(1);
         dag.add_leaf(2);
-        dag.add_leaf(3);
-        dag.add_leaf(4);
-        dag.add_edge(1, 2);
-        dag.add_edge(1, 3);
-        dag.add_edge(0, 4);
-        dag.add_edge(0, 1);
+        dag.add_edge(3, 0);
+        dag.add_edge(3, 1);
+        dag.add_edge(4, 3);
+        dag.add_edge(4, 2);
         dag.compute_num_nodes();
 
         SECTION("Empty sample set") {
@@ -110,42 +110,42 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 0);
+            CHECK(num_samples_below.num_samples_below(4) == 0);
+            CHECK(num_samples_below.num_samples_below(3) == 0);
             CHECK(num_samples_below.num_samples_below(0) == 0);
             CHECK(num_samples_below.num_samples_below(1) == 0);
             CHECK(num_samples_below.num_samples_below(2) == 0);
-            CHECK(num_samples_below.num_samples_below(3) == 0);
-            CHECK(num_samples_below.num_samples_below(4) == 0);
         }
 
         SECTION("All samples in sample set") {
             SampleSet samples{5};
+            samples.add(0);
+            samples.add(1);
             samples.add(2);
-            samples.add(3);
-            samples.add(4);
             NumSamplesBelow num_samples_below(dag, samples);
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 3);
-            CHECK(num_samples_below.num_samples_below(0) == 3);
-            CHECK(num_samples_below.num_samples_below(1) == 2);
+            CHECK(num_samples_below.num_samples_below(4) == 3);
+            CHECK(num_samples_below.num_samples_below(3) == 2);
+            CHECK(num_samples_below.num_samples_below(0) == 1);
+            CHECK(num_samples_below.num_samples_below(1) == 1);
             CHECK(num_samples_below.num_samples_below(2) == 1);
-            CHECK(num_samples_below.num_samples_below(3) == 1);
-            CHECK(num_samples_below.num_samples_below(4) == 1);
         }
 
         SECTION("Some but not all samples in sample set") {
             SampleSet samples{5};
+            samples.add(0);
             samples.add(2);
-            samples.add(4);
             NumSamplesBelow num_samples_below(dag, samples);
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 2);
-            CHECK(num_samples_below.num_samples_below(0) == 2);
-            CHECK(num_samples_below.num_samples_below(1) == 1);
+            CHECK(num_samples_below.num_samples_below(4) == 2);
+            CHECK(num_samples_below.num_samples_below(3) == 1);
+            CHECK(num_samples_below.num_samples_below(0) == 1);
+            CHECK(num_samples_below.num_samples_below(1) == 0);
             CHECK(num_samples_below.num_samples_below(2) == 1);
-            CHECK(num_samples_below.num_samples_below(3) == 0);
-            CHECK(num_samples_below.num_samples_below(4) == 1);
         }
     }
 }

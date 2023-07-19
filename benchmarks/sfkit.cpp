@@ -155,10 +155,10 @@ void benchmark(
     // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
     // (Check this!)
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
-    SampleSet      sample_set_1(sequence_forest.forest().num_nodes());
-    SampleSet      sample_set_2(sequence_forest.forest().num_nodes());
+    SampleSet      sample_set_1(sequence_forest.num_samples());
+    SampleSet      sample_set_2(sequence_forest.num_samples());
     bool           flip = false;
-    for (SampleId sample: forest.leaves()) {
+    for (SampleId sample: sequence_forest.all_samples()) {
         if (flip) {
             sample_set_1.add(sample);
         } else {

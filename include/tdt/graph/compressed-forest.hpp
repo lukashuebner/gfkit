@@ -53,9 +53,10 @@ public:
             "The number of nodes in the DAG must be set before calling all_samples().",
             tdt::assert::light
         );
-        SampleSet sample_set(num_nodes());
-        for (NodeId const node_id: _dag_postorder_edges.leaves()) {
-            sample_set.add(node_id);
+        SampleSet sample_set(num_samples());
+        for (NodeId const sample_id: _dag_postorder_edges.leaves()) {
+            KASSERT(sample_id < num_samples(), "Sample ID is out of range.", tdt::assert::light);
+            sample_set.add(sample_id);
         }
         return sample_set;
     }

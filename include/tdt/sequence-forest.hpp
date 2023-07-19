@@ -116,11 +116,11 @@ public:
         return D;
     }
 
-    [[nodiscard]] uint64_t num_sites() const {
+    [[nodiscard]] SiteId num_sites() const {
         return _sequence.num_sites();
     }
 
-    [[nodiscard]] uint64_t num_samples() const {
+    [[nodiscard]] SampleId num_samples() const {
         return _forest.num_samples();
     }
 
@@ -145,4 +145,8 @@ private:
     TSKitTreeSequence _tree_sequence;
     CompressedForest  _forest;
     GenomicSequence   _sequence;
+
+    // TODO Split up into CompressedForestIO and SequenceForestIO
+    // TODO Better naming to distinguish between CompressedForest and SequenceForest
+    // friend class CompressedForestIO;
 };

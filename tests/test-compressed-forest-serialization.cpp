@@ -189,8 +189,8 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     // --- Divergence ---
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
-    SampleSet sample_set_1(sequence_forest.forest().num_nodes());
-    SampleSet sample_set_2(sequence_forest.forest().num_nodes());
+    SampleSet sample_set_1(sequence_forest.num_samples());
+    SampleSet sample_set_2(sequence_forest.num_samples());
     bool      flip = false;
     for (SampleId sample: forest.leaves()) {
         if (flip) {

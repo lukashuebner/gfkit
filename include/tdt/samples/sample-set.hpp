@@ -76,8 +76,8 @@ public:
         }
     };
 
-    SampleSet(SampleId const num_nodes_in_dag) {
-        _samples.resize(num_nodes_in_dag);
+    SampleSet(SampleId const num_samples_in_dag) {
+        _samples.resize(num_samples_in_dag);
     };
 
     const_iterator begin() const {

@@ -285,7 +285,6 @@ public:
     }
 
     std::size_t max_node_id() const {
-        // +1 to account for the virtual root
         return _tree_sequence.num_nodes();
     }
 
