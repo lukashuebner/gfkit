@@ -30,9 +30,7 @@ public:
             edges.sort_edges(EdgeListGraph::SortBy::FromVertex);
         }
 
-        // TODO Check if node ids are consecutive
-        auto nodes        = edges.nodes();
-        auto num_vertices = nodes.size();
+        auto num_vertices = edges.num_nodes();
         _adjacency_array.resize(asserting_cast<uint32_t>(num_vertices));
 
         for (auto const& edge: edges) {

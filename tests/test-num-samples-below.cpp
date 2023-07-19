@@ -61,6 +61,7 @@ TEST_CASE("SampleSet", "[NumSamplesBelow]") {
 
 TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     EdgeListGraph dag;
+    dag.num_nodes(0);
 
     SECTION("Empty graph") {
         NumSamplesBelow num_samples_below(dag, SampleSet{0});
@@ -72,7 +73,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     SECTION("Graph with a single edge") {
         dag.add_edge(0, 1);
         dag.add_leaf(1);
-        dag.compute_nodes();
+        dag.compute_num_nodes();
 
         SampleSet empty_samples(dag.num_leaves());
         REQUIRE(empty_samples.num_nodes_in_dag() == 1);
@@ -102,7 +103,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
         dag.add_edge(1, 3);
         dag.add_edge(0, 4);
         dag.add_edge(0, 1);
-        dag.compute_nodes();
+        dag.compute_num_nodes();
 
         SECTION("Empty sample set") {
             NumSamplesBelow num_samples_below(dag, SampleSet{5});
@@ -237,7 +238,7 @@ TEST_CASE("NumSamplesBelow Medium-Sized Example", "[NumSamplesBelow]") {
         dag.add_leaf(leaf);
     }
     dag.add_root(root);
-    dag.compute_nodes();
+    dag.compute_num_nodes();
 
     SECTION("All samples in sample set") {
         SampleSet samples{39};

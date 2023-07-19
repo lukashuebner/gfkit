@@ -18,7 +18,7 @@ TEST_CASE("AdjacencyArrayGraph Basics", "[AdjacencyArrayGraph]") {
     edge_list.add_edge(2, 0);
     edge_list.add_edge(3, 0);
     edge_list.add_root(3);
-    edge_list.compute_nodes();
+    edge_list.compute_num_nodes();
 
     AdjacencyArrayGraph graph(edge_list);
 

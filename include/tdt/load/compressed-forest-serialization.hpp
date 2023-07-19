@@ -26,7 +26,7 @@ public:
             ));
         }
 
-        KASSERT(forest.nodes_are_computed(), "Nodes of the loaded forest are not computed", tdt::assert::light);
+        KASSERT(forest.num_nodes_is_set(), "Number of nodes of the loaded forest are not computed", tdt::assert::light);
         KASSERT(
             sequence.mutation_indices_are_built(),
             "Mutation indices of the loaded sequence are not built",
@@ -40,7 +40,7 @@ public:
 
         // Build mutation indices and compute the nodes of the (edge list) DAG
         // The mutation indices are build during the serialization of the sequence
-        // The nodes of the DAG are computed during the deserialization of the forest
+        // The number of nodes of the DAG are computed during the deserialization of the forest
         archive(CURRENT_VERSION, forest, sequence);
     }
 

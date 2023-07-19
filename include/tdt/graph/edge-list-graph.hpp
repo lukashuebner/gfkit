@@ -35,17 +35,14 @@ public:
     void add_edge(NodeId from, NodeId to) {
         _edges.emplace_back(Edge(from, to));
         // TODO Think about incremental updates of the nodes array or a separate build phase for the graph.
-        _nodes_are_valid = false;
     }
 
     void add_root(NodeId root) {
         _roots.push_back(root);
-        _nodes_are_valid = false;
     }
 
     void add_leaf(NodeId leaf) {
         _leaves.push_back(leaf);
-        _nodes_are_valid = false;
     }
 
     EdgeId num_edges() const {
@@ -137,51 +134,40 @@ public:
         ToVertex,
     };
 
-    void compute_nodes() const {
-        _nodes.clear();
-
-        auto insert_or_increment = [this](NodeId const vertex, bool increment = true) {
-            auto&& it = _nodes.find(vertex);
-            if (it == _nodes.end()) {
-                _nodes.insert({vertex, increment});
-            } else if (increment) {
-                it++;
-            }
-        };
+    // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
+    // This is incredibly slow, so use it only in unit tests
+    void compute_num_nodes() {
+        std::unordered_set<NodeId> nodes;
+        nodes.reserve(2 * _leaves.size() + (_roots.size() - 1)); // Lower bound only
 
         for (auto const& edge: _edges) {
-            insert_or_increment(edge.from(), true);
-            insert_or_increment(edge.to(), false);
+            nodes.insert(edge.from());
+            nodes.insert(edge.to());
         }
 
         for (auto const& root: _roots) {
-            insert_or_increment(root, false);
+            nodes.insert(root);
         }
 
         for (auto const& leaf: _leaves) {
-            insert_or_increment(leaf, false);
+            nodes.insert(leaf);
         }
 
-        _nodes_are_valid = true;
+        _num_nodes = asserting_cast<NodeId>(nodes.size());
     }
 
-    // TODO Write unit tests
-    // Return the vertices in the graph as well as their outdegree.
-    NodeOutdegreeMap nodes() const {
-        KASSERT(_nodes_are_valid, "The nodes are not computed yet", tdt::assert::light);
-        return _nodes;
+    void num_nodes(NodeId num_nodes) {
+        KASSERT(!num_nodes_is_set(), "The number of nodes is already set", tdt::assert::light);
+        _num_nodes = num_nodes;
     }
 
-    // TODO introduce finalize step which computes this
-    NodeId num_nodes() const {
-        // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
-        KASSERT(_nodes_are_valid, "The nodes are not computed yet", tdt::assert::light);
-        return asserting_cast<NodeId>(_nodes.size());
+    [[nodiscard]] NodeId num_nodes() const {
+        KASSERT(num_nodes_is_set(), "The number of nodes is not set", tdt::assert::light);
+        return _num_nodes;
     }
 
-    // TODO The nodes might not be up to date. The proper way to solve this is to introduce a dirty flag.
-    [[nodiscard]] bool nodes_are_computed() const {
-        return !_nodes.empty();
+    [[nodiscard]] bool num_nodes_is_set() const {
+        return _num_nodes != INVALID_NODE_ID;
     }
 
     bool check_postorder() const {
@@ -264,16 +250,8 @@ public:
     }
 
     template <class Archive>
-    void save(Archive& archive) const {
-        // Serialization of tsl::hopscotch_map is not trivial, thus we do not add it to the archive and recompute the
-        // nodes when loading instead.
-        archive(_edges, _roots, _leaves, _traversal_order);
-    }
-
-    template <class Archive>
-    void load(Archive& archive) {
-        archive(_edges, _roots, _leaves, _traversal_order);
-        compute_nodes();
+    void serialize(Archive& archive) {
+        archive(_num_nodes, _edges, _roots, _leaves, _traversal_order);
     }
 
 private:
@@ -290,13 +268,10 @@ private:
         return true;
     }
 
-    // TODO Should we? Would this provide a speedup?
     // We're not assuming that node ids are consecutive
-    // TODO remove this mutable
-    mutable NodeOutdegreeMap _nodes;
-    mutable bool             _nodes_are_valid = true;
-    EdgeList                 _edges;
-    std::vector<NodeId>      _roots;
-    std::vector<NodeId>      _leaves;
-    TraversalOrder           _traversal_order = TraversalOrder::Unordered;
+    NodeId              _num_nodes = INVALID_NODE_ID;
+    EdgeList            _edges;
+    std::vector<NodeId> _roots;
+    std::vector<NodeId> _leaves;
+    TraversalOrder      _traversal_order = TraversalOrder::Unordered;
 };

@@ -156,10 +156,7 @@ public:
         KASSERT(compressed_forest.num_leaves() == _tree_sequence.num_samples());
 
         // Set the number of nodes in the DAG so it does not have to be recomputed.
-        // TODO If we're only using the number of nodes and not the actual nodes later one we could just set that
-        // information, as we know it from the tree sequence.
-        // For now, we compute the number of nodes, as this is probably not the bottleneck.
-        compressed_forest.compute_nodes();
+        compressed_forest.num_nodes(_dag_subtree_to_node_map.num_nodes());
 
         // As we build the tree edges by a postorder traversal on the tree, the from edges should be post-ordered, too.
         compressed_forest.postorder_edges().traversal_order(TraversalOrder::Postorder);

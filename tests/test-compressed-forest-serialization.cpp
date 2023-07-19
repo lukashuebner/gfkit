@@ -75,7 +75,6 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK(cf_dag_deserialized.num_trees() == cf_dag.num_trees());
     CHECK(cf_dag_deserialized.roots() == cf_dag.roots());
     CHECK(cf_dag_deserialized.leaves() == cf_dag.leaves());
-    CHECK(cf_dag_deserialized.nodes() == cf_dag.nodes());
     CHECK(cf_dag_deserialized.directed() == cf_dag.directed());
     CHECK(cf_dag_deserialized.traversal_order() == cf_dag.traversal_order());
     CHECK(cf_dag_deserialized.is_inorder() == cf_dag.is_inorder());
