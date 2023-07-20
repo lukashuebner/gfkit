@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import numpy
 import tskit
 from time import perf_counter
 from os import path
@@ -30,8 +31,21 @@ ts = tskit.load(ts_file)
 
 for iteration in range(0, num_iterations):
     start = perf_counter()
-    ts.Tajimas_D()
+    tajimas_d = ts.Tajimas_D()
     end = perf_counter()
 
     walltime = s_to_ns(end - start)
     print(f'tajimas_d,tskit,{dataset},{revision},{machine_id},{iteration},walltime,{walltime},ns')
+    print(f'tajimas_d,tskit,{dataset},{revision},{machine_id},{iteration},tajimas_d,{tajimas_d},1')
+
+for iteration in range(0, num_iterations):
+    sample_set_1 = numpy.array(ts.samples()[1::2], dtype = numpy.int32)
+    sample_set_2 = numpy.array(ts.samples()[0::2], dtype = numpy.int32)
+
+    start = perf_counter()
+    fst = ts.Fst((sample_set_1, sample_set_2))
+    end = perf_counter()
+
+    walltime = s_to_ns(end - start)
+    print(f'fst,tskit,{dataset},{revision},{machine_id},{iteration},walltime,{walltime},ns')
+    print(f'fst,tskit,{dataset},{revision},{machine_id},{iteration},fst,{fst},1')
