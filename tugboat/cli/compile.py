@@ -5,8 +5,8 @@ def cmd_compile(config: str) -> RequiresContext[_Deps, None]:
     """Configure, compile, and test the project"""
     def factory(deps: _Deps) -> None:
         sh = deps.sh
-        sh(f"cmake --preset {config}")
-        sh(f"cmake --build --preset {config} --parallel")
-        sh(f"ctest --preset {config}")
+        sh(f"cmake --preset {config}", exit_on_failure=True)
+        sh(f"cmake --build --preset {config} --parallel", exit_on_failure=True)
+        sh(f"ctest --preset {config}", exit_on_failure=True)
 
     return RequiresContext(factory)
