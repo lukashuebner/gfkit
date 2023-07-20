@@ -4,6 +4,7 @@
 #include <cereal/archives/binary.hpp>
 
 #include "tdt/graph/compressed-forest.hpp"
+#include "tdt/sequence-forest.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 
 class CompressedForestIO {
@@ -43,6 +44,15 @@ public:
         // The number of nodes of the DAG are computed during the deserialization of the forest
         archive(CURRENT_VERSION, forest, sequence);
     }
+
+    // static SequenceForest load(std::string const& filename, SequenceForest& sequence_forest) {
+    //     SequenceForest sequence_forest();
+    //     load(filename, sequence_forest._forest, sequence_forest._sequence);
+    // }
+
+    // static void save(std::string& filename, SequenceForest& sequence_forest) {
+    //     save(filename, sequence_forest._forest, sequence_forest._sequence);
+    // }
 
 private:
     static constexpr Version CURRENT_VERSION = 1;
