@@ -8,9 +8,10 @@ from tugboat.git_rev import git_rev
 from tugboat.machine_id import machine_id
 from tugboat.deps import _Deps
 
+
 def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int) -> RequiresContext[_Deps, None]:
     """Run the benchmarks on all the datasets"""
-    def factory(deps: _Deps) -> None: 
+    def factory(deps: _Deps) -> None:
         datasets = deps.datasets
         console = deps.console
         config = deps.config
@@ -19,51 +20,57 @@ def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int) -> Requir
 
         progress_bar_columns = (
             rich.progress.SpinnerColumn(),
-            rich.progress.TextColumn("[progress.description]{task.description}"),
+            rich.progress.TextColumn(
+                "[progress.description]{task.description}"),
             rich.progress.BarColumn(),
             rich.progress.MofNCompleteColumn()
         )
         with rich.progress.Progress(*progress_bar_columns, console=console) as progress:
-            task = progress.add_task("Running benchmarks...", total=len(datasets.all()))
+            task = progress.add_task(
+                "Running benchmarks...", total=len(datasets.all()))
 
             for dataset in datasets.all():
                 if not isfile(dataset.trees_file()):
-                    log.warn(f"{dataset.trees_file()} does not exists or is not a file")
+                    log.warn(
+                        f"{dataset.trees_file()} does not exists or is not a file")
                 elif not isfile(dataset.forest_file()):
-                    log.warn(f"{dataset.forest_file()} does not exists or is not a file")
+                    log.warn(
+                        f"{dataset.forest_file()} does not exists or is not a file")
                 elif not redo and exists(dataset.ops_bench_file()):
-                    log.warn(f"{dataset.ops_bench_file()} already exists but --redo not given")
+                    log.warn(
+                        f"{dataset.ops_bench_file()} already exists but --redo not given")
                 elif not redo and exists(dataset.ops_bench_file()):
-                    log.warn(f"{dataset.tajimasD_bench_file()} already exists but --redo not given")
+                    log.warn(
+                        f"{dataset.tajimasD_bench_file()} already exists but --redo not given")
                 else:
                     ok = True
                     # Run sfkit benchmark
                     ret = sh(f"{config.SFKIT_BIN} benchmark"
-                       f" --warmup-iterations={warmup_iterations}"
-                       f" --iterations={iterations}"
-                       f" --forest-file={dataset.forest_file()}"
-                       f" --trees-file={dataset.trees_file()}"
-                       f" --revision={git_rev()}"
-                       f" --machine={machine_id()}"
-                       f" > {dataset.ops_bench_file()}"
-                       f" 2> /dev/null"
-                    )
+                             f" --warmup-iterations={warmup_iterations}"
+                             f" --iterations={iterations}"
+                             f" --forest-file={dataset.forest_file()}"
+                             f" --trees-file={dataset.trees_file()}"
+                             f" --revision={git_rev()}"
+                             f" --machine={machine_id()}"
+                             f" > {dataset.ops_bench_file()}"
+                             f" 2> /dev/null"
+                             )
                     if ret != 0:
                         remove(dataset.ops_bench_file())
                         ok = False
 
                     # Run tajimasD benchmark
-                    sh(f"python3 {config.BENCHMARK_TSKITS_TAJIMAS_D_PY}"
+                    sh(f"python3 {config.BENCHMARK_TSKITS_PYTHON_ONLY_FUNCS_PY}"
                        f" --trees-file={dataset.trees_file()}"
                        f" --iterations={iterations}"
                        f" --revision={git_rev()}"
                        f" --machine={machine_id()}"
                        f" > {dataset.tajimasD_bench_file()}"
-                    )
+                       )
                     if ret != 0:
                         remove(dataset.tajimasD_bench_file())
                         ok = False
-                    
+
                     if ok:
                         log.ok(f"Done benchmarking {dataset.basename()}")
                 progress.advance(task)
