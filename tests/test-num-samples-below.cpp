@@ -13,52 +13,6 @@
 
 using namespace ::Catch::Matchers;
 
-TEST_CASE("SampleSet", "[NumSamplesBelow]") {
-    SampleSet samples{10};
-
-    CHECK(samples.num_nodes_in_dag() == 10);
-    CHECK(samples.popcount() == 0);
-    // CHECK(samples.build_inverse().overall_num_samples() == samples.overall_num_samples());
-    // CHECK(samples.build_inverse().popcount() == 10);
-
-    samples.add(0);
-    samples.add(9);
-    samples.add(5);
-
-    // SampleSet inverse = samples.build_inverse();
-    CHECK(samples.num_nodes_in_dag() == 10);
-    CHECK(samples.popcount() == 3);
-    // CHECK(inverse.overall_num_samples() == samples.overall_num_samples());
-    // CHECK(inverse.popcount() == 7);
-
-    // Check the operator[]
-    CHECK(samples[0] == true);
-    CHECK(samples[1] == false);
-    CHECK(samples[2] == false);
-    CHECK(samples[3] == false);
-    CHECK(samples[4] == false);
-    CHECK(samples[5] == true);
-    CHECK(samples[6] == false);
-    CHECK(samples[7] == false);
-    CHECK(samples[8] == false);
-    CHECK(samples[9] == true);
-
-    // CHECK(inverse[0] == false);
-    // CHECK(inverse[1] == true);
-    // CHECK(inverse[2] == true);
-    // CHECK(inverse[3] == true);
-    // CHECK(inverse[4] == true);
-    // CHECK(inverse[5] == false);
-    // CHECK(inverse[6] == true);
-    // CHECK(inverse[7] == true);
-    // CHECK(inverse[8] == true);
-    // CHECK(inverse[9] == false);
-
-    // Check the iterator
-    CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 5, 9}));
-    // CHECK_THAT(inverse, RangeEquals(std::vector<SampleId>{1, 2, 3, 4, 6, 7, 8}));
-}
-
 TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     EdgeListGraph dag;
     dag.num_nodes(0);
@@ -76,7 +30,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
         dag.compute_num_nodes();
 
         SampleSet empty_samples(dag.num_leaves());
-        REQUIRE(empty_samples.num_nodes_in_dag() == 1);
+        REQUIRE(empty_samples.overall_num_samples() == 1);
         REQUIRE(empty_samples.popcount() == 0);
         NumSamplesBelow empty_num_samples_below(dag, empty_samples);
         CHECK(empty_num_samples_below.num_nodes_in_dag() == 2);

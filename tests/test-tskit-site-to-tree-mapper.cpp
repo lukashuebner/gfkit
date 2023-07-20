@@ -40,7 +40,7 @@ TEST_CASE("TSKitSiteToTreeMapper example multi tree no back no recurrent", "[TSK
     CHECK(site2tree(1) == 1);
     CHECK(site2tree(2) == 2);
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
