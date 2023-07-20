@@ -192,8 +192,6 @@ void benchmark(
     }
 
     // Benchmark computing the diversity
-    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
-    // (Check this!)
     memory_usage.start();
     timer.start();
 
@@ -238,7 +236,7 @@ void benchmark(
     log_time(warmup, "num_segregating_sites", "tskit", timer.stop());
     log_mem(warmup, "num_segregating_sites", "tskit", memory_usage.stop());
 
-    // Does our AFS match the one computed by tskit?
+    // Does our number of segregating sites match the one computed by tskit?
     if (sfkit_num_seg_sites == Catch::Approx(tskit_num_seg_sites).epsilon(FLOAT_EQ_EPS)) {
         std::cerr << "ERROR !! Number of segregating sites mismatch between tskit and sfkit" << std::endl;
         std::cerr << "    " << tskit_num_seg_sites << " vs. " << sfkit_num_seg_sites << " (tskit vs. sfkit)"
@@ -256,9 +254,21 @@ void benchmark(
 
     log_time(warmup, "tajimas_d", "sfkit", timer.stop());
     log_mem(warmup, "tajimas_d", "sfkit", memory_usage.stop());
+    results_printer.print(warmup, "tajimas_d", "sfkit", trees_file, "tajimas_d", tajimas_d, "1", iteration);
 
     memory_usage.start();
     timer.start();
+
+    // Benchmark computing the FST. tskit's implementation is in Python; see Tajima's D above.
+    memory_usage.start();
+    timer.start();
+
+    double const sfkit_fst = sequence_forest.fst(sample_set_1, sample_set_2);
+    do_not_optimize(sfkit_fst);
+
+    log_time(warmup, "fst", "sfkit", timer.stop());
+    log_mem(warmup, "fst", "sfkit", memory_usage.stop());
+    results_printer.print(warmup, "fst", "sfkit", trees_file, "fst", sfkit_fst, "1", iteration);
 }
 
 int main(int argc, char** argv) {

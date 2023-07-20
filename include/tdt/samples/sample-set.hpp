@@ -116,41 +116,36 @@ public:
         std::fill(_samples.begin(), _samples.end(), false);
     }
 
-    SampleId operator[](SampleId const sample_id) const {
+    [[nodiscard]] SampleId operator[](SampleId const sample_id) const {
         KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
         return _samples[sample_id];
     }
 
-    SampleId num_nodes_in_dag() const {
+    [[nodiscard]] SampleId overall_num_samples() const {
         return asserting_cast<SampleId>(_samples.size());
     }
 
-    SampleId popcount() const {
-        return asserting_cast<SampleId>(std::accumulate(_samples.begin(), _samples.end(), 0));
+    [[nodiscard]] SampleId popcount() const {
+        return asserting_cast<SampleId>(std::reduce(_samples.begin(), _samples.end(), 0));
     }
 
-    // Building the inverse is not that trivial, as we don't know which nodes are inner nodes and which are leaves.
-    // SampleSet build_inverse() const {
-    //     // Let's see how well the compiler optimizes this and optimize if the profiler tells us that this is too slow.
-    //     SampleSet inverse(overall_num_samples());
-    //     for (SampleId sample_id = 0; sample_id < _samples.size(); ++sample_id) {
-    //         if (!_samples[sample_id]) {
-    //             inverse.add(sample_id);
-    //         }
-    //     }
-
-    //     return inverse;
-    // }
-
-    std::vector<tsk_id_t> as_tsk_id_t_vector() const {
-        std::vector<tsk_id_t> result;
-        result.reserve(this->popcount());
-        for (SampleId sample_id = 0; sample_id < _samples.size(); ++sample_id) {
-            if (_samples[sample_id]) {
-                result.push_back(asserting_cast<tsk_id_t>(sample_id));
+    [[nodiscard]] SampleSet inverse() const {
+        SampleSet inverse(overall_num_samples());
+        for (SampleId sample_id = 0; sample_id < _samples.size(); sample_id++) {
+            if (!(*this)[sample_id]) {
+                inverse.add(sample_id);
             }
         }
-        return result;
+        return inverse;
+    }
+
+    [[nodiscard]] std::vector<tsk_id_t> to_tsk_samples() const {
+        std::vector<tsk_id_t> tsk_samples;
+        tsk_samples.reserve(popcount());
+        for (auto&& sample_id: *this) {
+            tsk_samples.push_back(asserting_cast<tsk_id_t>(sample_id));
+        }
+        return tsk_samples;
     }
 
 private:

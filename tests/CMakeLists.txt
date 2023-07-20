@@ -41,4 +41,5 @@ register_test(test-segregating-sites FILES test-segregating-sites.cpp tskit-test
 
 register_test(test-tajimas-d FILES test-tajimas-d.cpp LIBRARIES tskit)
 
+register_test(test-sample-set FILES test-sample-set.cpp)
 register_test(test-num-samples-below FILES test-num-samples-below.cpp)

@@ -52,7 +52,7 @@ private:
     void compute(SampleSet const& samples) {
         KASSERT(_dag.check_postorder(), "DAG edges are not post-ordered.", tdt::assert::normal);
         KASSERT(
-            _dag.num_leaves() <= samples.num_nodes_in_dag(),
+            _dag.num_leaves() <= samples.overall_num_samples(),
             "Number of leaves in the DAG is greater than he number of overall samples representable in the subtree "
             "size object. (NOT the number of samples actually in the SampleSet)",
             tdt::assert::light

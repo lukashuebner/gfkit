@@ -44,7 +44,7 @@ public:
     }
 
     [[nodiscard]] double diversity(SampleSet const& sample_set) {
-        auto const n  = num_samples();
+        auto const n  = sample_set.popcount();
         double     pi = 0.0;
         for (uint64_t frequency: allele_frequencies(sample_set)) {
             pi += static_cast<double>(frequency * (n - frequency));
@@ -87,7 +87,7 @@ public:
     // TODO Make this const
     [[nodiscard]] uint64_t num_segregating_sites(SampleSet const& sample_set) {
         size_t num_segregating_sites = 0;
-        // TODO Pass sample set as shared_ptr? 
+        // TODO Pass sample set as shared_ptr?
         for (uint64_t frequency: allele_frequencies(sample_set)) {
             if (frequency != 0 && frequency != num_samples()) {
                 num_segregating_sites++;
@@ -114,6 +114,20 @@ public:
         double const D = (T - S / h) / sqrt(a * S + (b / (h * h + g)) * S * (S - 1));
 
         return D;
+    }
+
+    // This is per sequence length, the other statistics are not
+    [[nodiscard]] double fst(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+        // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X, then
+        // what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
+
+        // TODO Reuse the computation of the num_samples_below(sample_set)
+        auto const sequence_length = _sequence.num_sites();
+        auto const d_x  = diversity(sample_set_1) / sequence_length;
+        auto const d_y  = diversity(sample_set_2) / sequence_length;
+        auto const d_xy = divergence(sample_set_1, sample_set_2) / sequence_length;
+        auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
+        return fst;
     }
 
     [[nodiscard]] SiteId num_sites() const {

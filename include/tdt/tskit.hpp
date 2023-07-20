@@ -130,6 +130,26 @@ public:
         return pi;
     }
 
+    double diversity(SampleSet samples) const {
+        double     pi;
+        auto const tsk_samples        = samples.to_tsk_samples();
+        tsk_size_t sample_set_sizes[] = {tsk_samples.size()};
+
+        auto ret = tsk_treeseq_diversity(
+            &_tree_sequence,
+            1,
+            sample_set_sizes,
+            tsk_samples.data(),
+            0,
+            NULL,
+            TSK_STAT_SITE,
+            &pi
+        );
+        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+
+        return pi;
+    }
+
     double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) const {
         double                divergence;
         constexpr int         num_windows     = 0;
