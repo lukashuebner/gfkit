@@ -45,7 +45,7 @@ def cmd_download() -> RequiresContext[_Deps, None]:
                 elif getsize(ds.tsz_file()) == 0:
                     log.error(f"{ds.tsz_file()} is empty")
                 else:
-                    ret = sh(f"tsunzip --decompress {ds.tsz_file()} > {ds.trees_file()}")
+                    ret = sh(f"tsunzip --decompress {ds.tsz_file()} --stdout > {ds.trees_file()}")
                     if ret == 0:
                         log.ok(f"Extracted {ds.basename()}")
                     else:
