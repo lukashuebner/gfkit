@@ -64,35 +64,6 @@ extern char const* single_tree_ex_mutations;
 extern char const* multiple_tree_ex_nodes;
 extern char const* multiple_tree_ex_edges;
 
-extern char const* odd_tree1_ex_nodes;
-extern char const* odd_tree1_ex_edges;
-
-extern char const* multi_root_tree_ex_nodes;
-extern char const* multi_root_tree_ex_edges;
-
-extern char const* multi_path_tree_ex_nodes;
-extern char const* multi_path_tree_ex_edges;
-
-extern char const* nonbinary_ex_nodes;
-extern char const* nonbinary_ex_edges;
-extern char const* nonbinary_ex_sites;
-extern char const* nonbinary_ex_mutations;
-
-extern char const* unary_ex_nodes;
-extern char const* unary_ex_edges;
-extern char const* unary_ex_sites;
-extern char const* unary_ex_mutations;
-
-extern char const* internal_sample_ex_nodes;
-extern char const* internal_sample_ex_edges;
-extern char const* internal_sample_ex_sites;
-extern char const* internal_sample_ex_mutations;
-
-extern char const* multiroot_ex_nodes;
-extern char const* multiroot_ex_edges;
-extern char const* multiroot_ex_sites;
-extern char const* multiroot_ex_mutations;
-
 extern char const* empty_ex_nodes;
 extern char const* empty_ex_edges;
 

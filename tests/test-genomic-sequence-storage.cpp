@@ -15,9 +15,10 @@ TEST_CASE("Mutation", "[GenomicSequenceStorage]") {
     SiteId const       site_id       = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
     SubtreeId const    tree_id       = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
     AllelicState const allelic_state = GENERATE('A', 'C', 'G', 'T');
+    AllelicState const parent_state  = GENERATE('A', 'C', 'G', 'T');
     SubtreeId const    subtree_id    = GENERATE(1u, 2u, 4u, 5u);
 
-    Mutation mutation(site_id, tree_id, subtree_id, allelic_state);
+    Mutation mutation(site_id, tree_id, subtree_id, allelic_state, parent_state);
     CHECK(mutation.site_id() == site_id);
     CHECK(mutation.subtree_id() == subtree_id);
     CHECK(mutation.tree_id() == tree_id);
@@ -82,13 +83,14 @@ TEST_CASE("GenomicSequenceStorage Mutations", "[GenomicSequenceStorage]") {
     CHECK(sequence_storage.num_sites() == 5);
 
     // Adding mutations does affect the number of sites.
-    size_t          num_sites  = sequence_storage.num_sites();
-    SiteId const    site_id    = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
-    TreeId const    tree_id    = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
-    SubtreeId const subtree_id = GENERATE(1u, 2u, 4u, 5u);
+    size_t          num_sites    = sequence_storage.num_sites();
+    SiteId const    site_id      = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
+    TreeId const    tree_id      = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
+    SubtreeId const subtree_id   = GENERATE(1u, 2u, 4u, 5u);
+    AllelicState    parent_state = 'A';
     for (AllelicState const allelic_state: {'A', 'C', 'G', 'T'}) {
-        sequence_storage.emplace_back(site_id, tree_id, subtree_id, allelic_state);
-        sequence_storage.push_back(Mutation{site_id, tree_id, subtree_id, allelic_state});
+        sequence_storage.emplace_back(site_id, tree_id, subtree_id, allelic_state, parent_state);
+        sequence_storage.push_back(Mutation{site_id, tree_id, subtree_id, allelic_state, parent_state});
         CHECK(sequence_storage.num_sites() == num_sites);
     }
     CHECK(sequence_storage.num_mutations() == 8);

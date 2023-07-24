@@ -22,7 +22,7 @@ using namespace ::Catch::Matchers;
 TEST_CASE("Tajima's D tskit example", "[Diversity]") {
     struct Testcase {
         std::string ts_file;
-        double      expected;
+        double      tskit_tajimas_d;
     };
 
     // 2, 3, and are multiallelic
@@ -30,15 +30,11 @@ TEST_CASE("Tajima's D tskit example", "[Diversity]") {
         {"data/allele-frequency-spectrum-simple-example-0.trees", -0.45947037060657214},
         {"data/allele-frequency-spectrum-simple-example-1.trees", -0.4279734893252207},
     };
-    auto const& testcase = GENERATE_REF(from_range(testcases));
-    auto const& ts_file  = testcase.ts_file;
-    auto const& expected = testcase.expected;
-    std::cout << "Testing " << ts_file << " with expected value " << expected << std::endl;
+    auto const& testcase        = GENERATE_REF(from_range(testcases));
+    auto const& ts_file         = testcase.ts_file;
+    auto const& tskit_tajimas_d = testcase.tskit_tajimas_d;
+    std::cout << "Testing " << ts_file << " with expected value " << tskit_tajimas_d << std::endl;
 
-    TSKitTreeSequence tree_sequence(ts_file);
-
-    auto           reference_afs = tree_sequence.allele_frequency_spectrum();
-    SequenceForest sequence_forest(std::move(tree_sequence));
-
-    CHECK(Approx(sequence_forest.tajimas_d()).epsilon(1e-6) == expected);
+    SequenceForest sequence_forest(ts_file);
+    CHECK(Approx(sequence_forest.tajimas_d()).epsilon(1e-6) == tskit_tajimas_d);
 }

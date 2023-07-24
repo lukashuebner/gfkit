@@ -176,14 +176,14 @@ char const* multi_derived_states_nodes = "1  0       -1   0\n"
                                          "0  0.202   -1   -1\n"
                                          "0  0.253   -1   -1\n";
 
-char const* multi_derived_states_edges = "2 10 4 2\n"
-                                         "2 10 4 3\n"
-                                         "0 10 5 1\n"
-                                         "0 2  5 3\n"
-                                         "2 10 5 4\n"
-                                         "0 7  6 0,5\n"
-                                         "7 10 7 0,5\n"
-                                         "0 2  8 2,6\n";
+char const* multi_derived_states_edges = "2  10  4  2\n"
+                                         "2  10  4  3\n"
+                                         "0  10  5  1\n"
+                                         "0  2   5  3\n"
+                                         "2  10  5  4\n"
+                                         "0  7   6  0,5\n"
+                                         "7  10  7  0,5\n"
+                                         "0  2   8  2,6\n";
 
 char const* multi_derived_states_sites = "1      0\n"
                                          "4.5    0\n"
@@ -192,10 +192,19 @@ char const* multi_derived_states_sites = "1      0\n"
 /* site, node, derived_state, [parent, time] */
 char const* multi_derived_states_mutations = "0    6   1  -1\n"  // to derived state
                                              "0    5   0   0\n"  // back to ancestral state
-                                             "0    3   2   1\n"  // and once more to the derived state
+                                             "0    3   2   1\n"  // and once more to a derived state
                                              "1    5   3  -1\n"  // to derived state
                                              "1    4   0   3\n"  // back to ancestral state
                                              "2    4   1  -1\n"; // to derived state
+// - site 0 - ancestral: 0
+// node:  0  1  2  3
+// state: 1  0  0  2
+// - site 1 - ancestral: 0
+// node:  0  1  2  3
+// state: 0  3  0  0
+// - site 2 - ancestral: 0
+// node:  0  1  2  3
+// state: 0  0  1  1
 
 /* Two (diploid) individuals */
 char const* multi_derived_states_individuals = "0      0.2,1.5    -1,-1\n"
@@ -228,283 +237,6 @@ char const* single_tree_multi_derived_states_mutations =
 // node 1: derived state 1
 // node 2: derived state 2
 // node 3: derived state 2
-
-/*** An example of a nonbinary tree sequence ***/
-/*
-0.41┊          12     ┊         12      ┊
-    ┊           ┃     ┊          ┃      ┊
-0.28┊           ┃     ┊          ┃      ┊
-    ┊           ┃     ┊          ┃      ┊
-0.13┊          10     ┊         10      ┊
-    ┊         ┏━╋━┓   ┊         ┏┻┓     ┊
-0.07┊         ┃ ┃ ┃   ┊         ┃ ┃     ┊
-    ┊         ┃ ┃ ┃   ┊         ┃ ┃     ┊
-0.01┊         ┃ ┃ ┃   ┊         ┃ ┃     ┊
-    ┊         ┃ ┃ ┃   ┊         ┃ ┃     ┊
-0.00┊ 0 1 2 3 4 5 7 6 ┊ 0 1 2 3 4 7 5 6 ┊
-*/
-char const* nonbinary_ex_nodes     = "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "1  0       0   -1\n"
-                                     "0  0.01    0   -1\n"
-                                     "0  0.068   0   -1\n"
-                                     "0  0.130   0   -1\n"
-                                     "0  0.279   0   -1\n"
-                                     "0  0.405   0   -1\n";
-char const* nonbinary_ex_edges     = "0	100	8	0,1,2,3\n"
-                                     "0	100	9	6,8\n"
-                                     "0  100 10  4\n"
-                                     "0  17  10  5\n"
-                                     "0  100 10  7\n"
-                                     "17	100	11	5,9\n"
-                                     "0	17	12	9\n"
-                                     "0  100 12  10\n"
-                                     "17	100	12	11";
-char const* nonbinary_ex_sites     = "1  0\n"
-                                     "18 0\n";
-char const* nonbinary_ex_mutations = "0    2   1\n"
-                                     "1    11  1";
-
-/*** An example of a tree sequence with unary nodes. ***/
-/*
-0.25┊     8   ┊   8     ┊         ┊
-    ┊   ┏━┻━┓ ┊   ┃     ┊         ┊
-0.20┊   ┃   7 ┊   ┃     ┊   7     ┊
-    ┊   ┃   ┃ ┊   ┃     ┊ ┏━┻━┓   ┊
-0.17┊   6   ┃ ┊   6     ┊ ┃   ┃   ┊
-    ┊ ┏━┻┓  ┃ ┊ ┏━┻━┓   ┊ ┃   ┃   ┊
-0.09┊ ┃  5  ┃ ┊ ┃   5   ┊ ┃   5   ┊
-    ┊ ┃ ┏┻┓ ┃ ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊
-0.07┊ ┃ ┃ ┃ ┃ ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊
-    ┊ ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊
-0.00┊ 0 1 3 2 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊
-  0.00      2.00      7.00      10.00
-*/
-char const* unary_ex_nodes = "1  0       0  -1\n"
-                             "1  0       0  -1\n"
-                             "1  0       0  -1\n"
-                             "1  0       0  -1\n"
-                             "0  0.071   0  -1\n"
-                             "0  0.090   0  -1\n"
-                             "0  0.170   0  -1\n"
-                             "0  0.202   0  -1\n"
-                             "0  0.253   0  -1\n";
-char const* unary_ex_edges = "2 10 4 2,3\n"
-                             "0 10 5 1\n"
-                             "0 2  5 3\n"
-                             "2 10 5 4\n"
-                             "0 7  6 0,5\n"
-                             "7 10 7 0\n"
-                             "0 2  7 2\n"
-                             "7 10 7 5\n"
-                             "0 7  8 6\n"
-                             "0 2  8 7\n";
-
-/* We make one mutation for each tree, over unary nodes if they exist */
-char const* unary_ex_sites     = "1.0    0\n"
-                                 "4.5    0\n"
-                                 "8.5    0\n";
-char const* unary_ex_mutations = "0    2   1\n"
-                                 "1    6   1\n"
-                                 "2    5   1\n";
-
-/* An example of a simple tree sequence with multiple marginal trees. */
-
-/* Simple single tree example. */
-char const* multiple_tree_ex_nodes = /*                                    */
-    "1  0   -1   -1\n"               /*         6        |                */
-    "1  0   -1   -1\n"               /*        / \       |                 */
-    "1  0   -1   -1\n"               /*       /   \      |     5           */
-    "0  1   -1   -1\n"               /*      4     \     |    / \          */
-    "0  2   -1   -1\n"               /*     / \     \    |   /   3         */
-    "0  3   -1   -1\n"               /*    /   \     \   |  /   / \        */
-    "0  4   -1   -1\n";              /*   0     1     2  | 0   1   2       */
-                                     /* |----------------|---------------| */
-                                     /* 0                1               2 */
-
-char const* multiple_tree_ex_edges = "0.75  1.0   3   1,2\n"
-                                     "0.0  0.75   4   0,1\n"
-                                     "0.75  1.0   5   0,3\n"
-                                     "0.0  0.75   6   2,4\n";
-
-/* Odd topology -- different roots. */
-
-char const* odd_tree1_ex_nodes = /*        |       |   5    */
-    "1  0   -1  -1\n"            /*        |   4   |   |    */
-    "1  0   -1  -1\n"            /*    3   |   |   |   |    */
-    "0  1   -1  -1\n"            /*    |   |   |   |   |    */
-    "0  2   -1   -1\n"           /*    2   |   2   |   2    */
-    "0  3   -1   -1\n"           /*   / \  |  / \  |  / \   */
-    "0  4   -1   -1\n";          /*  0   1 | 0   1 | 0   1  */
-                                 /* |------|-------|------| */
-                                 /* 0.0    0.2     0.7   1.0*/
-
-char const* odd_tree1_ex_edges = "0.0   1.0 2   0,1\n"
-                                 "0.0   0.2 3   2\n"
-                                 "0.2   0.7 4   2\n"
-                                 "0.7   1.0 4   2\n";
-
-/* An example where some samples descend from other samples, and multiple roots */
-
-char const* multi_root_tree_ex_nodes = "1  0   -1  -1\n" /*  4     5 */
-                                       "1  0   -1  -1\n" /*  |     | */
-                                       "1  1   -1  -1\n" /*  2     3 */
-                                       "1  1   -1  -1\n" /*  |     | */
-                                       "0  2   -1  -1\n" /*  0     1 */
-                                       "0  2   -1  -1\n";
-
-char const* multi_root_tree_ex_edges = "0   1   2   0\n"
-                                       "0   1   3   1\n"
-                                       "0   1   4   2\n"
-                                       "0   1   5   3\n";
-
-/* Examples of tree sequences where samples have different paths to the same ancestor. */
-
-char const* multi_path_tree_ex_nodes = /*       5        |             */
-    "1  0   -1  -1\n"                  /*      / \       |             */
-    "1  0   -1  -1\n"                  /*     /   4      |     4       */
-    "1  0   -1  -1\n"                  /*    /   / \     |    / \      */
-    "0  1   -1  -1\n"                  /*   /   /   \    |   3   \     */
-    "0  2   -1  -1\n"                  /*  /   /     \   |  / \   \    */
-    "0  3   -1  -1\n";                 /* 0   2       1  | 0   2   1   */
-                                       /*----------------|------------ */
-                                       /*0.0            0.2         1.0*/
-
-char const* multi_path_tree_ex_edges = "0.2 1.0 3   0\n"
-                                       "0.2 1.0 3   2\n"
-                                       "0.0 1.0 4   1\n"
-                                       "0.0 0.2 4   2\n"
-                                       "0.2 1.0 4   3\n"
-                                       "0.0 0.2 5   0\n"
-                                       "0.0 0.2 5   4\n";
-
-char const* multi_path_tree_ex2_nodes = "1  0   -1  -1\n"
-                                        "1  0   -1  -1\n"
-                                        "0  1   -1  -1\n"
-                                        "0  2   -1  -1\n"
-                                        "0  3   -1  -1\n";
-
-char const* multi_path_tree_ex2_edges = "0.6 1.0 2   1\n"
-                                        "0.0 1.0 3   0\n"
-                                        "0.0 0.6 4   1\n"
-                                        "0.6 1.0 4   2\n"
-                                        "0.0 1.0 4   3\n";
-
-/* An example of a tree sequence with internally sampled nodes. */
-
-/*
-1.20┊         ┊     8   ┊         ┊
-    ┊         ┊   ┏━┻━┓ ┊         ┊
-1.00┊   7     ┊   ┃   ┃ ┊         ┊
-    ┊ ┏━┻━┓   ┊   ┃   ┃ ┊         ┊
-0.70┊ ┃   ┃   ┊   ┃   ┃ ┊   6     ┊
-    ┊ ┃   ┃   ┊   ┃   ┃ ┊ ┏━┻━┓   ┊
-0.50┊ ┃   5   ┊   5   ┃ ┊ ┃   5   ┊
-    ┊ ┃ ┏━┻┓  ┊  ┏┻━┓ ┃ ┊ ┃ ┏━┻┓  ┊
-0.40┊ ┃ ┃  4  ┊  4  ┃ ┃ ┊ ┃ ┃  4  ┊
-    ┊ ┃ ┃ ┏┻┓ ┊ ┏┻┓ ┃ ┃ ┊ ┃ ┃ ┏┻┓ ┊
-0.20┊ ┃ ┃ ┃ 3 ┊ ┃ ┃ ┃ 3 ┊ ┃ ┃ ┃ 3 ┊
-    ┊ ┃ ┃ ┃   ┊ ┃ ┃ ┃   ┊ ┃ ┃ ┃   ┊
-0.10┊ ┃ 1 2   ┊ ┃ 2 1   ┊ ┃ 1 2   ┊
-    ┊ ┃       ┊ ┃       ┊ ┃       ┊
-0.00┊ 0       ┊ 0       ┊ 0       ┊
-  0.00      2.00      8.00      10.00
-*/
-
-char const* internal_sample_ex_nodes = "1  0.0   0   -1\n"
-                                       "1  0.1   0   -1\n"
-                                       "1  0.1   0   -1\n"
-                                       "1  0.2   0   -1\n"
-                                       "0  0.4   0   -1\n"
-                                       "1  0.5   0   -1\n"
-                                       "0  0.7   0   -1\n"
-                                       "0  1.0   0   -1\n"
-                                       "0  1.2   0   -1\n";
-char const* internal_sample_ex_edges = "2 8  4 0\n"
-                                       "0 10 4 2\n"
-                                       "0 2  4 3\n"
-                                       "8 10 4 3\n"
-                                       "0 10 5 1,4\n"
-                                       "8 10 6 0,5\n"
-                                       "0 2  7 0,5\n"
-                                       "2 8  8 3,5\n";
-/* We make one mutation for each tree, some above the internal node */
-char const* internal_sample_ex_sites     = "1.0    0\n"
-                                           "4.5    0\n"
-                                           "8.5    0\n";
-char const* internal_sample_ex_mutations = "0    2   1\n"
-                                           "1    5   1\n"
-                                           "2    5   1\n";
-
-/*** An example of a tree sequence with multiple roots. ***/
-/*
-0.90┊             ┊         11  ┊             ┊
-    ┊             ┊         ┏┻┓ ┊             ┊
-0.80┊         10  ┊         ┃ ┃ ┊             ┊
-    ┊         ┏┻┓ ┊         ┃ ┃ ┊             ┊
-0.40┊     9   ┃ ┃ ┊    9    ┃ ┃ ┊     9       ┊
-    ┊   ┏━┻┓  ┃ ┃ ┊  ┏━┻━┓  ┃ ┃ ┊   ┏━┻━━┓    ┊
-0.30┊   ┃  ┃  ┃ ┃ ┊  ┃   8  ┃ ┃ ┊   ┃    8    ┊
-    ┊   ┃  ┃  ┃ ┃ ┊  ┃  ┏┻┓ ┃ ┃ ┊   ┃   ┏┻┓   ┊
-0.20┊   ┃  7  ┃ ┃ ┊  7  ┃ ┃ ┃ ┃ ┊   7   ┃ ┃   ┊
-    ┊   ┃ ┏┻┓ ┃ ┃ ┊ ┏┻┓ ┃ ┃ ┃ ┃ ┊ ┏━┻┓  ┃ ┃   ┊
-0.10┊   ┃ ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┃ ┃ ┃ ┃ ┊ ┃  6  ┃ ┃   ┊
-    ┊   ┃ ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┃ ┃ ┃ ┃ ┊ ┃ ┏┻┓ ┃ ┃   ┊
-0.00┊ 5 2 3 4 0 1 ┊ 3 4 1 2 0 5 ┊ 4 0 3 1 2 5 ┊
-    0             4             8            10
-*/
-char const* multiroot_ex_nodes = "1  0.0  0  -1\n"
-                                 "1  0.0  0  -1\n"
-                                 "1  0.0  0  -1\n"
-                                 "1  0.0  0  -1\n"
-                                 "1  0.0  0  -1\n"
-                                 "1  0.0  0  -1\n"
-                                 "0  0.1  0  -1\n"
-                                 "0  0.2  0  -1\n"
-                                 "0  0.3  0  -1\n"
-                                 "0  0.4  0  -1\n"
-                                 "0  0.8  0  -1\n"
-                                 "0  0.9  0  -1\n";
-char const* multiroot_ex_edges = "8  10  6   0,3\n"
-                                 "0  8   7   3\n"
-                                 "0  10  7   4\n"
-                                 "8  10  7   6\n"
-                                 "4  10  8   1,2\n"
-                                 "0  4   9   2\n"
-                                 "0  10  9   7\n"
-                                 "4  10  9   8\n"
-                                 "0  4   10  0,1\n"
-                                 "4  8   11  0,5\n";
-
-/* We make one mutation over each root node */
-char const* multiroot_ex_sites     = "1.0    0\n"
-                                     "2.0    0\n"
-                                     "3.0    0\n"
-                                     "5.0    0\n"
-                                     "6.0    0\n"
-                                     "8.0    0\n"
-                                     "9.0    0\n";
-char const* multiroot_ex_mutations = "0    10  1\n"
-                                     "1    9   1\n"
-                                     "2    5   1\n"
-                                     "3    11  1\n"
-                                     "4    9   1\n"
-                                     "5    9   1\n"
-                                     "6    5   1\n";
-
-/*** An example of a empty tree sequence. ***/
-char const* empty_ex_nodes = "1  0.0  0  -1\n"
-                             "1  0.0  0  -1\n"
-                             "1  0.0  0  -1\n"
-                             "1  0.0  0  -1\n"
-                             "1  0.0  0  -1\n"
-                             "1  0.0  0  -1\n";
-char const* empty_ex_edges = "";
 
 /* Simple utilities to parse text so we can write declarative
  * tests. This is not intended as a robust general input mechanism.

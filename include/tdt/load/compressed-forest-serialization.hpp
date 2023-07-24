@@ -55,5 +55,5 @@ public:
     // }
 
 private:
-    static constexpr Version CURRENT_VERSION = 1;
+    static constexpr Version CURRENT_VERSION = 2;
 };

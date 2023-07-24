@@ -38,39 +38,38 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    auto                   reference_afs = tree_sequence.allele_frequency_spectrum();
     ForestCompressor       forest_compressor(tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
+    GenomicSequenceFactory sequence_factory(tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
 
     // Serialize and deserialize the compressed forest and genome sequence storage
-    CompressedForestIO::save(ARCHIVE_FILE_NAME, compressed_forest, sequence_store);
+    CompressedForestIO::save(ARCHIVE_FILE_NAME, forest, sequence);
 
-    CompressedForest compressed_forest_deserialized;
-    GenomicSequence  sequence_store_deserialized;
-    CompressedForestIO::load(ARCHIVE_FILE_NAME, compressed_forest_deserialized, sequence_store_deserialized);
+    CompressedForest forest_deserialized;
+    GenomicSequence  sequence_deserialized;
+    CompressedForestIO::load(ARCHIVE_FILE_NAME, forest_deserialized, sequence_deserialized);
 
     std::filesystem::remove(ARCHIVE_FILE_NAME);
 
     // CompressedForest
-    CHECK(compressed_forest_deserialized.num_nodes() == compressed_forest.num_nodes());
-    CHECK(compressed_forest_deserialized.num_samples() == compressed_forest.num_samples());
-    CHECK(compressed_forest_deserialized.num_trees() == compressed_forest.num_trees());
-    CHECK(compressed_forest_deserialized.num_edges() == compressed_forest.num_edges());
-    CHECK(compressed_forest_deserialized.num_roots() == compressed_forest.num_roots());
-    CHECK(compressed_forest_deserialized.roots() == compressed_forest.roots());
+    CHECK(forest_deserialized.num_nodes() == forest.num_nodes());
+    CHECK(forest_deserialized.num_samples() == forest.num_samples());
+    CHECK(forest_deserialized.num_trees() == forest.num_trees());
+    CHECK(forest_deserialized.num_edges() == forest.num_edges());
+    CHECK(forest_deserialized.num_roots() == forest.num_roots());
+    CHECK(forest_deserialized.roots() == forest.roots());
 
-    auto const all_samples                    = compressed_forest.all_samples();
-    auto const num_samples_below_deserialized = compressed_forest_deserialized.compute_num_samples_below(all_samples);
-    auto const num_samples_below              = compressed_forest.compute_num_samples_below(all_samples);
-    for (NodeId node_id = 0; node_id < compressed_forest.num_nodes(); ++node_id) {
-        CHECK(compressed_forest_deserialized.is_sample(node_id) == compressed_forest.is_sample(node_id));
+    auto const all_samples                    = forest.all_samples();
+    auto const num_samples_below_deserialized = forest_deserialized.compute_num_samples_below(all_samples);
+    auto const num_samples_below              = forest.compute_num_samples_below(all_samples);
+    for (NodeId node_id = 0; node_id < forest.num_nodes(); ++node_id) {
+        CHECK(forest_deserialized.is_sample(node_id) == forest.is_sample(node_id));
         CHECK(num_samples_below_deserialized(node_id) == num_samples_below(node_id));
     }
 
-    auto cf_dag              = compressed_forest_deserialized.postorder_edges();
-    auto cf_dag_deserialized = compressed_forest_deserialized.postorder_edges();
+    auto cf_dag              = forest_deserialized.postorder_edges();
+    auto cf_dag_deserialized = forest_deserialized.postorder_edges();
     CHECK(cf_dag_deserialized.num_nodes() == cf_dag.num_nodes());
     CHECK(cf_dag_deserialized.num_edges() == cf_dag.num_edges());
     CHECK(cf_dag_deserialized.num_roots() == cf_dag.num_roots());
@@ -88,40 +87,57 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK_THAT(cf_dag_deserialized, RangeEquals(cf_dag));
 
     // GenomicSequenceStore
-    CHECK(sequence_store_deserialized.num_sites() == sequence_store.num_sites());
-    CHECK(sequence_store_deserialized.num_mutations() == sequence_store.num_mutations());
+    CHECK(sequence_deserialized.num_sites() == sequence.num_sites());
+    CHECK(sequence_deserialized.num_mutations() == sequence.num_mutations());
 
-    for (SiteId site_id = 0; site_id < sequence_store.num_sites(); ++site_id) {
-        CHECK(sequence_store_deserialized.ancestral_state(site_id) == sequence_store.ancestral_state(site_id));
-        CHECK(sequence_store_deserialized[site_id] == sequence_store[site_id]);
-        CHECK_THAT(
-            sequence_store_deserialized.mutations_at_site(site_id),
-            RangeEquals(sequence_store.mutations_at_site(site_id))
-        );
+    for (SiteId site_id = 0; site_id < sequence.num_sites(); ++site_id) {
+        CHECK(sequence_deserialized.ancestral_state(site_id) == sequence.ancestral_state(site_id));
+        CHECK(sequence_deserialized[site_id] == sequence[site_id]);
+        CHECK_THAT(sequence_deserialized.mutations_at_site(site_id), RangeEquals(sequence.mutations_at_site(site_id)));
     }
 
-    for (size_t mutation_id = 0; mutation_id < sequence_store.num_mutations(); ++mutation_id) {
-        CHECK(sequence_store_deserialized.mutation_by_id(mutation_id) == sequence_store.mutation_by_id(mutation_id));
+    for (size_t mutation_id = 0; mutation_id < sequence.num_mutations(); ++mutation_id) {
+        CHECK(sequence_deserialized.mutation_by_id(mutation_id) == sequence.mutation_by_id(mutation_id));
     }
 
-    CHECK(sequence_store_deserialized.mutations_are_sorted_by_site() == sequence_store.mutations_are_sorted_by_site());
+    CHECK(sequence_deserialized.mutations_are_sorted_by_site() == sequence.mutations_are_sorted_by_site());
 
     // High-level operations
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs_from_deserialized(
-        sequence_store_deserialized,
-        compressed_forest_deserialized
+    SequenceForest sf(std::move(tree_sequence), std::move(forest), std::move(sequence));
+
+    tree_sequence = TSKitTreeSequence(ts_file);
+    SequenceForest sf_deserialized(
+        std::move(tree_sequence),
+        std::move(forest_deserialized),
+        std::move(sequence_deserialized)
     );
 
-    CHECK(afs.num_samples() == afs_from_deserialized.num_samples());
-    CHECK(afs.num_sites() == afs_from_deserialized.num_sites());
-    CHECK_THAT(afs, RangeEquals(afs_from_deserialized));
+    auto const afs              = sf.allele_frequency_spectrum(sf.all_samples());
+    auto const afs_deserialized = sf_deserialized.allele_frequency_spectrum(sf_deserialized.all_samples());
 
-    // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
-    CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(reference_afs).subspan(1, afs.num_samples() - 1))
+    CHECK(afs.num_samples() == afs_deserialized.num_samples());
+    CHECK_THAT(afs, RangeEquals(afs_deserialized));
+
+    // The original and the deserialized forest should have the same sample ids.
+    SampleSet sample_set_1(sf.num_samples());
+    SampleSet sample_set_2(sf.num_samples());
+    bool      flip = false;
+    for (SampleId sample: sf.all_samples()) {
+        if (flip) {
+            sample_set_1.add(sample);
+        } else {
+            sample_set_2.add(sample);
+        }
+        flip = !flip;
+    }
+    CHECK(sf.diversity() == Approx(sf_deserialized.diversity()).epsilon(1e-4));
+    CHECK(sf.num_segregating_sites() == sf_deserialized.num_segregating_sites());
+    CHECK(
+        sf.divergence(sample_set_1, sample_set_2)
+        == Approx(sf_deserialized.divergence(sample_set_1, sample_set_2)).epsilon(1e-4)
     );
+    CHECK(sf.tajimas_d() == Approx(sf_deserialized.tajimas_d()).epsilon(1e-4));
+    CHECK(sf.fst(sample_set_1, sample_set_2) == Approx(sf_deserialized.fst(sample_set_1, sample_set_2)).epsilon(1e-4));
 }
 
 void convert(std::string const& trees_file, std::string const& forest_file) {
@@ -173,18 +189,21 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     CHECK(forest.num_nodes_is_set());
 
     // --- AFS ---
-    auto reference_afs = tree_sequence.allele_frequency_spectrum();
+    auto tskit_afs = tree_sequence.allele_frequency_spectrum();
 
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence, forest);
+    AlleleFrequencies<PerfectDNAHasher> const allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum const             sfkit_afs(allele_frequencies);
 
-    CHECK(afs.num_samples() == forest.postorder_edges().num_leaves());
-    CHECK(afs.num_sites() == sequence.num_sites());
+    CHECK(sfkit_afs.num_samples() == forest.postorder_edges().num_leaves());
 
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
-    CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(reference_afs).subspan(1, afs.num_samples() - 1))
-    );
+    for (size_t i = 1; i < sfkit_afs.num_samples() - 1; ++i) {
+        if (sfkit_afs[i] != tskit_afs[i]) {
+            std::cerr << "ERROR !! AFS mismatch between tskit and sfkit" << std::endl;
+            std::cerr << "    " << tskit_afs[i] << " vs. " << sfkit_afs[i] << " (tskit vs. sfkit)" << std::endl;
+            std::exit(1);
+        }
+    }
 
     // --- Divergence ---
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));

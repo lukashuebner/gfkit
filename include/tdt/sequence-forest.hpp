@@ -10,13 +10,20 @@
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
 #include "tdt/sequence/allele-frequencies.hpp"
+#include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/sequence/genomic-sequence-storage-factory.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "tdt/tskit.hpp"
+#include "tdt/utils/always_false_v.hpp"
 
+// TODO Move this to a more general place
 // TODO encapsulate CompresedForest and GenomicSequence functions in this class
+template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class SequenceForest {
 public:
+    using MultiallelicFrequency = typename AlleleFrequencies<AllelicStatePerfectHasher>::MultiallelicFrequency;
+    using BiallelicFrequency    = typename AlleleFrequencies<AllelicStatePerfectHasher>::BiallelicFrequency;
+
     // TODO Rename to GenomicSequenceStore
     SequenceForest(
         TSKitTreeSequence&& tree_sequence, CompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
@@ -34,8 +41,8 @@ public:
         _sequence = sequence_factory.move_storage();
     }
 
-    AlleleFrequencies allele_frequencies(SampleSet const& sample_set) {
-        return AlleleFrequencies(_forest, _sequence, sample_set);
+    AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies(SampleSet const& sample_set) {
+        return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, sample_set);
     }
 
     // TODO Make this const
@@ -44,13 +51,37 @@ public:
     }
 
     [[nodiscard]] double diversity(SampleSet const& sample_set) {
-        auto const n  = sample_set.popcount();
-        double     pi = 0.0;
-        for (uint64_t frequency: allele_frequencies(sample_set)) {
-            pi += static_cast<double>(frequency * (n - frequency));
-        }
+        SampleId const n     = sample_set.popcount();
+        double         pi    = 0.0;
+        auto const     freqs = allele_frequencies(sample_set);
+        freqs.visit(
+            // Biallelic visitor
+            [&pi, n](auto&& state) {
+                auto const freq = state.num_ancestral();
+                pi += 2 * static_cast<double>(freq * (n - freq));
+            },
+            // Multiallelic visitor
+            [&pi, n](auto&& state) {
+                // TODO Does the compiler unroll this?
+                for (auto const freq: state) {
+                    pi += static_cast<double>(freq * (n - freq));
+                }
+            }
+        );
 
-        return pi / (0.5 * static_cast<double>(n * (n - 1)));
+        return pi / static_cast<double>(n * (n - 1));
+    }
+
+    [[nodiscard]] AlleleFrequencySpectrum<AllelicStatePerfectHasher> allele_frequency_spectrum() {
+        return AlleleFrequencySpectrum<AllelicStatePerfectHasher>(allele_frequencies(_forest.all_samples()));
+    }
+
+    [[nodiscard]] AlleleFrequencySpectrum<AllelicStatePerfectHasher> allele_frequency_spectrum(SampleSet sample_set) {
+        return AlleleFrequencySpectrum<AllelicStatePerfectHasher>(allele_frequencies(sample_set));
+    }
+
+    [[nodiscard]] double divergence(SampleSet const& sample_set) {
+        return divergence(_forest.all_samples(), sample_set);
     }
 
     [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
@@ -59,6 +90,7 @@ public:
 
         double divergence = 0.0;
         // TODO Combine both frequencies computations into one
+
         auto allele_freq_1    = allele_frequencies(sample_set_1);
         auto allele_freq_2    = allele_frequencies(sample_set_2);
         auto allele_freq_1_it = allele_freq_1.cbegin();
@@ -69,10 +101,34 @@ public:
                 "Allele frequency lists have different lengths (different number of sites).",
                 tdt::assert::light
             );
-            auto const freq1 = *allele_freq_1_it;
-            auto const freq2 = *allele_freq_2_it;
-            // divergence += static_cast<double>(freq1 * (n2 - freq2));
-            divergence += static_cast<double>(freq1 * (n2 - freq2) + freq2 * (n1 - freq1));
+
+            auto const state_1 = *allele_freq_1_it;
+            auto const state_2 = *allele_freq_2_it;
+
+            [[likely]] if (std::holds_alternative<BiallelicFrequency>(state_1) && std::holds_alternative<BiallelicFrequency>(state_2)) {
+                double const freq1 = std::get<BiallelicFrequency>(state_1).num_ancestral();
+                double const freq2 = std::get<BiallelicFrequency>(state_2).num_ancestral();
+                divergence += static_cast<double>(freq1 * (n2 - freq2) + freq2 * (n1 - freq1));
+            }
+            else {
+                allele_freq_1_it.force_multiallelicity();
+                allele_freq_2_it.force_multiallelicity();
+                auto const freq1_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_1_it);
+                auto const freq2_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_2_it);
+
+                using Idx = typename MultiallelicFrequency::Idx;
+                for (Idx i = 0; i < freq1_multiallelic.num_states; i++) {
+                    for (Idx j = 0; j < freq2_multiallelic.num_states; j++) {
+                        if (i != j) {
+                            divergence += static_cast<double>(
+                                freq1_multiallelic[i] * (n2 - freq2_multiallelic[j])
+                                + freq2_multiallelic[j] * (n1 - freq1_multiallelic[i])
+                            );
+                        }
+                    }
+                }
+            }
+
             allele_freq_1_it++;
             allele_freq_2_it++;
         }
@@ -86,13 +142,26 @@ public:
 
     // TODO Make this const
     [[nodiscard]] uint64_t num_segregating_sites(SampleSet const& sample_set) {
-        size_t num_segregating_sites = 0;
-        // TODO Pass sample set as shared_ptr?
-        for (uint64_t frequency: allele_frequencies(sample_set)) {
-            if (frequency != 0 && frequency != num_samples()) {
+        size_t     num_segregating_sites = 0;
+        auto const num_samples           = sample_set.popcount();
+
+        auto const freqs = allele_frequencies(sample_set);
+        freqs.visit(
+            [&num_segregating_sites, num_samples](auto&& state) {
+                if (state.num_ancestral() != 0 && state.num_ancestral() != num_samples) {
+                    num_segregating_sites++;
+                }
+            },
+            [&num_segregating_sites, num_samples](auto&& state) {
+                for (auto const num_samples_in_state: state) {
+                    if (num_samples_in_state == num_samples) {
+                        return;
+                    }
+                }
                 num_segregating_sites++;
             }
-        }
+        );
+
         return num_segregating_sites;
     }
 
@@ -123,10 +192,10 @@ public:
 
         // TODO Reuse the computation of the num_samples_below(sample_set)
         auto const sequence_length = _sequence.num_sites();
-        auto const d_x  = diversity(sample_set_1) / sequence_length;
-        auto const d_y  = diversity(sample_set_2) / sequence_length;
-        auto const d_xy = divergence(sample_set_1, sample_set_2) / sequence_length;
-        auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
+        auto const d_x             = diversity(sample_set_1) / sequence_length;
+        auto const d_y             = diversity(sample_set_2) / sequence_length;
+        auto const d_xy            = divergence(sample_set_1, sample_set_2) / sequence_length;
+        auto const fst             = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
         return fst;
     }
 

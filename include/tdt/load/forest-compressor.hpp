@@ -79,11 +79,10 @@ public:
             return ts_node_id < asserting_cast<tsk_id_t>(num_samples);
         };
 
-        // TODO Rewrite this, once we have the tree_sequence iterator
-        // TODO Add progress bar or progress report (for the large datasets)
         // size_t const num_trees            = _tree_sequence.num_trees();
         // size_t       tree_counter         = 0;
         // size_t       report_every_n_trees = num_trees / 100;
+        // TODO Rewrite this, once we have the tree_sequence iterator
         for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next()) {
             // tree_counter++;
             // if (report_every_n_trees == 0 || tree_counter % report_every_n_trees == 0) {

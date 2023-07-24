@@ -18,7 +18,7 @@ class GenomicSequenceFactory {
 public:
     // Rename storage to store?
     GenomicSequenceFactory(TSKitTreeSequence const& tree_sequence)
-        : _storage(tree_sequence.num_sites(), tree_sequence.num_mutations()),
+        : _sequence(tree_sequence.num_sites(), tree_sequence.num_mutations()),
           _site2tree(tree_sequence),
           _mutation_it(tree_sequence.mutations().begin()),
           _mutations_end(tree_sequence.mutations().end()) {
@@ -47,16 +47,22 @@ public:
             SubtreeId const sf_subtree_id = ts_node2sf_subtree.at(_mutation_it->node);
             KASSERT(_mutation_it->node != TSK_NULL, "Mutation node is null", tdt::assert::light);
             KASSERT(_mutation_it->derived_state_length == 1u, "Derived state length is not 1", tdt::assert::light);
-            AllelicState const derived_state      = *_mutation_it->derived_state;
-            tsk_id_t           parent_mutation_id = _mutation_it->parent;
-            tsk_id_t           mutation_id        = asserting_cast<tsk_id_t>(_storage.num_mutations());
+
+            AllelicState const derived_state = *_mutation_it->derived_state;
+            tsk_id_t const     mutation_id   = asserting_cast<tsk_id_t>(_sequence.num_mutations());
             KASSERT(
                 mutation_id == _mutation_it->id,
                 "Mutation ID is not equal to the index in the mutations vector",
                 tdt::assert::light
             );
 
-            _storage.emplace_back(site_id, tree_id, sf_subtree_id, derived_state, parent_mutation_id);
+            tsk_id_t const     parent_mutation_id = _mutation_it->parent;
+            AllelicState const ancestral_state =
+                parent_mutation_id == TSK_NULL
+                    ? _sequence.ancestral_state(asserting_cast<SiteId>(site_id))
+                    : _sequence.mutation_by_id(asserting_cast<MutationId>(parent_mutation_id)).allelic_state();
+
+            _sequence.emplace_back(site_id, tree_id, sf_subtree_id, derived_state, ancestral_state);
             ++_mutation_it;
         }
         return true;
@@ -70,17 +76,17 @@ public:
         );
         KASSERT(!_moved, "Storage has already been moved", tdt::assert::light);
         _moved = true;
-        return std::move(_storage);
+        return std::move(_sequence);
     }
 
     void finalize() {
         KASSERT(!_finalized, "Storage has already been finalized", tdt::assert::light);
         _finalized = true;
-        _storage.build_mutation_indices();
+        _sequence.build_mutation_indices();
     }
 
 private:
-    GenomicSequence           _storage;
+    GenomicSequence           _sequence;
     TskMutationView           _tsk_mutations;
     TSKitSiteToTreeMapper     _site2tree;
     TskMutationView::iterator _mutation_it;
@@ -92,10 +98,10 @@ private:
         // Store ancestral states
         for (auto&& site: tree_sequence.sites()) {
             KASSERT(site.ancestral_state_length == 1u, "Ancestral state length is not 1", tdt::assert::light);
-            _storage.emplace_back(*site.ancestral_state);
+            _sequence.emplace_back(*site.ancestral_state);
         }
         KASSERT(
-            _storage.num_sites() == tree_sequence.num_sites(),
+            _sequence.num_sites() == tree_sequence.num_sites(),
             "Number of sites reported by num_sites() and in the sites() iterator does not match",
             tdt::assert::light
         );

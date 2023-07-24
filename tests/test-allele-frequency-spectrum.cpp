@@ -7,12 +7,12 @@
 #include <tskit.h>
 
 #include "tdt/assertion_levels.hpp"
+#include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/compressed-forest-serialization.hpp"
+#include "tdt/load/forest-compressor.hpp"
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/forest-compressor.hpp"
 
 using namespace ::Catch::Matchers;
 
@@ -70,15 +70,16 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
     ForestCompressor       forest_compressor(tdt_tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tdt_tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
+    GenomicSequenceFactory sequence_factory(tdt_tree_sequence);
+    CompressedForest       forest = forest_compressor.compress(sequence_factory);
 
-    auto sequence_store = sequence_store_factory.move_storage();
+    auto sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
+    SampleSet const                               all_samples = forest.all_samples();
+    AlleleFrequencies<PerfectNumericHasher> const allele_frequencies(forest, sequence, all_samples);
+    AlleleFrequencySpectrum<PerfectNumericHasher> afs(allele_frequencies);
 
     CHECK(afs.num_samples() == 4);
-    CHECK(afs.num_sites() == 3);
 
     CHECK(afs.frequency(0) == 0u);
     CHECK(afs.frequency(1) == 2u);
@@ -99,7 +100,7 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
     tsk_treeseq_t tskit_tree_sequence;
     tsk_id_t      samples[]          = {0, 1, 2, 3};
     tsk_size_t    sample_set_sizes[] = {4};
-    double        ref_result[5];
+    double        tskit_afs[5];
     int           ret;
 
     tsk_treeseq_from_text(
@@ -124,39 +125,39 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
         0,
         NULL,
         TSK_STAT_POLARISED,
-        ref_result
+        tskit_afs
     );
     CHECK(ret == 0);
-    CHECK(ref_result[0] == 0);
-    CHECK(ref_result[1] == 1.0);
-    CHECK(ref_result[2] == 1.0);
-    CHECK(ref_result[3] == 0);
+    CHECK(tskit_afs[0] == 0);
+    CHECK(tskit_afs[1] == 1.0);
+    CHECK(tskit_afs[2] == 1.0);
+    CHECK(tskit_afs[3] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
     TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
-    CHECK_THAT(wrapper_result, RangeEquals(ref_result));
+    CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     ForestCompressor       forest_compressor(tdt_tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tdt_tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
+    GenomicSequenceFactory sequence_factory(tdt_tree_sequence);
+    CompressedForest       forest = forest_compressor.compress(sequence_factory);
 
-    auto sequence_store = sequence_store_factory.move_storage();
+    auto sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
+    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
 
-    CHECK(afs.num_samples() == 4);
-    CHECK(afs.num_sites() == 1);
+    CHECK(sfkit_afs.num_samples() == 4);
 
-    CHECK(afs.frequency(0) == 0u);
-    CHECK(afs.frequency(1) == 1u);
-    CHECK(afs.frequency(2) == 1u);
-    CHECK(afs.frequency(3) == 0u);
-    CHECK(afs.frequency(4) == 0u);
+    CHECK(sfkit_afs.frequency(0) == 0u);
+    CHECK(sfkit_afs.frequency(1) == 1u);
+    CHECK(sfkit_afs.frequency(2) == 1u);
+    CHECK(sfkit_afs.frequency(3) == 0u);
+    CHECK(sfkit_afs.frequency(4) == 0u);
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
     CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(ref_result).subspan(1, afs.num_samples() - 1))
+        std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
+        RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
@@ -168,7 +169,7 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
     tsk_treeseq_t tskit_tree_sequence;
     tsk_id_t      samples[]          = {0, 1, 2, 3};
     tsk_size_t    sample_set_sizes[] = {4, 0};
-    double        ref_result[5];
+    double        tskit_afs[5];
     int           ret;
 
     tsk_treeseq_from_text(
@@ -196,38 +197,38 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
         0,
         NULL,
         TSK_STAT_POLARISED,
-        ref_result
+        tskit_afs
     );
     CHECK(ret == 0);
-    CHECK(ref_result[0] == 0);
-    CHECK(ref_result[1] == 2.0);
-    CHECK(ref_result[2] == 0);
-    CHECK(ref_result[3] == 0);
-    CHECK(ref_result[4] == 0); // tskit considers all-sites-derived as no-site-derived
+    CHECK(tskit_afs[0] == 0);
+    CHECK(tskit_afs[1] == 2.0);
+    CHECK(tskit_afs[2] == 0);
+    CHECK(tskit_afs[3] == 0);
+    CHECK(tskit_afs[4] == 0); // tskit considers all-sites-derived as no-site-derived
 
     // Test our method of calling tskit's AFS with our wrapper.
     TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
-    CHECK_THAT(wrapper_result, RangeEquals(ref_result));
+    CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     ForestCompressor       forest_compressor(tdt_tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tdt_tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
+    GenomicSequenceFactory sequence_factory(tdt_tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
-    CHECK(afs.num_samples() == 4);
-    CHECK(afs.num_sites() == 3);
+    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    CHECK(sfkit_afs.num_samples() == 4);
 
-    CHECK(afs.frequency(0) == 0u);
-    CHECK(afs.frequency(1) == 2u);
-    CHECK(afs.frequency(2) == 0u);
-    CHECK(afs.frequency(3) == 0u);
-    CHECK(afs.frequency(4) == 1u);
+    CHECK(sfkit_afs.frequency(0) == 0u);
+    CHECK(sfkit_afs.frequency(1) == 2u);
+    CHECK(sfkit_afs.frequency(2) == 0u);
+    CHECK(sfkit_afs.frequency(3) == 0u);
+    CHECK(sfkit_afs.frequency(4) == 1u);
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
     CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(ref_result).subspan(1, afs.num_samples() - 1))
+        std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
+        RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
@@ -238,7 +239,7 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     tsk_treeseq_t tskit_tree_sequence;
     tsk_id_t      samples[]          = {0, 1, 2, 3};
     tsk_size_t    sample_set_sizes[] = {4, 0};
-    double        ref_result[5];
+    double        tskit_afs[5];
     int           ret;
 
     tsk_treeseq_from_text(
@@ -272,39 +273,39 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
         0,
         NULL,
         TSK_STAT_POLARISED,
-        ref_result
+        tskit_afs
     );
     CHECK(ret == 0);
-    CHECK(ref_result[0] == 0);
-    CHECK(ref_result[1] == 3.0);
-    CHECK(ref_result[2] == 1.0);
-    CHECK(ref_result[3] == 0);
-    CHECK(ref_result[4] == 0);
+    CHECK(tskit_afs[0] == 0);
+    CHECK(tskit_afs[1] == 3.0);
+    CHECK(tskit_afs[2] == 1.0);
+    CHECK(tskit_afs[3] == 0);
+    CHECK(tskit_afs[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
     TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
-    CHECK_THAT(wrapper_result, RangeEquals(ref_result));
+    CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     ForestCompressor       forest_compressor(tdt_tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tdt_tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
+    GenomicSequenceFactory sequence_factory(tdt_tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
-    CHECK(afs.num_samples() == 4);
-    CHECK(afs.num_sites() == 3);
+    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    CHECK(sfkit_afs.num_samples() == 4);
 
     // TODO Manually check these values!
-    CHECK(afs.frequency(0) == 0u);
-    CHECK(afs.frequency(1) == 3u);
-    CHECK(afs.frequency(2) == 1u);
-    CHECK(afs.frequency(3) == 0u);
-    CHECK(afs.frequency(4) == 0u);
+    CHECK(sfkit_afs.frequency(0) == 0u);
+    CHECK(sfkit_afs.frequency(1) == 3u);
+    CHECK(sfkit_afs.frequency(2) == 1u);
+    CHECK(sfkit_afs.frequency(3) == 0u);
+    CHECK(sfkit_afs.frequency(4) == 0u);
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
     CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(ref_result).subspan(1, afs.num_samples() - 1))
+        std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
+        RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
@@ -314,7 +315,7 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
     tsk_treeseq_t tskit_tree_sequence;
     tsk_id_t      samples[]          = {0, 1, 2, 3};
     tsk_size_t    sample_set_sizes[] = {4, 0};
-    double        ref_result[5];
+    double        tskit_afs[5];
     int           ret;
 
     tsk_treeseq_from_text(
@@ -348,39 +349,39 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
         0,
         NULL,
         TSK_STAT_POLARISED,
-        ref_result
+        tskit_afs
     );
     CHECK(ret == 0);
-    CHECK(ref_result[0] == 0);
-    CHECK(ref_result[1] == 1.0);
-    CHECK(ref_result[2] == 2.0);
-    CHECK(ref_result[3] == 0);
-    CHECK(ref_result[4] == 0);
+    CHECK(tskit_afs[0] == 0);
+    CHECK(tskit_afs[1] == 1.0);
+    CHECK(tskit_afs[2] == 2.0);
+    CHECK(tskit_afs[3] == 0);
+    CHECK(tskit_afs[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
     TSKitTreeSequence tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
     auto              wrapper_result = tdt_tree_sequence.allele_frequency_spectrum();
-    CHECK_THAT(wrapper_result, RangeEquals(ref_result));
+    CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     // TODO Write a utility function to construct the compressed tree + sequence store and use it in all the tests.
     ForestCompressor       forest_compressor(tdt_tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tdt_tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
+    GenomicSequenceFactory sequence_factory(tdt_tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(sequence_store, compressed_forest);
-    CHECK(afs.num_samples() == 4);
-    CHECK(afs.num_sites() == 3);
+    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    CHECK(sfkit_afs.num_samples() == 4);
 
-    CHECK(afs.frequency(0) == 0u);
-    CHECK(afs.frequency(1) == 1u);
-    CHECK(afs.frequency(2) == 2u);
-    CHECK(afs.frequency(3) == 0u);
-    CHECK(afs.frequency(4) == 0u);
+    CHECK(sfkit_afs.frequency(0) == 0u);
+    CHECK(sfkit_afs.frequency(1) == 1u);
+    CHECK(sfkit_afs.frequency(2) == 2u);
+    CHECK(sfkit_afs.frequency(3) == 0u);
+    CHECK(sfkit_afs.frequency(4) == 0u);
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
     CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(ref_result).subspan(1, afs.num_samples() - 1))
+        std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
+        RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
@@ -399,21 +400,21 @@ TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    auto              reference_afs = tree_sequence.allele_frequency_spectrum();
+    auto              tskit_afs = tree_sequence.allele_frequency_spectrum();
 
     ForestCompressor       forest_compressor(tree_sequence);
-    GenomicSequenceFactory sequence_store_factory(tree_sequence);
-    CompressedForest       compressed_forest = forest_compressor.compress(sequence_store_factory);
-    GenomicSequence        sequence_store    = sequence_store_factory.move_storage();
+    GenomicSequenceFactory sequence_factory(tree_sequence);
+    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence_store, compressed_forest);
+    AlleleFrequencies<PerfectDNAHasher>       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum<PerfectDNAHasher> sfkit_afs(allele_frequencies);
 
-    CHECK(afs.num_samples() == compressed_forest.postorder_edges().num_leaves());
-    CHECK(afs.num_sites() == sequence_store.num_sites());
+    CHECK(sfkit_afs.num_samples() == forest.postorder_edges().num_leaves());
 
     // tskit stores 0's in the lowest and highest position of the AFS for unwindowed AFS, we don't.
     CHECK_THAT(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        RangeEquals(std::span(reference_afs).subspan(1, afs.num_samples() - 1))
+        std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
+        RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
 }
