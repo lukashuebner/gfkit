@@ -47,8 +47,8 @@ def cmd_download() -> RequiresContext[_Deps, None]:
                 else:
                     ret = sh(f"tsunzip --decompress {ds.tsz_file()} > {ds.trees_file()}")
                     if ret == 0:
-                        log.error(f"Failed to extract {ds.basename()}")
-                    else:
                         log.ok(f"Extracted {ds.basename()}")
+                    else:
+                        log.error(f"Failed to extract {ds.basename()}")
 
     return RequiresContext(factory)
