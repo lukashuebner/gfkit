@@ -81,14 +81,14 @@ public:
 
         // TODO Rewrite this, once we have the tree_sequence iterator
         // TODO Add progress bar or progress report (for the large datasets)
-        size_t const num_trees            = _tree_sequence.num_trees();
-        size_t       tree_counter         = 0;
-        size_t       report_every_n_trees = num_trees / 100;
+        // size_t const num_trees            = _tree_sequence.num_trees();
+        // size_t       tree_counter         = 0;
+        // size_t       report_every_n_trees = num_trees / 100;
         for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next()) {
-            tree_counter++;
-            if (report_every_n_trees == 0 || tree_counter % report_every_n_trees == 0) {
-                std::cerr << "Compressing tree " << tree_counter << "/" << num_trees << std::endl;
-            }
+            // tree_counter++;
+            // if (report_every_n_trees == 0 || tree_counter % report_every_n_trees == 0) {
+            //     std::cerr << "Compressing tree " << tree_counter << "/" << num_trees << std::endl;
+            // }
             // Reset the mapper for this tree
             // TODO Specify for which nodes we want mapping instead of computing and storing it for all nodes
             ts_node2sf_subtree.reset();

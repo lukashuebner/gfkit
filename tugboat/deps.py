@@ -9,4 +9,4 @@ class _Deps():
     console: Console
     log: Logger
     datasets: Datasets
-    sh: Callable[[str, bool], None]
+    sh: Callable[[str, bool], int]

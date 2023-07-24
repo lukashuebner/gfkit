@@ -88,7 +88,7 @@ void benchmark(
         results_printer.print_memory(warmup, section, variant, trees_file, report, iteration);
     };
 
-    // Benchmark tree sequence loading
+    // --- Benchmark tree sequence loading ---
     Timer             timer;
     MemoryUsage       memory_usage;
     TSKitTreeSequence tree_sequence(trees_file);
@@ -97,7 +97,7 @@ void benchmark(
         log_time(warmup, "load_trees_file", "tskit", timer.stop());
     }
 
-    // Benchmark building the DAG from the tree sequence
+    // --- Benchmark building the DAG from the tree sequence ---
     memory_usage.start();
     timer.start();
 
@@ -111,7 +111,7 @@ void benchmark(
     log_time(warmup, "load_forest_file", "sfkit", timer.stop());
     log_mem(warmup, "load_forest_file", "sfkit", memory_usage.stop());
 
-    // Benchmark computing subtree sizes
+    // --- Benchmark computing subtree sizes ---
     memory_usage.start();
     timer.start();
 
@@ -122,12 +122,17 @@ void benchmark(
     log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
     log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
 
-    // Benchmark computing the AFS
+    // --- Construct the SequenceForest object on which we then call the high-level operations. ---
+    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
+    // (Check this!)
+    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+
+    // --- Benchmark computing the AFS ---
     memory_usage.start();
     timer.start();
 
-    AlleleFrequencySpectrum<PerfectDNAHasher> afs(sequence, forest);
-    do_not_optimize(afs);
+    auto const sfkit_afs = sequence_forest.allele_frequency_spectrum();
+    do_not_optimize(sfkit_afs);
 
     log_time(warmup, "afs", "sfkit", timer.stop());
     log_mem(warmup, "afs", "sfkit", memory_usage.stop());
@@ -135,29 +140,25 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    auto reference_afs = tree_sequence.allele_frequency_spectrum();
-    do_not_optimize(reference_afs);
+    auto const tskit_afs = tree_sequence.allele_frequency_spectrum();
+    do_not_optimize(tskit_afs);
 
     log_time(warmup, "afs", "tskit", timer.stop());
     log_mem(warmup, "afs", "tskit", memory_usage.stop());
 
     // Does our AFS match the one computed by tskit?
-    bool const equal = std::ranges::equal(
-        std::span(afs).subspan(1, afs.num_samples() - 1),
-        std::span(reference_afs).subspan(1, afs.num_samples() - 1)
-    );
-    if (!equal) {
-        std::cerr << "ERROR !! AFS mismatch between tskit and sf" << std::endl;
-        std::exit(1);
+    for (size_t i = 1; i < sfkit_afs.num_samples() - 1; ++i) {
+        if (sfkit_afs[i] != tskit_afs[i]) {
+            std::cerr << "ERROR !! AFS mismatch between tskit and sfkit" << std::endl;
+            std::cerr << "    " << tskit_afs[i] << " vs. " << sfkit_afs[i] << " (tskit vs. sfkit)" << std::endl;
+            std::exit(1);
+        }
     }
 
-    // Benchmark computing the divergence
-    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
-    // (Check this!)
-    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
-    SampleSet      sample_set_1(sequence_forest.num_samples());
-    SampleSet      sample_set_2(sequence_forest.num_samples());
-    bool           flip = false;
+    // --- Benchmark computing the divergence ---
+    SampleSet sample_set_1(sequence_forest.num_samples());
+    SampleSet sample_set_2(sequence_forest.num_samples());
+    bool      flip = false;
     for (SampleId sample: sequence_forest.all_samples()) {
         if (flip) {
             sample_set_1.add(sample);
@@ -191,7 +192,7 @@ void benchmark(
         std::exit(1);
     }
 
-    // Benchmark computing the diversity
+    // --- Benchmark computing the diversity ---
     memory_usage.start();
     timer.start();
 
@@ -217,7 +218,7 @@ void benchmark(
         std::exit(1);
     }
 
-    // Benchmark computing the number of segregating sites
+    // --- Benchmark computing the number of segregating sites ---
     memory_usage.start();
     timer.start();
 
@@ -244,8 +245,9 @@ void benchmark(
         std::exit(1);
     }
 
-    // Benchmark computing Tajima's D. tskit does implement this only in Python, not in C. We're using
-    // experiments/scripts/benchmark-tskits-tajimas-d.py to measure tskit's performance.
+    // --- Benchmark computing Tajima's D. ---
+    // tskit does implement this only in Python, not in C. We're using experiments/scripts/benchmark-tskits-tajimas-d.py
+    // to measure tskit's performance.
     memory_usage.start();
     timer.start();
 
@@ -259,7 +261,8 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    // Benchmark computing the FST. tskit's implementation is in Python; see Tajima's D above.
+    // --- Benchmark computing the FST. ---
+    // tskit's implementation is in Python; see Tajima's D above.
     memory_usage.start();
     timer.start();
 
