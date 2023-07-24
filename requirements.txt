@@ -3,3 +3,6 @@ tszip==0.2.2
 sh==2.0.4
 fs==2.4.16
 returns==0.21.0
+click==8.1.6
+rich==13.4.2
+pandas==2.0.3
