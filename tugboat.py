@@ -90,9 +90,8 @@ def benchmark(redo: bool, warmup_iterations: int, iterations: int):
 # --- compress ---
 @cli.command()
 @click.option("--parallel", help="Number of conversions to run in parallel", default=1)
-@click.option("--dry-run", is_flag=True, help="Print the commands without running them.", default=False)
-def compress(parallel: int, dryrun: bool):
-    cmd_compress(parallel, dryrun)(deps)
+def compress(parallel: int):
+    cmd_compress(parallel)(deps)
 
 # --- program entry point ---
 if __name__ == "__main__":

@@ -9,15 +9,18 @@ from rich.console import Console
 from tugboat.dataset import Dataset
 from tugboat.log import Logger
 import subprocess as sp
+from typing import Callable
 
 # TODO
-def _compress_and_check_for_error(sfkit: str, dataset: Dataset, console: Console, log: Logger):
+def _compress_and_check_for_error(sfkit_compress: str, dataset: Dataset, sh: Callable[[str, bool], int], log: Logger):
     try:
         sh(
-            f"compress --warmup-iterations=0 --iterations=1 --forest-output={dataset.forest_file()}"
-            f"--trees-file={dataset.trees_file()} revision={git_rev()}, machine={machine_id()}",
-            output=dataset.conversion_bench_file(),
-            check=True
+            f"{sfkit_compress} "
+            f"--trees-file={dataset.trees_file()} "
+            f"--forest-file={dataset.forest_file()} "
+            f"--revision={git_rev()} "
+            f"--machine={machine_id()} "
+            f" > {dataset.conversion_bench_file()}"
         )
         log.ok(f"Converted {dataset.basename()}")
     except sp.CalledProcessError as e:
@@ -31,9 +34,10 @@ def _compress_and_check_for_error(sfkit: str, dataset: Dataset, console: Console
             """
         )
 
-def cmd_compress(parallel: int, dryrun: bool):
+def cmd_compress(parallel: int):
     """Compress all the datasets (.trees) to the .forest format"""
     def factory(deps: _Deps) -> None:
+        sh = deps.sh
         config = deps.config
         console = deps.console
         datasets = deps.datasets
@@ -48,6 +52,6 @@ def cmd_compress(parallel: int, dryrun: bool):
                     elif exists(dataset.conversion_bench_file()):
                         log.warn(f"{dataset.conversion_bench_file()} already exists")
                     else:
-                        pool.submit(_compress_and_check_for_error, sfkit_compress, dataset, console)
+                        pool.submit(_compress_and_check_for_error, sfkit_compress, dataset, sh, log)
 
     return RequiresContext(factory)
