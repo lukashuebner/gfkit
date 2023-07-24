@@ -140,7 +140,7 @@ void benchmark(
     memory_usage.start();
     timer.start();
 
-    auto const tskit_afs = tree_sequence.allele_frequency_spectrum();
+    auto const tskit_afs = sequence_forest.tree_sequence().allele_frequency_spectrum();
     do_not_optimize(tskit_afs);
 
     log_time(warmup, "afs", "tskit", timer.stop());

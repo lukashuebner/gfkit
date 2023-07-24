@@ -207,7 +207,7 @@ public:
         return num_seg_sites;
     }
 
-    std::vector<double> allele_frequency_spectrum() {
+    std::vector<double> allele_frequency_spectrum() const {
         std::vector<double>   results;
         std::vector<tsk_id_t> samples;
 
