@@ -219,6 +219,26 @@ public:
         return _forest;
     }
 
+    [[nodiscard]] TreeId num_trees() const {
+        return _forest.num_trees();
+    }
+
+    [[nodiscard]] MutationId num_mutations() const {
+        return _sequence.num_mutations();
+    }
+
+    [[nodiscard]] SubtreeId num_unique_subtrees() const {
+        return _forest.num_unique_subtrees();
+    }
+
+    [[nodiscard]] SubtreeId num_subtrees_with_mutations() const {
+        return _sequence.subtrees_with_mutations().size();
+    }
+
+    [[nodiscard]] TSKitTreeSequence& tree_sequence() {
+        return _tree_sequence;
+    }
+
     // TODO We should not store this!!
     [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
         return _tree_sequence;

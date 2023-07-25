@@ -134,9 +134,8 @@ public:
         ToVertex,
     };
 
-    // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
-    // This is incredibly slow, so use it only in unit tests
-    void compute_num_nodes() {
+    // TODO make this const
+    std::unordered_set<NodeId> nodes() const {
         std::unordered_set<NodeId> nodes;
         nodes.reserve(2 * _leaves.size() + (_roots.size() - 1)); // Lower bound only
 
@@ -153,7 +152,13 @@ public:
             nodes.insert(leaf);
         }
 
-        _num_nodes = asserting_cast<NodeId>(nodes.size());
+        return nodes;
+    }
+
+    // We have to recompute the node count -> O(|_edges| + |_leaves| + |_roots|)
+    // This is incredibly slow, so use it only in unit tests
+    void compute_num_nodes() {
+        _num_nodes = asserting_cast<NodeId>(nodes().size());
     }
 
     void num_nodes(NodeId num_nodes) {

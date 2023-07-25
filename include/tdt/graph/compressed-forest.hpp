@@ -101,6 +101,14 @@ public:
         return _dag_postorder_edges.num_leaves();
     }
 
+    [[nodiscard]] SubtreeId num_unique_subtrees() const {
+        return _dag_postorder_edges.num_nodes();
+    }
+
+    [[nodiscard]] std::unordered_set<SubtreeId> unique_subtrees() const {
+        return _dag_postorder_edges.nodes();
+    }
+
     template <class Archive>
     void serialize(Archive& ar) {
         // The number of nodes in the DAG are computed during serialization of the EdgeListGraph object.

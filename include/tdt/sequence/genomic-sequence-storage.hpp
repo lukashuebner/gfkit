@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <span>
+#include <unordered_set>
 #include <vector>
 
 #include <kassert/kassert.hpp>
@@ -153,6 +154,16 @@ public:
                 _mutation_indices[asserting_cast<size_t>(site_id + 1)]
                     - _mutation_indices[asserting_cast<size_t>(site_id)]
             );
+    }
+
+    [[nodiscard]] std::unordered_set<SubtreeId> subtrees_with_mutations() const {
+        std::unordered_set<SubtreeId> subtrees_with_mutations;
+
+        std::for_each(_mutations.begin(), _mutations.end(), [&subtrees_with_mutations](Mutation const& mutation) {
+            subtrees_with_mutations.insert(mutation.subtree_id());
+        });
+
+        return subtrees_with_mutations;
     }
 
     template <class Archive>
