@@ -6,6 +6,7 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/common.hpp"
+#include "tdt/sequence/sequence.hpp"
 #include "tdt/tskit.hpp"
 
 // Using a search tree
@@ -46,16 +47,18 @@
 class TSKitSiteToTreeMapper {
 public:
     struct Breakpoint {
-        tsk_id_t site_id;
-        TreeId   tree_id;
+        Breakpoint(SiteId _site_id, TreeId _tree_id) noexcept : site_id(_site_id), tree_id(_tree_id) {}
+
+        SiteId site_id;
+        TreeId tree_id;
     };
 
     TSKitSiteToTreeMapper(TSKitTreeSequence const& tree_sequence) {
-        tsk_id_t const num_sites = asserting_cast<tsk_id_t>(tree_sequence.num_sites());
-        size_t const num_breakpoints = tree_sequence.breakpoints().size();
+        tsk_id_t const num_sites       = asserting_cast<tsk_id_t>(tree_sequence.num_sites());
+        size_t const   num_breakpoints = tree_sequence.breakpoints().size();
 
         _breakpoints.reserve(num_breakpoints + 1);
-        tsk_id_t site = 0;
+        SiteId site = 0;
         TreeId tree = 0;
         _breakpoints.emplace_back(site, tree);
 
@@ -68,7 +71,7 @@ public:
         }
 
         _current_breakpoint = _breakpoints.begin();
-        _next_breakpoint = _current_breakpoint + 1;
+        _next_breakpoint    = _current_breakpoint + 1;
     }
 
     TreeId tree_id(tsk_id_t site_id) const {

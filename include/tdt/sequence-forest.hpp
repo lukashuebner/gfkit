@@ -136,13 +136,13 @@ public:
         return divergence / (static_cast<double>(n1 * n2));
     }
 
-    [[nodiscard]] uint64_t num_segregating_sites() {
+    [[nodiscard]] SiteId num_segregating_sites() {
         return num_segregating_sites(_forest.all_samples());
     }
 
     // TODO Make this const
-    [[nodiscard]] uint64_t num_segregating_sites(SampleSet const& sample_set) {
-        size_t     num_segregating_sites = 0;
+    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
+        SiteId     num_segregating_sites = 0;
         auto const num_samples           = sample_set.popcount();
 
         auto const freqs = allele_frequencies(sample_set);

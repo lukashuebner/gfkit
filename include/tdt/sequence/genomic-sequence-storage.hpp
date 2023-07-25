@@ -18,9 +18,9 @@
 
 class GenomicSequence {
 public:
-    GenomicSequence(size_t num_sites_hint = 0, size_t num_mutations_hint = 0) {
-        _sites.reserve(num_sites_hint);
-        _mutation_indices.reserve(num_sites_hint);
+    GenomicSequence(SiteId num_sites_hint = 0, MutationId num_mutations_hint = 0) {
+        _sites.reserve(asserting_cast<size_t>(num_sites_hint));
+        _mutation_indices.reserve(asserting_cast<size_t>(num_sites_hint));
         _mutations.reserve(num_mutations_hint);
     }
 
@@ -29,17 +29,19 @@ public:
     }
 
     [[nodiscard]] MutationId num_mutations() const {
-        return asserting_cast<SiteId>(_mutations.size());
+        return asserting_cast<MutationId>(_mutations.size());
     }
 
     [[nodiscard]] AllelicState ancestral_state(SiteId site_id) const {
-        KASSERT(site_id < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
-        return _sites[site_id];
+        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        return _sites[asserting_cast<size_t>(site_id)];
     }
 
     [[nodiscard]] AllelicState& ancestral_state(SiteId site_id) {
-        KASSERT(site_id < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
-        return _sites[site_id];
+        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        return _sites[asserting_cast<size_t>(site_id)];
     }
 
     [[nodiscard]] Mutation const& mutation_by_id(size_t mutation_id) const {
@@ -48,8 +50,9 @@ public:
     }
 
     void set(SiteId site_id, AllelicState state) {
-        KASSERT(site_id < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
-        _sites[site_id] = state;
+        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        _sites[asserting_cast<size_t>(site_id)] = state;
     }
 
     void push_back(AllelicState state) {
@@ -87,23 +90,25 @@ public:
     }
 
     [[nodiscard]] AllelicState& operator[](SiteId site_id) {
-        return _sites[site_id];
+        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
+        return _sites[asserting_cast<size_t>(site_id)];
     }
 
     void build_mutation_indices() {
         KASSERT(mutations_are_sorted_by_site(), "Mutations are not sorted by site.", tdt::assert::light);
         _mutation_indices.clear();
         _mutation_indices.reserve(_sites.size());
-        size_t mutation_idx = 0;
+        MutationId mutation_idx = 0;
         _mutation_indices.push_back(0);
         for (SiteId site_id = 0; site_id < num_sites(); ++site_id) {
-            while (mutation_idx < _mutations.size() && _mutations[mutation_idx].site_id() == site_id) {
+            while (mutation_idx < _mutations.size()
+                   && _mutations[asserting_cast<size_t>(mutation_idx)].site_id() == site_id) {
                 ++mutation_idx;
             }
             _mutation_indices.push_back(mutation_idx);
         }
         KASSERT(
-            _mutations.size() == mutation_idx,
+            _mutations.size() == asserting_cast<size_t>(mutation_idx),
             "Mutation index is not at the end of the mutation vector",
             tdt::assert::light
         );
@@ -130,15 +135,24 @@ public:
     }
 
     [[nodiscard]] MutationView mutations_at_site(SiteId const site_id) const {
+        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
         KASSERT(_mutation_indices_valid, "Mutations indices need to be rebuild first.", tdt::assert::light);
-        KASSERT(site_id < _mutation_indices.size() + 1, "Site ID is out of bounds", tdt::assert::light);
+        KASSERT(
+            asserting_cast<size_t>(site_id) < _mutation_indices.size() + 1,
+            "Site ID is out of bounds",
+            tdt::assert::light
+        );
         KASSERT(
             _mutations.size() == _mutation_indices.back(),
             "The _mutations_indices sentinel seems to be broken.",
             tdt::assert::light
         );
         return std::span(_mutations)
-            .subspan(_mutation_indices[site_id], _mutation_indices[site_id + 1] - _mutation_indices[site_id]);
+            .subspan(
+                _mutation_indices[asserting_cast<size_t>(site_id)],
+                _mutation_indices[asserting_cast<size_t>(site_id + 1)]
+                    - _mutation_indices[asserting_cast<size_t>(site_id)]
+            );
     }
 
     template <class Archive>
@@ -149,7 +163,7 @@ public:
 
 private:
     std::vector<AllelicState> _sites;
-    std::vector<size_t>       _mutation_indices; // Maps SiteId to MutationId
+    std::vector<MutationId>   _mutation_indices; // Maps SiteId to MutationId
     std::vector<Mutation>     _mutations;
     bool                      _mutation_indices_valid = false;
 };

@@ -12,7 +12,7 @@
 using namespace Catch::Matchers;
 
 TEST_CASE("Mutation", "[GenomicSequenceStorage]") {
-    SiteId const       site_id       = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
+    SiteId const       site_id       = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
     SubtreeId const    tree_id       = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
     AllelicState const allelic_state = GENERATE('A', 'C', 'G', 'T');
     AllelicState const parent_state  = GENERATE('A', 'C', 'G', 'T');
@@ -33,7 +33,7 @@ TEST_CASE("GenomicSequenceStorage Basics", "[GenomicSequenceStorage]") {
 
     // push_back() and get() a few sites
     CHECK(sequence_storage.num_sites() == 0);
-    size_t num_sites = 0;
+    SiteId num_sites = 0;
     for (AllelicState allelic_state: {'A', 'C', 'G', 'T'}) {
         sequence_storage.push_back(allelic_state);
         ++num_sites;
@@ -83,8 +83,8 @@ TEST_CASE("GenomicSequenceStorage Mutations", "[GenomicSequenceStorage]") {
     CHECK(sequence_storage.num_sites() == 5);
 
     // Adding mutations does affect the number of sites.
-    size_t          num_sites    = sequence_storage.num_sites();
-    SiteId const    site_id      = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
+    SiteId          num_sites    = sequence_storage.num_sites();
+    SiteId const    site_id      = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
     TreeId const    tree_id      = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
     SubtreeId const subtree_id   = GENERATE(1u, 2u, 4u, 5u);
     AllelicState    parent_state = 'A';

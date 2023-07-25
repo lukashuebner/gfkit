@@ -63,8 +63,8 @@ public:
         );
     }
 
-    [[nodiscard]] size_t num_samples() const {
-        return _afs.size() - 1;
+    [[nodiscard]] SampleId num_samples() const {
+        return asserting_cast<SampleId>(_afs.size()) - 1;
     }
 
     [[nodiscard]] value_type frequency(size_t num_derived_state) const {

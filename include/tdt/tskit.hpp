@@ -12,6 +12,8 @@
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/common.hpp"
 #include "tdt/samples/sample-set.hpp"
+#include "tdt/sequence/mutation.hpp"
+#include "tdt/sequence/sequence.hpp"
 
 using TskMutationView = std::span<tsk_mutation_t const>;
 
@@ -47,20 +49,20 @@ public:
         return *this;
     }
 
-    std::size_t num_nodes() const {
-        return tsk_treeseq_get_num_nodes(&_tree_sequence);
+    NodeId num_nodes() const {
+        return asserting_cast<NodeId>(tsk_treeseq_get_num_nodes(&_tree_sequence));
     }
 
-    std::size_t num_edges() const {
-        return tsk_treeseq_get_num_edges(&_tree_sequence);
+    EdgeId num_edges() const {
+        return asserting_cast<EdgeId>(tsk_treeseq_get_num_edges(&_tree_sequence));
     }
 
-    std::size_t num_sites() const {
-        return tsk_treeseq_get_num_sites(&_tree_sequence);
+    SiteId num_sites() const {
+        return asserting_cast<SiteId>(tsk_treeseq_get_num_sites(&_tree_sequence));
     }
 
-    std::size_t num_mutations() const {
-        return tsk_treeseq_get_num_mutations(&_tree_sequence);
+    MutationId num_mutations() const {
+        return asserting_cast<MutationId>(tsk_treeseq_get_num_mutations(&_tree_sequence));
     }
 
     std::size_t num_populations() const {
@@ -71,12 +73,12 @@ public:
         return tsk_treeseq_get_num_individuals(&_tree_sequence);
     }
 
-    std::size_t num_trees() const {
-        return tsk_treeseq_get_num_trees(&_tree_sequence);
+    TreeId num_trees() const {
+        return asserting_cast<TreeId>(tsk_treeseq_get_num_trees(&_tree_sequence));
     }
 
-    std::size_t num_samples() const {
-        return tsk_treeseq_get_num_samples(&_tree_sequence);
+    SampleId num_samples() const {
+        return asserting_cast<SampleId>(tsk_treeseq_get_num_samples(&_tree_sequence));
     }
 
     char const* file_uuid() const {
@@ -238,7 +240,7 @@ public:
 
     std::span<tsk_site_t const> sites() const {
         KASSERT(_tree_sequence.tree_sites_mem != nullptr);
-        return std::span(_tree_sequence.tree_sites_mem, num_sites());
+        return std::span(_tree_sequence.tree_sites_mem, asserting_cast<size_t>(num_sites()));
     }
 
     std::span<double const> const breakpoints() const {

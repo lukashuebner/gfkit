@@ -8,7 +8,7 @@
 
 // TODO Use sfkit namespace
 
-using SiteId = uint32_t;
+using SiteId = int32_t;
 
 // TODO Use only 2 bits per site
 using AllelicState                         = char;

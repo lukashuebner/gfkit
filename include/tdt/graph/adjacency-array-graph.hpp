@@ -56,11 +56,11 @@ public:
         // TODO Precompute the traversal order for cache efficient traversals
     }
 
-    size_t num_nodes() const {
-        return _adjacency_array.size();
+    NodeId num_nodes() const {
+        return asserting_cast<NodeId>(_adjacency_array.size());
     }
 
-    size_t num_edges() const {
+    NodeId num_edges() const {
         return _num_edges;
     }
 
@@ -88,7 +88,7 @@ public:
 
 private:
     std::vector<std::vector<NodeId>> _adjacency_array;
-    std::size_t                      _num_edges = 0;
+    EdgeId                           _num_edges = 0;
     std::vector<NodeId>              _roots;
     std::vector<NodeId>              _leaves;
     std::vector<NodeId>              _preorder;
