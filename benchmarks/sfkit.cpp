@@ -123,8 +123,8 @@ void benchmark(
     log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
 
     // --- Construct the SequenceForest object on which we then call the high-level operations. ---
-    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during construction.
-    // (Check this!)
+    // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during
+    // construction. (Check this!)
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
     // --- Benchmark computing the AFS ---
@@ -246,8 +246,8 @@ void benchmark(
     }
 
     // --- Benchmark computing Tajima's D. ---
-    // tskit does implement this only in Python, not in C. We're using experiments/scripts/benchmark-tskits-tajimas-d.py
-    // to measure tskit's performance.
+    // tskit does implement this only in Python, not in C. We're using
+    // experiments/scripts/benchmark-tskits-tajimas-d.py to measure tskit's performance.
     memory_usage.start();
     timer.start();
 
