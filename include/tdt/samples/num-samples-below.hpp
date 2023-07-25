@@ -65,14 +65,36 @@ private:
             _subtree_sizes[sample] = 1;
         }
 
-        // TODO Try prefetching a few edges ahead
-        for (auto&& edge: _dag) {
-            _subtree_sizes[edge.from()] += _subtree_sizes[edge.to()];
+        constexpr auto num_edges_to_prefetch = 128;
+        auto prefetch_it = _dag.begin();
+        for (size_t i = 0; i < num_edges_to_prefetch && prefetch_it != _dag.end(); i++) {
+            __builtin_prefetch(&_subtree_sizes[prefetch_it->from()], 0, 3);
+            __builtin_prefetch(&_subtree_sizes[prefetch_it->to()], 0, 3);
+            prefetch_it++;
+        }
+
+        auto work_it = _dag.begin();
+        while (prefetch_it != _dag.end()) {
+            _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
             KASSERT(
-                _subtree_sizes[edge.from()] <= samples.popcount(),
+                _subtree_sizes[work_it->from()] <= samples.popcount(),
                 "Number of samples below a node exceeds the number of samples in the tree sequence.",
                 tdt::assert::light
             );
+            work_it++;
+            __builtin_prefetch(&_subtree_sizes[prefetch_it->from()], 0, 3);
+            __builtin_prefetch(&_subtree_sizes[prefetch_it->to()], 0, 3);
+            prefetch_it++;
+        }
+
+        while(work_it != _dag.end()) {
+            _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
+            KASSERT(
+                _subtree_sizes[work_it->from()] <= samples.popcount(),
+                "Number of samples below a node exceeds the number of samples in the tree sequence.",
+                tdt::assert::light
+            );
+            work_it++;
         }
     }
 };
