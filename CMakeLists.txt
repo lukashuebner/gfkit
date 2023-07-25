@@ -124,10 +124,6 @@ if (TDT_WARNINGS_ARE_ERRORS)
     list(APPEND TDT_WARNING_FLAGS "-Werror")
 endif ()
 
-# Link in the OpenSSL library
-find_package(OpenSSL REQUIRED)
-target_link_libraries(tdt_base INTERFACE OpenSSL::SSL)
-
 # Target for user-code
 add_library(tdt INTERFACE)
 add_library(tdt::tdt ALIAS tdt)
