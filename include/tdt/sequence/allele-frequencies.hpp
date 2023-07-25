@@ -192,7 +192,8 @@ public:
     void visit(BiallelicVisitor biallelic_vistor, MultiallelicVisitor multiallelic_visitor) const noexcept {
         for (AlleleFrequency const& this_sites_state: *this) {
             std::visit(
-                [biallelic_vistor, multiallelic_visitor](auto const& arg) -> void {
+                // TODO This noexcept should be conditional on the noexcept of the visitors.
+                [biallelic_vistor, multiallelic_visitor](auto const& arg) noexcept -> void {
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, BiallelicFrequency>) {
                         biallelic_vistor(arg);
