@@ -9,39 +9,6 @@
 #include "tdt/sequence/sequence.hpp"
 #include "tdt/tskit.hpp"
 
-// Using a search tree
-// class TSKitSiteToTreeMapper {
-// public:
-//     TSKitSiteToTreeMapper(TSKitTreeSequence const& tree_sequence) {
-//         TreeId tree_id  = 0;
-//         _breakpoints[0] = 0;
-//         tsk_id_t site   = 0;
-//         for (auto breakpoint: tree_sequence.breakpoints()) {
-//             while (tree_sequence.position_of(site) < breakpoint) {
-//                 ++site;
-//             }
-//             _breakpoints[site] = tree_id;
-//             ++tree_id;
-//         }
-//     }
-
-//     TreeId tree_id(tsk_id_t site_id) const {
-//         auto it = _breakpoints.upper_bound(site_id);
-//         it--;
-//         KASSERT(it != _breakpoints.end(), "Site " << site_id << " is not in the tree sequence.",
-//         tdt::assert::normal); return it->second;
-//     }
-
-//     TreeId operator()(tsk_id_t position) const {
-//         return tree_id(position);
-//     }
-
-// private:
-//     // TODO Use a better range-query structure
-//     // TODO Use conan for dependency management
-//     std::map<tsk_id_t, TreeId> _breakpoints;
-// };
-
 // As the mutations are sorted by site, we can use a mapper wich does not rely on a search tree but only
 // checks of the next site passes the next breakpoint in the sorted list of breakpoints.
 class TSKitSiteToTreeMapper {
