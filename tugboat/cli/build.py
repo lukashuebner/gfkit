@@ -1,7 +1,7 @@
 from returns.context import RequiresContext
 from tugboat.deps import _Deps
 
-def cmd_compile(config: str) -> RequiresContext[_Deps, None]:
+def cmd_build(config: str) -> RequiresContext[_Deps, None]:
     """Configure, compile, and test the project"""
     def factory(deps: _Deps) -> None:
         sh = deps.sh

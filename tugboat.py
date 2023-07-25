@@ -3,7 +3,7 @@ import click
 from rich.console import Console
 
 from tugboat.cli.ls import cmd_ls
-from tugboat.cli.compile import cmd_compile
+from tugboat.cli.build import cmd_build
 from tugboat.cli.clean import cmd_clean
 from tugboat.cli.collect import cmd_collect
 from tugboat.cli.plot import cmd_plot
@@ -34,12 +34,16 @@ def ls():
     """List all datasets"""
     cmd_ls()(deps)
 
-# --- compile ---
+# --- build ---
 @cli.command()
-@click.argument("config", default="release", type=click.Choice(['debug', 'release', 'relwithdeb']))
-def compile(config: str):
+@click.argument("config", default="release", type=click.Choice(['debug', 'release', 'relwithdeb', 'all']))
+def build(config: str):
     """Configure, compile and test the project."""
-    cmd_compile(config)(deps)
+    if config == "all":
+        for config in ['debug', 'release', 'relwithdeb']:
+            cmd_build(config)(deps)
+    else:
+        cmd_build(config)(deps)
 
 # --- clean ---
 @cli.command()
