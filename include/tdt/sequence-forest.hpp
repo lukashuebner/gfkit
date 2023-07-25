@@ -50,26 +50,35 @@ public:
         return diversity(_forest.all_samples());
     }
 
-    [[nodiscard]] double diversity(SampleSet const& sample_set) {
-        SampleId const n     = sample_set.popcount();
-        double         pi    = 0.0;
-        auto const     freqs = allele_frequencies(sample_set);
-        freqs.visit(
+    [[nodiscard]] double
+    diversity(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
+        auto const n  = num_samples;
+        double     pi = 0.0;
+
+        allele_frequencies.visit(
             // Biallelic visitor
             [&pi, n](auto&& state) {
-                auto const freq = state.num_ancestral();
-                pi += 2 * static_cast<double>(freq * (n - freq));
+                auto const n_anc = state.num_ancestral();
+                auto const n_der = n - n_anc;
+                pi += 2 * static_cast<double>(n_anc * n_der);
             },
             // Multiallelic visitor
             [&pi, n](auto&& state) {
                 // TODO Does the compiler unroll this?
-                for (auto const freq: state) {
-                    pi += static_cast<double>(freq * (n - freq));
+                for (auto const n_state: state) {
+                    auto const n_not_state = n - n_state;
+                    pi += static_cast<double>(n_state * n_not_state);
                 }
             }
         );
 
         return pi / static_cast<double>(n * (n - 1));
+    }
+
+    [[nodiscard]] double diversity(SampleSet const& sample_set) {
+        SampleId const num_samples = sample_set.popcount();
+        auto const     freqs       = allele_frequencies(sample_set);
+        return diversity(num_samples, freqs);
     }
 
     [[nodiscard]] AlleleFrequencySpectrum<AllelicStatePerfectHasher> allele_frequency_spectrum() {
@@ -80,24 +89,18 @@ public:
         return AlleleFrequencySpectrum<AllelicStatePerfectHasher>(allele_frequencies(sample_set));
     }
 
-    [[nodiscard]] double divergence(SampleSet const& sample_set) {
-        return divergence(_forest.all_samples(), sample_set);
-    }
-
-    [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        auto const n1 = sample_set_1.popcount();
-        auto const n2 = sample_set_2.popcount();
-
-        double divergence = 0.0;
-        // TODO Combine both frequencies computations into one
-
-        auto allele_freq_1    = allele_frequencies(sample_set_1);
-        auto allele_freq_2    = allele_frequencies(sample_set_2);
-        auto allele_freq_1_it = allele_freq_1.cbegin();
-        auto allele_freq_2_it = allele_freq_2.cbegin();
-        while (allele_freq_1_it != allele_freq_1.cend()) {
+    [[nodiscard]] double divergence(
+        SampleId                                     num_samples_1,
+        AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies_1,
+        SampleId                                     num_samples_2,
+        AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies_2
+    ) {
+        double divergence       = 0.0;
+        auto   allele_freq_1_it = allele_frequencies_1.cbegin();
+        auto   allele_freq_2_it = allele_frequencies_2.cbegin();
+        while (allele_freq_1_it != allele_frequencies_1.cend()) {
             KASSERT(
-                allele_freq_2_it != allele_freq_2.cend(),
+                allele_freq_2_it != allele_frequencies_2.cend(),
                 "Allele frequency lists have different lengths (different number of sites).",
                 tdt::assert::light
             );
@@ -106,8 +109,8 @@ public:
                 && std::holds_alternative<BiallelicFrequency>(*allele_freq_2_it)) [[likely]] {
                 double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freq_1_it).num_ancestral();
                 double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freq_2_it).num_ancestral();
-                double const n_der_1 = n1 - n_anc_1;
-                double const n_der_2 = n2 - n_anc_2;
+                double const n_der_1 = num_samples_1 - n_anc_1;
+                double const n_der_2 = num_samples_2 - n_anc_2;
                 divergence += static_cast<double>(n_anc_1 * n_der_2 + n_der_1 * n_anc_2);
             } else {
                 allele_freq_1_it.force_multiallelicity();
@@ -119,8 +122,8 @@ public:
                 // TODO Check if the compiler unrolls this
                 for (Idx state = 0; state < freq_1_multiallelic.num_states; state++) {
                     // The number of samples in sample set 2 which are not in
-                    double const n_state_1 = freq_1_multiallelic[state];
-                    double const n_not_state_2 = n2 - freq_2_multiallelic[state];
+                    double const n_state_1     = freq_1_multiallelic[state];
+                    double const n_not_state_2 = num_samples_2 - freq_2_multiallelic[state];
                     divergence += n_state_1 * n_not_state_2;
                 }
             }
@@ -129,7 +132,16 @@ public:
             allele_freq_2_it++;
         }
 
-        return divergence / (static_cast<double>(n1 * n2));
+        return divergence / (static_cast<double>(num_samples_1 * num_samples_2));
+    }
+
+    [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+        // TODO Possibly compute both allele frequencies in parallel (high and low order 32 bit)
+        auto       allele_freq_1 = allele_frequencies(sample_set_1);
+        auto       allele_freq_2 = allele_frequencies(sample_set_2);
+        auto const num_samples_1 = sample_set_1.popcount();
+        auto const num_samples_2 = sample_set_2.popcount();
+        return divergence(num_samples_1, allele_freq_1, num_samples_2, allele_freq_2);
     }
 
     [[nodiscard]] SiteId num_segregating_sites() {
@@ -137,12 +149,10 @@ public:
     }
 
     // TODO Make this const
-    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
-        SiteId     num_segregating_sites = 0;
-        auto const num_samples           = sample_set.popcount();
-
-        auto const freqs = allele_frequencies(sample_set);
-        freqs.visit(
+    [[nodiscard]] SiteId
+    num_segregating_sites(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
+        SiteId num_segregating_sites = 0;
+        allele_frequencies.visit(
             [&num_segregating_sites, num_samples](auto&& state) {
                 if (state.num_ancestral() != 0 && state.num_ancestral() != num_samples) {
                     num_segregating_sites++;
@@ -161,21 +171,29 @@ public:
         return num_segregating_sites;
     }
 
+    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
+        auto const num_samples = sample_set.popcount();
+        auto const freqs       = allele_frequencies(sample_set);
+        return num_segregating_sites(num_samples, freqs);
+    }
+
     [[nodiscard]] double tajimas_d() {
-        double const n = static_cast<double>(num_samples());
+        SampleId const n = num_samples();
+
+        auto const allele_freqs = allele_frequencies(_forest.all_samples());
         // TODO Does the compiler optimize the following two loops into one?
-        double const T = diversity();
-        double const S = static_cast<double>(num_segregating_sites());
+        double const T = diversity(n, allele_freqs);
+        double const S = static_cast<double>(num_segregating_sites(n, allele_freqs));
 
         double h = 0;
         double g = 0;
         // TODO are there formulas for computing these values more efficiently?
-        for (uint64_t i = 1; i < num_samples(); i++) {
+        for (SampleId i = 1; i < num_samples(); i++) {
             h += 1.0 / static_cast<double>(i);
             g += 1.0 / static_cast<double>(i * i);
         }
         double const a = (n + 1) / (3 * (n - 1) * h) - 1 / (h * h);
-        double const b = 2 * (n * n + n + 3) / (9 * n * (n - 1)) - (n + 2) / (h * n) + g / (h * h);
+        double const b = 2. * (n * n + n + 3) / (9 * n * (n - 1)) - (n + 2) / (h * n) + g / (h * h);
         double const D = (T - S / h) / sqrt(a * S + (b / (h * h + g)) * S * (S - 1));
 
         return D;
@@ -186,12 +204,16 @@ public:
         // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X, then
         // what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
 
-        // TODO Reuse the computation of the num_samples_below(sample_set)
+        auto const n_1             = sample_set_1.popcount();
+        auto const n_2             = sample_set_2.popcount();
+        auto const allele_freqs_1  = allele_frequencies(sample_set_1);
+        auto const allele_freqs_2  = allele_frequencies(sample_set_2);
         auto const sequence_length = _sequence.num_sites();
-        auto const d_x             = diversity(sample_set_1) / sequence_length;
-        auto const d_y             = diversity(sample_set_2) / sequence_length;
-        auto const d_xy            = divergence(sample_set_1, sample_set_2) / sequence_length;
-        auto const fst             = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
+
+        auto const d_x  = diversity(n_1, allele_freqs_1) / sequence_length;
+        auto const d_y  = diversity(n_2, allele_freqs_2) / sequence_length;
+        auto const d_xy = divergence(n_1, allele_freqs_1, n_2, allele_freqs_2) / sequence_length;
+        auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
         return fst;
     }
 

@@ -96,11 +96,11 @@ public:
             return _num_samples_in_state.end();
         }
 
-        const_iterator begin() const {
+        const_iterator begin() const noexcept {
             return _num_samples_in_state.begin();
         }
 
-        const_iterator end() const {
+        const_iterator end() const noexcept {
             return _num_samples_in_state.end();
         }
 
