@@ -11,7 +11,6 @@
 #include "tdt/sequence/tskit-site-to-tree-mapper.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
-// TODO Rename forest-compressor.hpp to compressed-forest.hpp
 #include "tdt/load/forest-compressor.hpp"
 
 using namespace ::Catch::Matchers;

@@ -7,7 +7,6 @@
 #include <xxhash.h>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/utils/sha256.hpp"
 #include "tdt/utils/xxhash.hpp"
 
 #define TDT_XXHASH_SUBTREE_IDS

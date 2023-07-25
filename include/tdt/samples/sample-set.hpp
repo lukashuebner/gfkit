@@ -149,6 +149,5 @@ public:
     }
 
 private:
-    // TODO Profile and check if a compressed bitset would be faster?
     std::vector<bool> _samples;
 };

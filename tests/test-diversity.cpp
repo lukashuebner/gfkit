@@ -143,14 +143,12 @@ TEST_CASE("Diversity tskit example with sample sets", "[Diversity]") {
 
     // Test our wrapper around tskit
     TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(tree_sequence.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
     SequenceForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
@@ -190,14 +188,12 @@ TEST_CASE("Diversity multi tree with back and recurrent mutations", "[Diversity]
 
     // Test our wrapper around tskit
     TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(tree_sequence.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
     SequenceForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
@@ -237,14 +233,12 @@ TEST_CASE("Diversity multi tree with multiple derived states", "[Diversity]") {
 
     // Test our wrapper around tskit
     TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(tree_sequence.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
     SequenceForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
-    // TODO Create a interface for diversity() which allows to pass multiple sample sets at once.
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 

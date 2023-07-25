@@ -97,6 +97,5 @@ public:
     }
 
 private:
-    // TODO Use a different datatype
     std::vector<value_type> _afs;
 };

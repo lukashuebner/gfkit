@@ -7,10 +7,6 @@
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "tdt/utils/always_false_v.hpp"
 
-// TODO This class shares functionality with the AlleleFrequencySpectrum class. We should refactor this.
-// The historical reason for this duplication is that AlleleFrequencySpectrum was written under the assumption of
-// multiallelicity and this class was written under the assumption of biallelicity when I implemented the diversity
-// statistics.
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class AlleleFrequencies {
 public:
@@ -286,7 +282,6 @@ public:
 
         // Maybe it's faster (it's certainly simpler) to just use multiallelic iterator for all sites.
         void _update_state() {
-            // TODO Generalize this to multiallelic sites
             // TODO Can we improve performance by knowing if a site is bi- or multiallelic?
             KASSERT(_site < num_sites(), "Site index out of bounds", tdt::assert::light);
 

@@ -27,8 +27,6 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         CHECK(graph.begin()->from() == 0); // Calling this twice should not change the result
         CHECK(graph.begin()->to() == 1);
         CHECK(graph.begin()->to() == 1); // Calling this twice should not change the result
-        // TODO
-        // CHECK_THAT(graph, RangeEquals(std::vector<Edge>{Edge(0, 1))});
     }
 
     SECTION("Set the number of nodes to a wrong value") {
@@ -50,8 +48,6 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         graph.add_edge(2, 2);
         graph.compute_num_nodes();
         CHECK(graph.num_edges() == 3);
-        // TODO
-        // EXPECT_THAT(graph, (ElementsAre(Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 2))));
     }
 
     SECTION("Graph with multiedges") {
@@ -61,8 +57,6 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
         graph.add_edge(0, 1);
         graph.compute_num_nodes();
         CHECK(graph.num_edges() == 2);
-        // TODO
-        // EXPECT_THAT(graph, (ElementsAre(Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 2), Edge(0, 1), Edge(0, 1))));
     }
 }
 

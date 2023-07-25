@@ -296,7 +296,6 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
     CHECK(sfkit_afs.num_samples() == 4);
 
-    // TODO Manually check these values!
     CHECK(sfkit_afs.frequency(0) == 0u);
     CHECK(sfkit_afs.frequency(1) == 3u);
     CHECK(sfkit_afs.frequency(2) == 1u);

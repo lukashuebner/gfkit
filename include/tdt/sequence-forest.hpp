@@ -16,15 +16,12 @@
 #include "tdt/tskit.hpp"
 #include "tdt/utils/always_false_v.hpp"
 
-// TODO Move this to a more general place
-// TODO encapsulate CompresedForest and GenomicSequence functions in this class
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class SequenceForest {
 public:
     using MultiallelicFrequency = typename AlleleFrequencies<AllelicStatePerfectHasher>::MultiallelicFrequency;
     using BiallelicFrequency    = typename AlleleFrequencies<AllelicStatePerfectHasher>::BiallelicFrequency;
 
-    // TODO Rename to GenomicSequenceStore
     SequenceForest(
         TSKitTreeSequence&& tree_sequence, CompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
     )
