@@ -102,30 +102,26 @@ public:
                 tdt::assert::light
             );
 
-            auto const state_1 = *allele_freq_1_it;
-            auto const state_2 = *allele_freq_2_it;
-
-            if (std::holds_alternative<BiallelicFrequency>(state_1)
-                && std::holds_alternative<BiallelicFrequency>(state_2)) [[likely]] {
-                double const freq1 = std::get<BiallelicFrequency>(state_1).num_ancestral();
-                double const freq2 = std::get<BiallelicFrequency>(state_2).num_ancestral();
-                divergence += static_cast<double>(freq1 * (n2 - freq2) + freq2 * (n1 - freq1));
+            if (std::holds_alternative<BiallelicFrequency>(*allele_freq_1_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freq_2_it)) [[likely]] {
+                double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freq_1_it).num_ancestral();
+                double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freq_2_it).num_ancestral();
+                double const n_der_1 = n1 - n_anc_1;
+                double const n_der_2 = n2 - n_anc_2;
+                divergence += static_cast<double>(n_anc_1 * n_der_2 + n_der_1 * n_anc_2);
             } else {
                 allele_freq_1_it.force_multiallelicity();
                 allele_freq_2_it.force_multiallelicity();
-                auto const freq1_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_1_it);
-                auto const freq2_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_2_it);
+                auto const freq_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_1_it);
+                auto const freq_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_2_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
-                for (Idx i = 0; i < freq1_multiallelic.num_states; i++) {
-                    for (Idx j = 0; j < freq2_multiallelic.num_states; j++) {
-                        if (i != j) {
-                            divergence += static_cast<double>(
-                                freq1_multiallelic[i] * (n2 - freq2_multiallelic[j])
-                                + freq2_multiallelic[j] * (n1 - freq1_multiallelic[i])
-                            );
-                        }
-                    }
+                // TODO Check if the compiler unrolls this
+                for (Idx state = 0; state < freq_1_multiallelic.num_states; state++) {
+                    // The number of samples in sample set 2 which are not in
+                    double const n_state_1 = freq_1_multiallelic[state];
+                    double const n_not_state_2 = n2 - freq_2_multiallelic[state];
+                    divergence += n_state_1 * n_not_state_2;
                 }
             }
 
