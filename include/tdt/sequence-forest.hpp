@@ -105,12 +105,12 @@ public:
             auto const state_1 = *allele_freq_1_it;
             auto const state_2 = *allele_freq_2_it;
 
-            [[likely]] if (std::holds_alternative<BiallelicFrequency>(state_1) && std::holds_alternative<BiallelicFrequency>(state_2)) {
+            if (std::holds_alternative<BiallelicFrequency>(state_1)
+                && std::holds_alternative<BiallelicFrequency>(state_2)) [[likely]] {
                 double const freq1 = std::get<BiallelicFrequency>(state_1).num_ancestral();
                 double const freq2 = std::get<BiallelicFrequency>(state_2).num_ancestral();
                 divergence += static_cast<double>(freq1 * (n2 - freq2) + freq2 * (n1 - freq1));
-            }
-            else {
+            } else {
                 allele_freq_1_it.force_multiallelicity();
                 allele_freq_2_it.force_multiallelicity();
                 auto const freq1_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_1_it);
