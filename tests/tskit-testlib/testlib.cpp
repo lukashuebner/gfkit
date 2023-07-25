@@ -341,7 +341,7 @@ void parse_edges(char const* text, tsk_edge_table_t* edge_table) {
             q++;
         }
         KASSERT(num_children >= 1u);
-        strncpy(sub_line, p, MAX_LINE);
+        strncpy(sub_line, p, MAX_LINE - 1);
         q = strtok(sub_line, ",");
         for (k = 0; k < num_children; k++) {
             KASSERT(q != nullptr);
@@ -447,7 +447,7 @@ void parse_sites(char const* text, tsk_site_table_t* site_table) {
         position = atof(p);
         p        = strtok(NULL, whitespace);
         KASSERT(p != nullptr);
-        strncpy(ancestral_state, p, MAX_LINE);
+        strncpy(ancestral_state, p, MAX_LINE - 1);
         ret_id = tsk_site_table_add_row(site_table, position, ancestral_state, strlen(ancestral_state), NULL, 0);
         KASSERT(ret_id >= 0);
     }
@@ -487,7 +487,7 @@ void parse_mutations(char const* text, tsk_mutation_table_t* mutation_table) {
         node = atoi(p);
         p    = strtok(NULL, whitespace);
         KASSERT(p != nullptr);
-        strncpy(derived_state, p, MAX_LINE);
+        strncpy(derived_state, p, MAX_LINE - 1);
         parent = TSK_NULL;
         p      = strtok(NULL, whitespace);
         if (p != nullptr) {
@@ -559,7 +559,7 @@ void parse_individuals(char const* text, tsk_individual_table_t* individual_tabl
             q++;
         }
         KASSERT(location_len >= 1);
-        strncpy(sub_line, p, MAX_LINE);
+        strncpy(sub_line, p, MAX_LINE - 1);
         q = strtok_r(sub_line, ",", &q_cont);
         for (k = 0; k < asserting_cast<tsk_size_t>(location_len); k++) {
             KASSERT(q != nullptr);
@@ -583,7 +583,7 @@ void parse_individuals(char const* text, tsk_individual_table_t* individual_tabl
                 q++;
             }
             KASSERT(parents_len >= 1);
-            strncpy(sub_line, p, MAX_LINE);
+            strncpy(sub_line, p, MAX_LINE - 1);
             q = strtok_r(sub_line, ",", &q_cont);
             for (k = 0; k < asserting_cast<tsk_size_t>(parents_len); k++) {
                 KASSERT(q != nullptr);
