@@ -30,6 +30,7 @@ public:
         return _derived_state;
     }
 
+    // TODO Remove this, it's never used (except for in unit tests)
     [[nodiscard]] SubtreeId tree_id() const {
         return _tree_id;
     }
@@ -55,11 +56,15 @@ public:
 private:
     // TODO Compress this representation. Through the use of indices we could get rid of the tree id
     // maybe even the site id, using a retrieval data structure? We also know the mapping site_id -> tree_id
+    // TODO Maybe we don't need the parent and derived state at least for biallelic sites (either filter the mutation or
+    // it toggles the state)
     SiteId       _site_id;
     AllelicState _parent_state;
     AllelicState _derived_state;
     TreeId       _tree_id;
-    SubtreeId    _subtree_id; // TODO Change to compressed forest node id
+    // TODO Directly encode the formula to compute the subtree size here. E.g. a bitmask of which samples ares below
+    // this node. (xor with sample set and then do a popcount)
+    SubtreeId _subtree_id; // TODO Change to compressed forest node id
 };
 
 using MutationView = std::span<Mutation const>;
