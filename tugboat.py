@@ -6,7 +6,8 @@ from tugboat.cli.ls import cmd_ls
 from tugboat.cli.build import cmd_build
 from tugboat.cli.clean import cmd_clean
 from tugboat.cli.collect import cmd_collect
-from tugboat.cli.plot import cmd_plot
+from tugboat.cli.plot_benchmarks import cmd_plot_benchmarks
+from tugboat.cli.plot_tree_stats import cmd_plot_tree_stats
 from tugboat.cli.download import cmd_download
 from tugboat.cli.compress import cmd_compress
 from tugboat.cli.benchmark import cmd_benchmark
@@ -57,14 +58,20 @@ def clean(ops_bench: bool, conversion_bench: bool, forest: bool, trees: bool, ts
     """Delete all generated files (default: ops_bench; optional: conversion_bench, forest, trees, tsz, collected)"""
     cmd_clean(ops_bench, conversion_bench, forest, trees, tsz, collected)(deps)
 
-# --- plot ---
-@cli.command()
+# --- plot-benchmarks ---
+@cli.command(name = "plot-benchmarks")
 @click.option("--collect/--no-collect", default=True, help="Run --collect before plotting")
-def plot(collect: bool):
-    """Re-create all plots"""
+def plot_benchmarks(collect: bool):
+    """Plot sfkit vs tskit speed benchmarks"""
     if collect:
         cmd_collect()(deps)
-    cmd_plot()(deps)
+    cmd_plot_benchmarks()(deps)
+
+# --- plot-tree-stats ---
+@cli.command(name = "plot-tree-stats")
+def plot_tree_stats():
+    """Plot sfkit vs tskit speed benchmarks"""
+    cmd_plot_tree_stats()(deps)
 
 # --- collect ---
 @cli.command()
