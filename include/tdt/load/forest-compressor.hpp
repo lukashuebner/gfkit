@@ -79,15 +79,8 @@ public:
             return ts_node_id < asserting_cast<tsk_id_t>(num_samples);
         };
 
-        // size_t const num_trees            = _tree_sequence.num_trees();
-        // size_t       tree_counter         = 0;
-        // size_t       report_every_n_trees = num_trees / 100;
         // TODO Rewrite this, once we have the tree_sequence iterator
         for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next()) {
-            // tree_counter++;
-            // if (report_every_n_trees == 0 || tree_counter % report_every_n_trees == 0) {
-            //     std::cerr << "Compressing tree " << tree_counter << "/" << num_trees << std::endl;
-            // }
             // Reset the mapper for this tree
             // TODO Specify for which nodes we want mapping instead of computing and storing it for all nodes
             ts_node2sf_subtree.reset();
@@ -95,7 +88,6 @@ public:
             for (auto const ts_node_id: ts_tree.postorder()) {
                 // Prefetching the children of the next node slows down the code in benchmarks.
                 if (is_sample(ts_node_id)) {
-                    // auto dag_subtree_id = succinct_subtree_id_factory.compute(ts_node_id);
                     // Samples are already mapped and added to this map above
                     auto dag_subtree_id = ts_node_to_dag_subtree_id_map[asserting_cast<size_t>(ts_node_id)];
                     KASSERT(
