@@ -38,10 +38,10 @@ log_axis_breaks <- 10^(-10:10)
 log_axis_minor_breaks <- rep(1:9, 21)*(10^rep(-10:10, each=9))
 
 # Define some shortcuts
-geom_points_with_errorbars <- function(data = NULL, mapping = NULL, point_size = 0.25, errorbar_width = 0.25) {
+geom_points_with_errorbars <- function(data = NULL, mapping = NULL, point_size = 0.25, errorbar_width = 0.25, ...) {
   list(
-    geom_point(data = data, mapping = mapping, size = point_size),
-    geom_errorbar(data = data, mapping = mapping, width = errorbar_width)
+    geom_point(data = data, mapping = mapping, size = point_size, ...),
+    geom_errorbar(data = data, mapping = mapping, width = errorbar_width, ...)
   )
 }
 

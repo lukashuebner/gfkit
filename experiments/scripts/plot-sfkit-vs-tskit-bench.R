@@ -42,6 +42,20 @@ pretty_print_datasets <- function(filename) {
         str_replace("anderson_chr", "Anderson Chr. ")
 }
 
+collection_labels <- c(
+    "1kg" = "1KG",
+    "sgdp" = "SGDP",
+    "unified" = "Unified",
+    "anderson" = "Anderson (simulated)"
+)
+
+collection_colors <- c(
+    "1kg" = "#ff7f0e",
+    "sgdp" = "#d62728",
+    "unified" = "#1f77b4",
+    "anderson" = "#2ca02c"
+)
+
 section_colors <- c(
     "load" = "#ff7f0e",
     "build_sf" = "#d62728",
@@ -54,7 +68,9 @@ section_labels <- c(
     "afs" = "AFS",
     "diversity" = "Diversity",
     "tajimas_d" = "Tajima's D",
-    "num_segregating_sits" = "Number of Segregating Sites"
+    "num_segregating_sites" = "Segregating Sites",
+    "divergence" = "Divergence",
+    "fst" = "Fst"
 )
 
 # The datasets are sorted by chromosome first and collection second.
@@ -159,7 +175,7 @@ speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
 # --- Speedup of sfkit over tskit ---
 speedup_data %>%
-    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d")) %>%
+    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst")) %>%
     select(-dataset) %>%
     ggplot(
         aes(
@@ -178,13 +194,56 @@ speedup_data %>%
         legend.key.size = style$legend.key.size,
     ) +
     ylab("speedup over tskit") +
-    scale_y_continuous() +
+    scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
     scale_x_discrete( labels = pretty_print_datasets) +
     # scale_color_shape_manual(
     #     color_values = section_colors,
     #     labels = section_labels
     # ) +
     gg_eps()
+
+style$height <- 200
+style$width <- 225
+ggsave(args$output, width = style$width, height = style$height, units = style$unit)
+
+speedup_data %>%
+    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst")) %>%
+    select(-dataset) %>%
+    ggplot(
+        aes(
+            y = speedup_median,
+            ymin = speedup_q10,
+            ymax = speedup_q90,
+            x = section,
+            color = collection,
+        ),
+    ) +
+    geom_point(size = 0.25, position = position_dodge2(width = 0.25)) +
+    geom_hline(yintercept = 1, linetype = "dashed", color = "black", size = 0.25) +
+    theme_husky(
+        style = style,
+        # legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.key.size = style$legend.key.size,
+        axis.title.x = element_blank(),
+        legend.title = element_blank(),
+    ) +
+    scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
+    scale_color_shape_manual(
+        color_values = collection_colors,
+        labels = collection_labels
+    ) +
+    scale_x_discrete(
+        labels = section_labels,
+        #breaks = section_labels,
+    ) +
+    ylab("speedup over tskit") +
+    gg_eps()
+
+style$height <- 75
+style$width <- 150
+ggsave("experiments/plots/sfkit-vs-tskit-speedup-aggregated.pdf", width = style$width, height = style$height, units = style$unit)
+to_jpeg("experiments/plots/sfkit-vs-tskit-speedup-aggregated.pdf")
 
 # --- Runtime of sfkit over tskit ---
 runtime_data %>%
