@@ -130,7 +130,8 @@ public:
                     // it's children.  In the case that two trees in the tree sequence are exactly identical, we want
                     // two root nodes in the DAG -- one for each of the two trees.
                     bool const is_root = ts_tree.is_root(ts_node_id);
-                    if (!_dag_subtree_to_node_map.contains(dag_subtree_id) || is_root) {
+                    auto dag_node_it = _dag_subtree_to_node_map.find(dag_subtree_id);
+                    if (dag_node_it == _dag_subtree_to_node_map.end() || is_root) {
                         NodeId dag_node_id;
                         // Root nodes can have the same ID (if both trees are identical), but don't have in edges. Thus,
                         // we don't need to map their ID.
@@ -146,7 +147,7 @@ public:
                         }
                         ts_node2sf_subtree[ts_node_id] = dag_node_id;
                     } else {
-                        ts_node2sf_subtree[ts_node_id] = _dag_subtree_to_node_map[dag_subtree_id];
+                        ts_node2sf_subtree[ts_node_id] = dag_node_it->second;
                     }
                 }
             }

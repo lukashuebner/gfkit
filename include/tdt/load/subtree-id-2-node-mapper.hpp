@@ -40,6 +40,10 @@ public:
         return _subtree_to_node_map.find(subtree_id);
     }
 
+    auto end() const {
+        return _subtree_to_node_map.end();
+    }
+
     NodeId get(SuccinctSubtreeId const& subtree_id) const {
         KASSERT(contains(subtree_id), "Subtree ID does not exists in the map", tdt::assert::light);
         return _subtree_to_node_map[subtree_id];
