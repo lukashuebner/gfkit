@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <vector>
 
 #include <kassert/kassert.hpp>
 
@@ -18,6 +19,16 @@ public:
 
         SiteId site_id;
         TreeId tree_id;
+    };
+    using breakpoint_iterator = std::vector<Breakpoint>::const_iterator;
+
+    struct State {
+        State(breakpoint_iterator _current_breakpoint, breakpoint_iterator _next_breakpoint)
+            : current_breakpoint(_current_breakpoint),
+              next_breakpoint(_next_breakpoint) {}
+
+        breakpoint_iterator current_breakpoint;
+        breakpoint_iterator next_breakpoint;
     };
 
     TSKitSiteToTreeMapper(TSKitTreeSequence const& tree_sequence) {
@@ -60,8 +71,17 @@ public:
         return tree_id(position);
     }
 
+    State state() const {
+        return State(_current_breakpoint, _next_breakpoint);
+    }
+
+    void reset_to(State state) {
+        _current_breakpoint = state.current_breakpoint;
+        _next_breakpoint    = state.next_breakpoint;
+    }
+
 private:
-    std::vector<Breakpoint>                        _breakpoints;
-    mutable decltype(_breakpoints)::const_iterator _current_breakpoint;
-    mutable decltype(_breakpoints)::const_iterator _next_breakpoint;
+    std::vector<Breakpoint>     _breakpoints;
+    mutable breakpoint_iterator _current_breakpoint;
+    mutable breakpoint_iterator _next_breakpoint;
 };
