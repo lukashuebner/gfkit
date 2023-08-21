@@ -49,6 +49,9 @@ public:
         return result;
     }
 
+    std::size_t size() const {
+        return _map.size();
+    }
 private:
     mutable tsl::hopscotch_map<tsk_id_t, NodeId> _map;
 };

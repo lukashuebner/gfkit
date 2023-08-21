@@ -25,11 +25,33 @@ public:
         _set_ancestral_states(tree_sequence);
     }
 
+    void request_mappings(TreeId tree_id, TsNode2SfSubtreeMapper& ts_node2sf_subtree) {
+        auto       mutation_it     = _mutation_it;
+        auto const site2tree_state = _site2tree.state();
+        while (mutation_it != _mutations_end) {
+            tsk_id_t const site_id       = mutation_it->site;
+            TreeId const   sites_tree_id = _site2tree(site_id);
+            KASSERT(
+                sites_tree_id >= tree_id,
+                "We seemed to have missed processing a mutation. Are the mutations sorted by tree id?",
+                tdt::assert::light
+            );
+            if (sites_tree_id > tree_id) {
+                break;
+            } else {
+                ts_node2sf_subtree.request(mutation_it->node);
+                ++mutation_it;
+            }
+        }
+        _site2tree.reset_to(site2tree_state);
+    }
+
     // TODO Write documentation
-    // Call this for all trees in order, make sure the
-    // The mutations are sorted by site.
+    // Call this for all trees in order, make sure the the mutations are sorted by site.
     // return true if done; else returns false
     bool process_mutations(TreeId tree_id, TsNode2SfSubtreeMapper const& ts_node2sf_subtree) {
+        std::cout << "Requested " << ts_node2sf_subtree.num_requested() << " and got " << ts_node2sf_subtree.size()
+                  << " mappings for tree " << tree_id << std::endl;
         while (_mutation_it != _mutations_end) {
             // TODO Use less bits for site and tree ids
             tsk_id_t const site_id       = _mutation_it->site;
