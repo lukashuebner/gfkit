@@ -12,12 +12,12 @@ using namespace Catch::Matchers;
 
 TEST_CASE("AdjacencyArrayGraph Basics", "[AdjacencyArrayGraph]") {
     EdgeListGraph edge_list;
-    edge_list.add_edge(0, 1);
-    edge_list.add_edge(1, 2);
-    edge_list.add_edge(2, 1);
-    edge_list.add_edge(2, 0);
-    edge_list.add_edge(3, 0);
-    edge_list.add_root(3);
+    edge_list.insert_edge(0, 1);
+    edge_list.insert_edge(1, 2);
+    edge_list.insert_edge(2, 1);
+    edge_list.insert_edge(2, 0);
+    edge_list.insert_edge(3, 0);
+    edge_list.insert_root(3);
     edge_list.compute_num_nodes();
 
     AdjacencyArrayGraph graph(edge_list);

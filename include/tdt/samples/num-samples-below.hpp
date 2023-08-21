@@ -19,17 +19,17 @@ public:
         compute(samples);
     }
 
-    [[nodiscard]] SampleId num_samples_below(SubtreeId subtree_id) const {
-        KASSERT(subtree_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
-        return _subtree_sizes[subtree_id];
+    [[nodiscard]] SampleId num_samples_below(NodeId node_id) const {
+        KASSERT(node_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
+        return _subtree_sizes[node_id];
     }
 
-    [[nodiscard]] SampleId operator()(SubtreeId subtree_id) const {
-        return this->num_samples_below(subtree_id);
+    [[nodiscard]] SampleId operator()(NodeId node_id) const {
+        return this->num_samples_below(node_id);
     }
 
-    [[nodiscard]] SampleId operator[](SubtreeId subtree_id) const {
-        return this->num_samples_below(subtree_id);
+    [[nodiscard]] SampleId operator[](NodeId node_id) const {
+        return this->num_samples_below(node_id);
     }
 
     [[nodiscard]] SampleId num_nodes_in_dag() const {
@@ -66,7 +66,7 @@ private:
         }
 
         constexpr auto num_edges_to_prefetch = 128;
-        auto prefetch_it = _dag.begin();
+        auto           prefetch_it           = _dag.begin();
         for (size_t i = 0; i < num_edges_to_prefetch && prefetch_it != _dag.end(); i++) {
             __builtin_prefetch(&_subtree_sizes[prefetch_it->from()], 0, 3);
             __builtin_prefetch(&_subtree_sizes[prefetch_it->to()], 0, 3);
@@ -87,7 +87,7 @@ private:
             prefetch_it++;
         }
 
-        while(work_it != _dag.end()) {
+        while (work_it != _dag.end()) {
             _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
             KASSERT(
                 _subtree_sizes[work_it->from()] <= samples.popcount(),

@@ -25,33 +25,37 @@ public:
         _set_ancestral_states(tree_sequence);
     }
 
-    void request_mappings(TreeId tree_id, TsNode2SfSubtreeMapper& ts_node2sf_subtree) {
-        auto       mutation_it     = _mutation_it;
-        auto const site2tree_state = _site2tree.state();
-        while (mutation_it != _mutations_end) {
-            tsk_id_t const site_id       = mutation_it->site;
-            TreeId const   sites_tree_id = _site2tree(site_id);
-            KASSERT(
-                sites_tree_id >= tree_id,
-                "We seemed to have missed processing a mutation. Are the mutations sorted by tree id?",
-                tdt::assert::light
-            );
-            if (sites_tree_id > tree_id) {
-                break;
-            } else {
-                ts_node2sf_subtree.request(mutation_it->node);
-                ++mutation_it;
-            }
-        }
-        _site2tree.reset_to(site2tree_state);
-    }
+    // void request_mappings(TreeId tree_id, TsToSfNodeMapper& ts_node2sf_subtree) {
+    //     auto       mutation_it     = _mutation_it;
+    //     auto const site2tree_state = _site2tree.state();
+    //     while (mutation_it != _mutations_end) {
+    //         tsk_id_t const site_id       = mutation_it->site;
+    //         TreeId const   sites_tree_id = _site2tree(site_id);
+    //         KASSERT(
+    //             sites_tree_id >= tree_id,
+    //             "We seemed to have missed processing a mutation. Are the mutations sorted by tree id?",
+    //             tdt::assert::light
+    //         );
+    //         if (sites_tree_id > tree_id) {
+    //             break;
+    //         } else {
+    //             ts_node2sf_subtree.request(mutation_it->node); // Request the node in tskit space
+    //         }
+    //         ++mutation_it;
+    //     }
+    //     _site2tree.reset_to(site2tree_state);
+    // }
 
     // TODO Write documentation
     // Call this for all trees in order, make sure the the mutations are sorted by site.
     // return true if done; else returns false
-    bool process_mutations(TreeId tree_id, TsNode2SfSubtreeMapper const& ts_node2sf_subtree) {
-        std::cout << "Requested " << ts_node2sf_subtree.num_requested() << " and got " << ts_node2sf_subtree.size()
-                  << " mappings for tree " << tree_id << std::endl;
+    template <typename TsToSfNodeMapper>
+    bool process_mutations(TreeId tree_id, TsToSfNodeMapper const& ts_to_sf_node) {
+        // KASSERT(
+        //     ts_node2sf_subtree.num_requested() == ts_node2sf_subtree.size(),
+        //     "The number of requested and mapped ts node IDs differ.",
+        //     tdt::assert::light
+        // );
         while (_mutation_it != _mutations_end) {
             // TODO Use less bits for site and tree ids
             tsk_id_t const site_id       = _mutation_it->site;
@@ -66,7 +70,7 @@ public:
                               // mapping of ts nodes to sf subtree ids.
             }
 
-            SubtreeId const sf_subtree_id = ts_node2sf_subtree.at(_mutation_it->node);
+            NodeId const sf_node_id = ts_to_sf_node(asserting_cast<size_t>(_mutation_it->node));
             KASSERT(_mutation_it->node != TSK_NULL, "Mutation node is null", tdt::assert::light);
             KASSERT(_mutation_it->derived_state_length == 1u, "Derived state length is not 1", tdt::assert::light);
 
@@ -84,7 +88,7 @@ public:
                     ? _sequence.ancestral_state(asserting_cast<SiteId>(site_id))
                     : _sequence.mutation_by_id(asserting_cast<MutationId>(parent_mutation_id)).allelic_state();
 
-            _sequence.emplace_back(site_id, tree_id, sf_subtree_id, derived_state, ancestral_state);
+            _sequence.emplace_back(site_id, tree_id, sf_node_id, derived_state, ancestral_state);
             ++_mutation_it;
         }
         return true;

@@ -1,7 +1,15 @@
-#include "fmt/format.h"
 #include <fstream>
 
+#include <fmt/format.h>
+
+#if defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wnoexcept"
+#endif
 #include <cereal/archives/binary.hpp>
+#if defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
 
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/sequence-forest.hpp"

@@ -242,11 +242,11 @@ public:
         return _sequence.num_mutations();
     }
 
-    [[nodiscard]] SubtreeId num_unique_subtrees() const {
+    [[nodiscard]] auto num_unique_subtrees() const {
         return _forest.num_unique_subtrees();
     }
 
-    [[nodiscard]] SubtreeId num_subtrees_with_mutations() const {
+    [[nodiscard]] auto num_subtrees_with_mutations() const {
         return _sequence.subtrees_with_mutations().size();
     }
 

@@ -25,8 +25,8 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     }
 
     SECTION("Graph with a single edge") {
-        dag.add_edge(1, 0);
-        dag.add_leaf(0);
+        dag.insert_edge(1, 0);
+        dag.insert_leaf(0);
         dag.compute_num_nodes();
 
         SampleSet empty_samples(dag.num_leaves());
@@ -50,13 +50,13 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     }
 
     SECTION("Graph with three leaves") {
-        dag.add_leaf(0);
-        dag.add_leaf(1);
-        dag.add_leaf(2);
-        dag.add_edge(3, 0);
-        dag.add_edge(3, 1);
-        dag.add_edge(4, 3);
-        dag.add_edge(4, 2);
+        dag.insert_leaf(0);
+        dag.insert_leaf(1);
+        dag.insert_leaf(2);
+        dag.insert_edge(3, 0);
+        dag.insert_edge(3, 1);
+        dag.insert_edge(4, 3);
+        dag.insert_edge(4, 2);
         dag.compute_num_nodes();
 
         SECTION("Empty sample set") {
@@ -149,49 +149,49 @@ TEST_CASE("NumSamplesBelow Medium-Sized Example", "[NumSamplesBelow]") {
     SampleId const              root = 38;
 
     EdgeListGraph dag;
-    dag.add_edge(24, 0);
-    dag.add_edge(24, 6);
-    dag.add_edge(31, 24);
-    dag.add_edge(31, 10);
-    dag.add_edge(29, 8);
-    dag.add_edge(23, 9);
-    dag.add_edge(23, 11);
-    dag.add_edge(25, 12);
-    dag.add_edge(25, 23);
-    dag.add_edge(28, 13);
-    dag.add_edge(28, 25);
-    dag.add_edge(29, 28);
-    dag.add_edge(26, 4);
-    dag.add_edge(21, 7);
-    dag.add_edge(21, 14);
-    dag.add_edge(26, 21);
-    dag.add_edge(27, 19);
-    dag.add_edge(27, 26);
-    dag.add_edge(32, 31);
-    dag.add_edge(32, 29);
-    dag.add_edge(33, 32);
-    dag.add_edge(33, 27);
-    dag.add_edge(20, 1);
-    dag.add_edge(20, 2);
-    dag.add_edge(22, 18);
-    dag.add_edge(22, 20);
-    dag.add_edge(36, 33);
-    dag.add_edge(36, 22);
-    dag.add_edge(35, 3);
-    dag.add_edge(35, 5);
-    dag.add_edge(37, 36);
-    dag.add_edge(37, 35);
-    dag.add_edge(30, 15);
-    dag.add_edge(30, 16);
-    dag.add_edge(34, 30);
-    dag.add_edge(34, 17);
-    dag.add_edge(38, 37);
-    dag.add_edge(38, 34);
+    dag.insert_edge(24, 0);
+    dag.insert_edge(24, 6);
+    dag.insert_edge(31, 24);
+    dag.insert_edge(31, 10);
+    dag.insert_edge(29, 8);
+    dag.insert_edge(23, 9);
+    dag.insert_edge(23, 11);
+    dag.insert_edge(25, 12);
+    dag.insert_edge(25, 23);
+    dag.insert_edge(28, 13);
+    dag.insert_edge(28, 25);
+    dag.insert_edge(29, 28);
+    dag.insert_edge(26, 4);
+    dag.insert_edge(21, 7);
+    dag.insert_edge(21, 14);
+    dag.insert_edge(26, 21);
+    dag.insert_edge(27, 19);
+    dag.insert_edge(27, 26);
+    dag.insert_edge(32, 31);
+    dag.insert_edge(32, 29);
+    dag.insert_edge(33, 32);
+    dag.insert_edge(33, 27);
+    dag.insert_edge(20, 1);
+    dag.insert_edge(20, 2);
+    dag.insert_edge(22, 18);
+    dag.insert_edge(22, 20);
+    dag.insert_edge(36, 33);
+    dag.insert_edge(36, 22);
+    dag.insert_edge(35, 3);
+    dag.insert_edge(35, 5);
+    dag.insert_edge(37, 36);
+    dag.insert_edge(37, 35);
+    dag.insert_edge(30, 15);
+    dag.insert_edge(30, 16);
+    dag.insert_edge(34, 30);
+    dag.insert_edge(34, 17);
+    dag.insert_edge(38, 37);
+    dag.insert_edge(38, 34);
 
     for (auto const& leaf: leaves) {
-        dag.add_leaf(leaf);
+        dag.insert_leaf(leaf);
     }
-    dag.add_root(root);
+    dag.insert_root(root);
     dag.compute_num_nodes();
 
     SECTION("All samples in sample set") {

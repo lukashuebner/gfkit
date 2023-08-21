@@ -304,7 +304,7 @@ public:
 
                 while (mutation_it != mutations_at_site.end()) {
                     auto const mutation                        = *mutation_it;
-                    auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.subtree_id());
+                    auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.node_id());
                     auto const this_mutations_state            = mutation.allelic_state();
 
                     [[unlikely]] if (this_mutations_state != derived_state && this_mutations_state != ancestral_state) {
@@ -347,7 +347,7 @@ public:
             state_freqs[idx_of_ancestral_state] = num_samples_in_sample_set();
 
             for (auto const& mutation: mutations_at_site) {
-                auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.subtree_id());
+                auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.node_id());
                 auto const idx_of_mutations_state = AllelicStatePerfectHasher::to_idx(mutation.allelic_state());
                 auto const idx_of_parents_state   = AllelicStatePerfectHasher::to_idx(mutation.parent_state());
 

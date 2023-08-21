@@ -14,13 +14,13 @@ public:
     Mutation() = default;
 
     Mutation(
-        SiteId site_id, TreeId tree_id, SubtreeId subtree_id, AllelicState state, AllelicState parent_state
+        SiteId site_id, TreeId tree_id, NodeId node_id, AllelicState state, AllelicState parent_state
     ) noexcept
         : _site_id(site_id),
           _parent_state(parent_state),
           _derived_state(state),
           _tree_id(tree_id),
-          _subtree_id(subtree_id) {}
+          _node_id(node_id) {}
 
     [[nodiscard]] SiteId site_id() const {
         return _site_id;
@@ -30,23 +30,18 @@ public:
         return _derived_state;
     }
 
-    // TODO Remove this, it's never used (except for in unit tests)
-    [[nodiscard]] SubtreeId tree_id() const {
-        return _tree_id;
-    }
-
-    [[nodiscard]] TreeId subtree_id() const {
-        return _subtree_id;
+    [[nodiscard]] NodeId node_id() const {
+        return _node_id;
     }
 
     template <class Archive>
     void serialize(Archive& archive) {
-        archive(_site_id, _derived_state, _tree_id, _subtree_id, _parent_state);
+        archive(_site_id, _derived_state, _tree_id, _node_id, _parent_state);
     }
 
     bool operator==(Mutation const& other) const noexcept {
         return _site_id == other._site_id && _derived_state == other._derived_state && _tree_id == other._tree_id
-               && _subtree_id == other._subtree_id && _parent_state == other._parent_state;
+               && _node_id == other._node_id && _parent_state == other._parent_state;
     }
 
     AllelicState parent_state() const {
@@ -64,7 +59,7 @@ private:
     TreeId       _tree_id;
     // TODO Directly encode the formula to compute the subtree size here. E.g. a bitmask of which samples ares below
     // this node. (xor with sample set and then do a popcount)
-    SubtreeId _subtree_id; // TODO Change to compressed forest node id
+    NodeId _node_id;
 };
 
 using MutationView = std::span<Mutation const>;

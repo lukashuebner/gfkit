@@ -3,8 +3,15 @@
 // #include <sparsehash/dense_hash_map>
 #include <unordered_set>
 
+#if defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wnoexcept"
+#endif
 #include <cereal/types/memory.hpp>
 #include <cereal/types/vector.hpp>
+#if defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
 #include <kassert/kassert.hpp>
 
 #include "tdt/assertion_levels.hpp"
@@ -73,16 +80,16 @@ public:
         return _dag_postorder_edges.num_edges();
     }
 
-    void add_leaf(NodeId const leaf) {
-        _dag_postorder_edges.add_leaf(leaf);
+    void insert_leaf(NodeId const leaf) {
+        _dag_postorder_edges.insert_leaf(leaf);
     }
 
-    void add_root(NodeId const root) {
-        _dag_postorder_edges.add_root(root);
+    void insert_root(NodeId const root) {
+        _dag_postorder_edges.insert_root(root);
     }
 
-    void add_edge(NodeId const from, NodeId const to) {
-        _dag_postorder_edges.add_edge(from, to);
+    void insert_edge(NodeId const from, NodeId const to) {
+        _dag_postorder_edges.insert_edge(from, to);
     }
 
     [[nodiscard]] std::vector<NodeId> const& roots() const {
@@ -101,11 +108,11 @@ public:
         return _dag_postorder_edges.num_leaves();
     }
 
-    [[nodiscard]] SubtreeId num_unique_subtrees() const {
+    [[nodiscard]] NodeId num_unique_subtrees() const {
         return _dag_postorder_edges.num_nodes();
     }
 
-    [[nodiscard]] std::unordered_set<SubtreeId> unique_subtrees() const {
+    [[nodiscard]] std::unordered_set<NodeId> unique_subtrees() const {
         return _dag_postorder_edges.nodes();
     }
 

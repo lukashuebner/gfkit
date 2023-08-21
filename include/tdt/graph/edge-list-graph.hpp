@@ -32,16 +32,16 @@ public:
 
     EdgeListGraph(TraversalOrder traversal_order) : _traversal_order(traversal_order) {}
 
-    void add_edge(NodeId from, NodeId to) {
+    void insert_edge(NodeId from, NodeId to) {
         _edges.emplace_back(Edge(from, to));
         // TODO Think about incremental updates of the nodes array or a separate build phase for the graph.
     }
 
-    void add_root(NodeId root) {
+    void insert_root(NodeId root) {
         _roots.push_back(root);
     }
 
-    void add_leaf(NodeId leaf) {
+    void insert_leaf(NodeId leaf) {
         _leaves.push_back(leaf);
     }
 

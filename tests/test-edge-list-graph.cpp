@@ -18,7 +18,7 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
     }
 
     SECTION("Graph with a single edge") {
-        graph.add_edge(0, 1);
+        graph.insert_edge(0, 1);
         graph.compute_num_nodes();
         CHECK(graph.num_nodes() == 2);
         CHECK(graph.num_edges() == 1);
@@ -31,21 +31,21 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
 
     SECTION("Set the number of nodes to a wrong value") {
         // If we add a single edge, the number of nodes should be autocomputed in O(|edges|) time.
-        graph.add_edge(0, 1);
+        graph.insert_edge(0, 1);
         graph.compute_num_nodes();
         CHECK(graph.num_nodes() == 2);
         CHECK(graph.num_edges() == 1);
 
         // Invalidate the num_nodes cache and check that the value is recomputed.
-        graph.add_edge(0, 2);
+        graph.insert_edge(0, 2);
         graph.compute_num_nodes();
         CHECK(graph.num_nodes() == 3);
     }
 
     SECTION("Graph with three edges") {
-        graph.add_edge(0, 2);
-        graph.add_edge(1, 2);
-        graph.add_edge(2, 2);
+        graph.insert_edge(0, 2);
+        graph.insert_edge(1, 2);
+        graph.insert_edge(2, 2);
         graph.compute_num_nodes();
         CHECK(graph.num_edges() == 3);
     }
@@ -53,8 +53,8 @@ TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
     SECTION("Graph with multiedges") {
         // We do not check that an edge is unique (too slow), so adding the same edge twice (or three times) should
         // work.
-        graph.add_edge(0, 1);
-        graph.add_edge(0, 1);
+        graph.insert_edge(0, 1);
+        graph.insert_edge(0, 1);
         graph.compute_num_nodes();
         CHECK(graph.num_edges() == 2);
     }
@@ -67,18 +67,18 @@ TEST_CASE("EdgeListGraph::add_leaves()", "[EdgeListGraph]") {
     CHECK(graph.leaves().size() == 0);
     CHECK(graph.leaves() == leaves);
 
-    graph.add_leaf(0);
+    graph.insert_leaf(0);
     leaves.push_back(0);
     CHECK(graph.leaves().size() == 1);
     CHECK(graph.leaves() == leaves);
 
     // No interference between leaves and roots.
-    graph.add_root(12);
+    graph.insert_root(12);
     CHECK(graph.leaves().size() == 1);
     CHECK(graph.leaves() == leaves);
 
     for (NodeId i: std::vector<NodeId>{1, 2, 5}) {
-        graph.add_leaf(i);
+        graph.insert_leaf(i);
         leaves.push_back(i);
     }
     CHECK(graph.leaves().size() == 4);
@@ -92,18 +92,18 @@ TEST_CASE("EdgeListGraph::add_root()", "[EdgeListGraph]") {
     CHECK(graph.roots().size() == 0);
     CHECK(graph.roots() == roots);
 
-    graph.add_root(0);
+    graph.insert_root(0);
     roots.push_back(0);
     CHECK(graph.roots().size() == 1);
     CHECK(graph.roots() == roots);
 
     // No interference between leaves and roots.
-    graph.add_leaf(12);
+    graph.insert_leaf(12);
     CHECK(graph.roots().size() == 1);
     CHECK(graph.roots() == roots);
 
     for (NodeId i: std::vector<NodeId>{1, 2, 5}) {
-        graph.add_root(i);
+        graph.insert_root(i);
         roots.push_back(i);
     }
     CHECK(graph.roots().size() == 4);
@@ -115,10 +115,10 @@ TEST_CASE("EdgeListGraph::directed()", "[EdgeListGraph]") {
 
     CHECK(graph.directed() == true);
 
-    graph.add_edge(0, 1);
+    graph.insert_edge(0, 1);
     CHECK(graph.directed() == true);
 
-    graph.add_edge(1, 0);
+    graph.insert_edge(1, 0);
     CHECK(graph.directed() == true);
 }
 
@@ -189,7 +189,7 @@ TEST_CASE("EdgeListGraph::edges_are_sorted()", "[EdgeListGraph]") {
 
     SECTION("Consecutive, both sorted") {
         for (NodeId i: std::vector<NodeId>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-            graph.add_edge(i, i + 1);
+            graph.insert_edge(i, i + 1);
         }
         CHECK(graph.edges_are_sorted(SortBy::FromVertex));
         CHECK(graph.edges_are_sorted(SortBy::ToVertex));
@@ -197,7 +197,7 @@ TEST_CASE("EdgeListGraph::edges_are_sorted()", "[EdgeListGraph]") {
 
     SECTION("Non-consecutive, both sorted") {
         for (NodeId i: std::vector<NodeId>{0, 10, 21, 34, 40, 544}) {
-            graph.add_edge(i, i + 1);
+            graph.insert_edge(i, i + 1);
         }
         CHECK(graph.edges_are_sorted(SortBy::FromVertex));
         CHECK(graph.edges_are_sorted(SortBy::ToVertex));
@@ -205,7 +205,7 @@ TEST_CASE("EdgeListGraph::edges_are_sorted()", "[EdgeListGraph]") {
 
     SECTION("Both unsorted") {
         for (NodeId i: std::vector<NodeId>{0, 3, 2, 30, 4, 5, 6, 7, 8, 9}) {
-            graph.add_edge(i, i + 1);
+            graph.insert_edge(i, i + 1);
         }
         CHECK_FALSE(graph.edges_are_sorted(SortBy::FromVertex));
         CHECK_FALSE(graph.edges_are_sorted(SortBy::ToVertex));
@@ -213,27 +213,27 @@ TEST_CASE("EdgeListGraph::edges_are_sorted()", "[EdgeListGraph]") {
 
     SECTION("Both sorted with double edges") {
         for (NodeId i: std::vector<NodeId>{0, 10, 21, 34, 40, 544}) {
-            graph.add_edge(i, i + 1);
-            graph.add_edge(i, i + 1);
+            graph.insert_edge(i, i + 1);
+            graph.insert_edge(i, i + 1);
         }
         CHECK(graph.edges_are_sorted(SortBy::FromVertex));
         CHECK(graph.edges_are_sorted(SortBy::ToVertex));
     }
 
     SECTION("sorted by from, not by to vertex") {
-        graph.add_edge(0, 1);
-        graph.add_edge(1, 4);
-        graph.add_edge(2, 1);
-        graph.add_edge(5, 0);
-        graph.add_edge(8, 1);
+        graph.insert_edge(0, 1);
+        graph.insert_edge(1, 4);
+        graph.insert_edge(2, 1);
+        graph.insert_edge(5, 0);
+        graph.insert_edge(8, 1);
     }
 
     SECTION("sorted by to, not by from vertex") {
-        graph.add_edge(10, 1);
-        graph.add_edge(1, 4);
-        graph.add_edge(2, 6);
-        graph.add_edge(34, 6);
-        graph.add_edge(8, 8);
+        graph.insert_edge(10, 1);
+        graph.insert_edge(1, 4);
+        graph.insert_edge(2, 6);
+        graph.insert_edge(34, 6);
+        graph.insert_edge(8, 8);
     }
 }
 
@@ -243,11 +243,11 @@ TEST_CASE("EdgeListGraph::sort() simple graph", "[EdgeListGraph]") {
     EdgeListGraph graph;
     size_t        num_edges = 0;
     for (NodeId i: std::vector<NodeId>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-        graph.add_edge(i, i + 1);
+        graph.insert_edge(i, i + 1);
         num_edges++;
     }
     for (NodeId i: std::vector<NodeId>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-        graph.add_edge(i + 2, i);
+        graph.insert_edge(i + 2, i);
         num_edges++;
     }
     CHECK(graph.num_edges() == num_edges);

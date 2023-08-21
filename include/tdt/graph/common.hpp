@@ -7,7 +7,6 @@
 #include "tdt/assertion_levels.hpp"
 
 using NodeId    = uint32_t;
-using SubtreeId = NodeId;
 using TreeId    = uint32_t;
 using EdgeId    = uint32_t;
 

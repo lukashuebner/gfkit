@@ -131,7 +131,7 @@ public:
     [[nodiscard]] bool mutations_are_sorted_by_tree_id() const {
         return std::is_sorted(_mutations.begin(), _mutations.end(), [](Mutation const& lhs, Mutation const& rhs) {
             // TODO Rename subtree_id() to tree_id()
-            return lhs.subtree_id() < rhs.subtree_id();
+            return lhs.node_id() < rhs.node_id();
         });
     }
 
@@ -156,11 +156,11 @@ public:
             );
     }
 
-    [[nodiscard]] std::unordered_set<SubtreeId> subtrees_with_mutations() const {
-        std::unordered_set<SubtreeId> subtrees_with_mutations;
+    [[nodiscard]] std::unordered_set<NodeId> subtrees_with_mutations() const {
+        std::unordered_set<NodeId> subtrees_with_mutations;
 
         std::for_each(_mutations.begin(), _mutations.end(), [&subtrees_with_mutations](Mutation const& mutation) {
-            subtrees_with_mutations.insert(mutation.subtree_id());
+            subtrees_with_mutations.insert(mutation.node_id());
         });
 
         return subtrees_with_mutations;
