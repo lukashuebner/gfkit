@@ -127,6 +127,15 @@ void benchmark(
     // construction. (Check this!)
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
+    // --- Output some statistics ---
+    // if (!warmup) {
+    //     std::cerr << "Tree sequence has " << sequence_forest.num_trees() << " trees, " << sequence_forest.num_sites()
+    //               << " sites, " << sequence_forest.num_mutations() << " mutations, " << sequence_forest.num_samples()
+    //               << " samples, " << sequence_forest.num_unique_subtrees() << " subtrees "
+    //               << " of which " << sequence_forest.num_subtrees_with_mutations() << " have mutations on them. "
+    //               << std::endl;
+    // }
+
     // --- Benchmark computing the AFS ---
     memory_usage.start();
     timer.start();
