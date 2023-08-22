@@ -183,4 +183,8 @@ TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     auto const num_pointed_to = std::count(pointed_to.begin(), pointed_to.end(), true);
     CHECK(asserting_cast<size_t>(num_pointed_to) == dag.num_nodes());
     CHECK_THAT(pointed_to, AllTrue());
+
+    // Check that the resulting DAG is in postorder and that there are no duplicate edges.
+    CHECK(dag.check_postorder());
+    CHECK(dag.check_no_duplicate_edges());
 }

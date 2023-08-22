@@ -57,6 +57,7 @@ private:
     XXH64_hash_t const _seed;
 };
 
+// SubtreeHash already is a hash; this function thus is the identity.
 template <>
 struct std::hash<SubtreeHash> {
     size_t operator()(SubtreeHash const& subtree_id) const noexcept {

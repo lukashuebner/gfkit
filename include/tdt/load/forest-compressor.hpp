@@ -44,42 +44,15 @@ public:
         // TODO Write assertions for that no old subtree id is reused
 
         CompressedForest forest;
-        // Reserve the memory for the subtree id once. This prevents reallocations and re-filling the memory for every
-        // subtree id, thus improves performance.
-        // TODO Do we have two mappings between TS and SF nodes?
 
-        // Cache the (DAG) subtree IDs for the current tree. As in tskit the same node can have different subtrees below
-        // it depending on the current tree, we need to reset this map for each tree. (The subtree ids are in the DAG
-        // domain in which each node id occurs only once)
-        // TsToSfNodeMapper ts_node2sf_subtree;
-
-        // TODO remove this if not needed
-        // std::vector<NodeId> samples_subtree_ids(_tree_sequence.num_samples());
         // Add the samples to the compressed forest here so they have the same ID in all trees.
         _register_samples(forest);
 
         // TODO Rewrite this, once we have the tree_sequence iterator
         for (_ts_tree.first(); _ts_tree.is_valid(); _ts_tree.next()) {
-            // Reset the mapper for this tree
-            // ts_node2sf_subtree.reset();
-            // genomic_sequence_storage_factory.request_mappings(
-            //     asserting_cast<TreeId>(_ts_tree.tree_id()),
-            //     ts_node2sf_subtree
-            // );
-
             for (auto const ts_node_id: _ts_tree.postorder()) {
-                // Prefetching the children of the next node slows down the code in benchmarks.
-                if (is_sample(ts_node_id) /* && ts_node2sf_subtree.is_requested(ts_node_id)*/) [[unlikely]] {
-                    //  Samples are already mapped and added to this map above
-                    // auto subtree_id = _ts_node_to_subtree[asserting_cast<size_t>(ts_node_id)];
-                    // KASSERT(
-                    //     _subtree_to_sf_node.contains(subtree_id),
-                    //     "A sample present in a later tree is missing from the first tree.",
-                    //     tdt::assert::light
-                    // );
-                    // NodeId sf_node_id = _subtree_to_sf_node.get(subtree_id);
-                    // ts_node2sf_subtree.insert(ts_node_id, sf_node_id);
-                } else { // Node is inner node
+                // Samples are already mapped and added to the DAG before processing the first tree.
+                if (!is_sample(ts_node_id)) [[likely]] {
                     // Compute the subtree ID of this inner node by hashing the subtree IDs of its children.
                     static_assert(std::is_same_v<decltype(XXH128_hash_t::low64), decltype(XXH128_hash_t::high64)>);
                     SubtreeHash subtree_id = SuccinctSubtreeIdZero;
@@ -130,10 +103,6 @@ public:
                         for (auto&& child: children_sf_node_ids) {
                             forest.insert_edge(sf_node_id, child);
                         }
-                        // ts_node2sf_subtree.insert_if_requested(ts_node_id, sf_node_id);
-                    } else {
-                        // ts_node2sf_subtree.insert_if_requested(ts_node_id,
-                        // asserting_cast<NodeId>(sf_node_it->second));
                     }
                 }
             }

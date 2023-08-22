@@ -5,10 +5,11 @@
 #include <kassert/kassert.hpp>
 
 #include "tdt/assertion_levels.hpp"
+#include "tdt/utils/xxhash.hpp"
 
-using NodeId    = uint32_t;
-using TreeId    = uint32_t;
-using EdgeId    = uint32_t;
+using NodeId = uint32_t;
+using TreeId = uint32_t;
+using EdgeId = uint32_t;
 
 constexpr NodeId INVALID_NODE_ID = static_cast<NodeId>(-1);
 
@@ -50,6 +51,12 @@ public:
 private:
     NodeId _from = INVALID_NODE_ID;
     NodeId _to   = INVALID_NODE_ID;
+};
+
+struct EdgeHash {
+    size_t operator()(Edge const& edge) const {
+        return xxhash64(edge.to(), xxhash64(edge.from()));
+    }
 };
 
 enum class TraversalOrder { Preorder, Postorder, Levelorder, Inorder, Unordered };

@@ -233,4 +233,9 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     SiteId const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();
     double const tskit_num_seg_sites = sequence_forest.tree_sequence().num_segregating_sites();
     CHECK(sfkit_num_seg_sites == Approx(tskit_num_seg_sites).epsilon(1e-4));
+
+    // Check some properties of the compressed forest
+    auto const dag = forest.postorder_edges();
+    CHECK(dag.check_postorder());
+    CHECK(dag.check_no_duplicate_edges());
 }

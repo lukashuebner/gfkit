@@ -211,6 +211,17 @@ public:
         return true;
     }
 
+    bool check_no_duplicate_edges() const {
+        std::unordered_set<Edge, EdgeHash> edges;
+        for (auto const& edge: _edges) {
+            if (edges.contains(edge)) {
+                return false;
+            }
+            edges.insert(edge);
+        }
+        return true;
+    }
+
     template <class Compare>
     void sort_edges(Compare comp, TraversalOrder traversal_order = TraversalOrder::Unordered) {
         _traversal_order = traversal_order;
