@@ -128,13 +128,90 @@ void benchmark(
     SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
     // --- Output some statistics ---
-    // if (!warmup) {
-    //     std::cerr << "Tree sequence has " << sequence_forest.num_trees() << " trees, " << sequence_forest.num_sites()
-    //               << " sites, " << sequence_forest.num_mutations() << " mutations, " << sequence_forest.num_samples()
-    //               << " samples, " << sequence_forest.num_unique_subtrees() << " subtrees "
-    //               << " of which " << sequence_forest.num_subtrees_with_mutations() << " have mutations on them. "
-    //               << std::endl;
-    // }
+    results_printer
+        .print(warmup, "stats", "sfkit", trees_file, "num_trees", sequence_forest.num_trees(), "1", iteration);
+    results_printer.print(
+        warmup,
+        "stats",
+        "tskit",
+        trees_file,
+        "num_trees",
+        sequence_forest.tree_sequence().num_trees(),
+        "1",
+        iteration
+    );
+
+    results_printer
+        .print(warmup, "stats", "sfkit", trees_file, "num_mutations", sequence_forest.num_mutations(), "1", iteration);
+    results_printer.print(
+        warmup,
+        "stats",
+        "tskit",
+        trees_file,
+        "num_mutations",
+        sequence_forest.tree_sequence().num_mutations(),
+        "1",
+        iteration
+    );
+
+    results_printer
+        .print(warmup, "stats", "sfkit", trees_file, "num_sites", sequence_forest.num_sites(), "1", iteration);
+    results_printer.print(
+        warmup,
+        "stats",
+        "tskit",
+        trees_file,
+        "num_sites",
+        sequence_forest.tree_sequence().num_sites(),
+        "1",
+        iteration
+    );
+
+    results_printer
+        .print(warmup, "stats", "sfkit", trees_file, "num_samples", sequence_forest.num_samples(), "1", iteration);
+    results_printer.print(
+        warmup,
+        "stats",
+        "tskit",
+        trees_file,
+        "num_samples",
+        sequence_forest.tree_sequence().num_samples(),
+        "1",
+        iteration
+    );
+
+    results_printer.print(
+        warmup,
+        "stats",
+        "sfkit",
+        trees_file,
+        "num_unique_subtrees",
+        sequence_forest.num_unique_subtrees(),
+        "1",
+        iteration
+    );
+
+    results_printer.print(
+        warmup,
+        "stats",
+        "sfkit",
+        trees_file,
+        "num_subtrees_with_mutations",
+        sequence_forest.num_subtrees_with_mutations(),
+        "1",
+        iteration
+    );
+
+    results_printer.print(
+        warmup,
+        "stats",
+        "tskit",
+        trees_file,
+        "num_edges",
+        sequence_forest.tree_sequence().num_edges(),
+        "1",
+        iteration
+    );
 
     // --- Benchmark computing the AFS ---
     memory_usage.start();
