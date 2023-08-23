@@ -11,7 +11,7 @@
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/compressed-forest-serialization.hpp"
 #include "tdt/load/forest-compressor.hpp"
-#include "tdt/sequence-forest.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
@@ -67,9 +67,9 @@ TEST_CASE("Divergence tskit example", "[Divergence]") {
     CHECK(tree_sequence.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SequenceForest sequence_forest(std::move(tree_sequence));
+    SuccinctForest forest(std::move(tree_sequence));
 
-    CHECK(sequence_forest.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
+    CHECK(forest.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);

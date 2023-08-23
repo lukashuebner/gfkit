@@ -11,7 +11,7 @@
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
-#include "tdt/sequence-forest.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
@@ -59,9 +59,9 @@ TEST_CASE("Segregating Sites tskit example", "[SegregatingSites]") {
     CHECK(tree_sequence.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SequenceForest sequence_forest(std::move(tree_sequence));
+    SuccinctForest forest(std::move(tree_sequence));
 
-    CHECK(sequence_forest.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
+    CHECK(forest.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);

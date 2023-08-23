@@ -103,10 +103,10 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK(sequence_deserialized.mutations_are_sorted_by_site() == sequence.mutations_are_sorted_by_site());
 
     // High-level operations
-    SequenceForest sf(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    SuccinctForest sf(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
     tree_sequence = TSKitTreeSequence(ts_file);
-    SequenceForest sf_deserialized(
+    SuccinctForest sf_deserialized(
         std::move(tree_sequence),
         std::move(forest_deserialized),
         std::move(sequence_deserialized)
@@ -206,7 +206,7 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     }
 
     // --- Divergence ---
-    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    SuccinctForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
     SampleSet sample_set_1(sequence_forest.num_samples());
     SampleSet sample_set_2(sequence_forest.num_samples());

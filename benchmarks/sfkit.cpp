@@ -7,7 +7,7 @@
 #include <CLI/Formatter.hpp>
 #include <catch2/catch_approx.hpp>
 #include <tdt/load/forest-compressor.hpp>
-#include <tdt/sequence-forest.hpp>
+#include <tdt/succinct-forest.hpp>
 #include <tdt/tskit.hpp>
 
 #include "perf.hpp"
@@ -125,7 +125,7 @@ void benchmark(
     // --- Construct the SequenceForest object on which we then call the high-level operations. ---
     // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during
     // construction. (Check this!)
-    SequenceForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    SuccinctForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
     // --- Output some statistics ---
     results_printer

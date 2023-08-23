@@ -19,7 +19,7 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/load/forest-compressor.hpp"
-#include "tdt/sequence-forest.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/tskit.hpp"
 
 using namespace ::Catch::Matchers;
@@ -139,7 +139,7 @@ TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    SequenceForest    sequence_forest(std::move(tree_sequence));
+    SuccinctForest    sequence_forest(std::move(tree_sequence));
 
     EdgeListGraph const& dag = sequence_forest.forest().postorder_edges();
 

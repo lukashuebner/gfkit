@@ -12,7 +12,7 @@
 #endif
 
 #include "tdt/graph/compressed-forest.hpp"
-#include "tdt/sequence-forest.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 
 class CompressedForestIO {

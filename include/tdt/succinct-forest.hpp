@@ -17,21 +17,21 @@
 #include "tdt/utils/always_false_v.hpp"
 
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
-class SequenceForest {
+class SuccinctForest {
 public:
     using MultiallelicFrequency = typename AlleleFrequencies<AllelicStatePerfectHasher>::MultiallelicFrequency;
     using BiallelicFrequency    = typename AlleleFrequencies<AllelicStatePerfectHasher>::BiallelicFrequency;
 
-    SequenceForest(
+    SuccinctForest(
         TSKitTreeSequence&& tree_sequence, CompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
     )
         : _tree_sequence(std::move(tree_sequence)),
           _forest(compressed_forest),
           _sequence(genomic_sequence) {}
 
-    SequenceForest(tsk_treeseq_t&& ts_tree_sequence) : SequenceForest(TSKitTreeSequence(ts_tree_sequence)) {}
+    SuccinctForest(tsk_treeseq_t&& ts_tree_sequence) : SuccinctForest(TSKitTreeSequence(ts_tree_sequence)) {}
 
-    SequenceForest(TSKitTreeSequence&& tree_sequence) : _tree_sequence(std::move(tree_sequence)) {
+    SuccinctForest(TSKitTreeSequence&& tree_sequence) : _tree_sequence(std::move(tree_sequence)) {
         ForestCompressor       forest_compressor(_tree_sequence);
         GenomicSequenceFactory sequence_factory(_tree_sequence);
         _forest   = forest_compressor.compress(sequence_factory);

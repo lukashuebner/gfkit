@@ -9,7 +9,7 @@
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
-#include "tdt/sequence-forest.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/sequence/allele-frequencies.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/literals.hpp"
@@ -34,7 +34,7 @@ TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {
         0
     );
 
-    SequenceForest sequence_forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     std::vector<uint64_t> expected    = {3, 3, 1};
@@ -73,7 +73,7 @@ TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
         0
     );
 
-    SequenceForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     auto const& all_samples = sequence_forest.all_samples();
@@ -113,7 +113,7 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         0
     );
 
-    SequenceForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     // Site 0 is multiallelic with 2 1 1 0 derived states.
