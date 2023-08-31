@@ -88,32 +88,37 @@ public:
         return const_iterator::sentinel();
     }
 
-    void add(SampleId const sample_id) {
+    SampleSet& add(SampleId const sample_id) {
         KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
         _samples[sample_id] = true;
+        return *this;
     }
 
     template <IterableInput IterableInput>
-    void add(IterableInput input) {
+    SampleSet& add(IterableInput input) {
         for (auto&& sample_id: input) {
             this->add(sample_id);
         }
+        return *this;
     }
 
-    void remove(SampleId const sample_id) {
+    SampleSet& remove(SampleId const sample_id) {
         KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
         _samples[sample_id] = false;
+        return *this;
     }
 
     template <IterableInput IterableInput>
-    void remove(IterableInput input) {
+    SampleSet& remove(IterableInput input) {
         for (auto&& sample_id: input) {
             this->remove(sample_id);
         }
+        return *this;
     }
 
-    void clear() {
+    SampleSet& clear() {
         std::fill(_samples.begin(), _samples.end(), false);
+        return *this;
     }
 
     [[nodiscard]] SampleId operator[](SampleId const sample_id) const {
