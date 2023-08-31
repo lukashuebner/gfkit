@@ -12,50 +12,20 @@ class AlleleFrequencies {
 public:
     class BiallelicFrequency {
     public:
-        BiallelicFrequency(
-            SampleId     num_ancestral,
-            AllelicState ancestral_state = InvalidAllelicState,
-            AllelicState derived_state   = InvalidAllelicState
-        ) noexcept
-            : _num_ancestral(num_ancestral),
-              _ancestral_state(ancestral_state),
-              _derived_state(derived_state) {}
+        BiallelicFrequency(SampleId num_ancestral) noexcept : _num_ancestral(num_ancestral) {}
 
         [[nodiscard]] SampleId num_ancestral() const {
             return _num_ancestral;
         }
 
-        // TODO Do I use this function anywhere?
-        [[nodiscard]] AllelicState ancestral_state() const {
-            KASSERT(
-                _ancestral_state != InvalidAllelicState,
-                "The ancestral state has not been set.",
-                tdt::assert::light
-            );
-            return _ancestral_state;
-        }
-
-        // TODO Do I use this function anywhere?
-        [[nodiscard]] AllelicState derived_state() const {
-            KASSERT(_derived_state != InvalidAllelicState, "The derived state has not been set.", tdt::assert::light);
-            return _derived_state;
-        }
-
         // Always compare the number of ancestral samples. Only compare the ancestral state and derived state if both
         // values have it set.
         bool operator==(BiallelicFrequency const& other) const {
-            return _num_ancestral == other._num_ancestral
-                   && (_ancestral_state == InvalidAllelicState || other._ancestral_state == InvalidAllelicState
-                       || _ancestral_state == other._ancestral_state)
-                   && (_derived_state == InvalidAllelicState || other._derived_state == InvalidAllelicState
-                       || _derived_state == other._derived_state);
+            return _num_ancestral == other._num_ancestral;
         }
 
     private:
         SampleId _num_ancestral; // There can never be more derived samples than total samples.
-        // TODO If I don't use the functions above I can remove these members
-        AllelicState _ancestral_state;
-        AllelicState _derived_state;
     };
 
     class MultiallelicFrequency {
