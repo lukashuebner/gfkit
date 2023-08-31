@@ -186,6 +186,51 @@ public:
         return divergence;
     }
 
+    double
+    f4(SampleSet const& sample_set_1,
+       SampleSet const& sample_set_2,
+       SampleSet const& sample_set_3,
+       SampleSet const& sample_set_4) const {
+        double                f4;
+        constexpr int         num_windows     = 0;
+        constexpr int         num_sample_sets = 4;
+        std::vector<tsk_id_t> samples_sets;
+
+        for (auto const& sample: sample_set_1) {
+            samples_sets.push_back(asserting_cast<tsk_id_t>(sample));
+        }
+        for (auto const& sample: sample_set_2) {
+            samples_sets.push_back(asserting_cast<tsk_id_t>(sample));
+        }
+        for (auto const& sample: sample_set_3) {
+            samples_sets.push_back(asserting_cast<tsk_id_t>(sample));
+        }
+        for (auto const& sample: sample_set_4) {
+            samples_sets.push_back(asserting_cast<tsk_id_t>(sample));
+        }
+        tsk_size_t sample_set_sizes[] =
+            {sample_set_1.popcount(), sample_set_2.popcount(), sample_set_3.popcount(), sample_set_4.popcount()};
+
+        tsk_id_t      set_indexes[]    = {0, 1, 2, 3};
+        constexpr int num_index_tuples = 1;
+
+        auto ret = tsk_treeseq_f4(
+            &_tree_sequence,
+            num_sample_sets,
+            sample_set_sizes,
+            samples_sets.data(),
+            num_index_tuples,
+            set_indexes,
+            num_windows,
+            NULL,
+            TSK_STAT_SITE,
+            &f4
+        );
+        KASSERT(ret == 0, "Failed to compute the divergence.", tdt::assert::light);
+
+        return f4;
+    }
+
     double num_segregating_sites() const {
         double                num_seg_sites;
         std::vector<tsk_id_t> samples;

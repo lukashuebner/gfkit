@@ -141,6 +141,96 @@ public:
         return divergence(num_samples_1, allele_freq_1, num_samples_2, allele_freq_2);
     }
 
+    [[nodiscard]] double
+    f4(SampleSet const& sample_set_1,
+       SampleSet const& sample_set_2,
+       SampleSet const& sample_set_3,
+       SampleSet const& sample_set_4) {
+        double f = 0.0;
+
+        auto const allele_freqs_1    = allele_frequencies(sample_set_1);
+        auto const allele_freqs_2    = allele_frequencies(sample_set_2);
+        auto const allele_freqs_3    = allele_frequencies(sample_set_3);
+        auto const allele_freqs_4    = allele_frequencies(sample_set_4);
+        auto       allele_freqs_1_it = allele_freqs_1.cbegin();
+        auto       allele_freqs_2_it = allele_freqs_2.cbegin();
+        auto       allele_freqs_3_it = allele_freqs_3.cbegin();
+        auto       allele_freqs_4_it = allele_freqs_4.cbegin();
+
+        auto const num_samples_1 = sample_set_1.popcount();
+        auto const num_samples_2 = sample_set_2.popcount();
+        auto const num_samples_3 = sample_set_3.popcount();
+        auto const num_samples_4 = sample_set_4.popcount();
+
+        while (allele_freqs_1_it != allele_freqs_1.cend()) {
+            KASSERT(
+                (allele_freqs_2_it != allele_freqs_2.cend(),
+                 allele_freqs_3_it != allele_freqs_3.cend(),
+                 allele_freqs_4_it != allele_freqs_4.cend()),
+                "Allele frequency lists have different lengths (different number of sites).",
+                tdt::assert::light
+            );
+
+            if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_2_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_3_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_4_it)) [[likely]] {
+                double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freqs_1_it).num_ancestral();
+                double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
+                double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
+                double const n_anc_4 = std::get<BiallelicFrequency>(*allele_freqs_4_it).num_ancestral();
+                double const n_der_1 = num_samples_1 - n_anc_1;
+                double const n_der_2 = num_samples_2 - n_anc_2;
+                double const n_der_3 = num_samples_3 - n_anc_3;
+                double const n_der_4 = num_samples_4 - n_anc_4;
+
+                // denom += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
+                // denom += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
+
+                f += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
+                f += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
+            } else {
+                allele_freqs_1_it.force_multiallelicity();
+                allele_freqs_2_it.force_multiallelicity();
+                allele_freqs_3_it.force_multiallelicity();
+                allele_freqs_4_it.force_multiallelicity();
+                auto const freqs_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
+                auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_2_it);
+                auto const freqs_3_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_3_it);
+                auto const freqs_4_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_4_it);
+
+                using Idx = typename MultiallelicFrequency::Idx;
+                // TODO Check if the compiler unrolls this
+                KASSERT(
+                    freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states
+                        && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states
+                        && freqs_3_multiallelic.num_states == freqs_4_multiallelic.num_states,
+                    "Allele frequency lists have different lengths (different number of states).",
+                    tdt::assert::light
+                );
+                for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
+                    double const n_state_1 = freqs_1_multiallelic[state];
+                    // double const n_state_2     = freqs_2_multiallelic[state];
+                    double const n_state_3 = freqs_3_multiallelic[state];
+                    double const n_state_4 = freqs_4_multiallelic[state];
+                    // double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
+                    double const n_not_state_2 = num_samples_2 - freqs_2_multiallelic[state];
+                    double const n_not_state_3 = num_samples_3 - freqs_3_multiallelic[state];
+                    double const n_not_state_4 = num_samples_4 - freqs_4_multiallelic[state];
+                    f += n_state_1 * n_not_state_2 * n_state_3 * n_not_state_4
+                         - n_state_1 * n_not_state_2 * n_not_state_3 * n_state_4;
+                }
+            }
+
+            allele_freqs_1_it++;
+            allele_freqs_2_it++;
+            allele_freqs_3_it++;
+            allele_freqs_4_it++;
+        }
+
+        return f / (static_cast<double>(num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4));
+    }
+
     [[nodiscard]] SiteId num_segregating_sites() {
         return num_segregating_sites(_forest.all_samples());
     }

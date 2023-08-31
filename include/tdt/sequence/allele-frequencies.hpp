@@ -277,7 +277,11 @@ public:
                     auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.node_id());
                     auto const this_mutations_state            = mutation.allelic_state();
 
-                    [[unlikely]] if (this_mutations_state != derived_state && this_mutations_state != ancestral_state) {
+                    // If this mutation is towards neither the derived nor the ancestral state but there is at least one
+                    // sample in this sample set below it, we have to compute the state using the algorithm supporting
+                    // multiallelicity.
+                    if (this_mutations_state != derived_state && this_mutations_state != ancestral_state
+                        && num_samples_below_this_mutation > 0) [[unlikely]] {
                         _update_state_multiallelic(ancestral_state, mutations_at_site);
                         return;
                     }

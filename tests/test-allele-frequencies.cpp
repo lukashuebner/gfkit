@@ -9,8 +9,8 @@
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
-#include "tdt/succinct-forest.hpp"
 #include "tdt/sequence/allele-frequencies.hpp"
+#include "tdt/succinct-forest.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/literals.hpp"
 #include "tskit-testlib/testlib.hpp"
@@ -139,6 +139,98 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         [&expected, &idx](auto&& state) {
             // No multiallelic state
             CHECK(state == std::get<MultiallelicFrequency>(expected[idx]));
+            idx++;
+        }
+    );
+
+    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // tsk_treeseq_free(&tskit_tree_sequence);
+}
+
+TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") {
+    tsk_treeseq_t tskit_tree_sequence;
+
+    tsk_treeseq_from_text(
+        &tskit_tree_sequence,
+        10,
+        multi_derived_states_nodes,
+        multi_derived_states_edges,
+        NULL,
+        multi_derived_states_sites,
+        multi_derived_states_mutations,
+        multi_derived_states_individuals,
+        NULL,
+        0
+    );
+
+    SuccinctForest<PerfectNumericHasher> forest(tskit_tree_sequence); // Takes ownership
+
+    using BiallelicFrequency    = typename AlleleFrequencies<PerfectNumericHasher>::BiallelicFrequency;
+    using MultiallelicFrequency = typename AlleleFrequencies<PerfectNumericHasher>::MultiallelicFrequency;
+    using AlleleFrequency       = typename AlleleFrequencies<PerfectNumericHasher>::AlleleFrequency;
+
+    auto const sample_0 = SampleSet(4).add(0);
+    auto const sample_1 = SampleSet(4).add(1);
+    auto const sample_2 = SampleSet(4).add(2);
+    auto const sample_3 = SampleSet(4).add(3);
+
+    auto const freqs_0 = forest.allele_frequencies(sample_0);
+    auto const freqs_1 = forest.allele_frequencies(sample_1);
+    auto const freqs_2 = forest.allele_frequencies(sample_2);
+    auto const freqs_3 = forest.allele_frequencies(sample_3);
+
+    std::vector<AlleleFrequency> expected_0(std::initializer_list<AlleleFrequency>{
+        BiallelicFrequency{0_uc},
+        BiallelicFrequency{1_uc},
+        BiallelicFrequency{1_uc}});
+    std::vector<AlleleFrequency> expected_1(std::initializer_list<AlleleFrequency>{
+        BiallelicFrequency{1_uc},
+        BiallelicFrequency{0_uc},
+        BiallelicFrequency{1_uc}});
+    std::vector<AlleleFrequency> expected_2(std::initializer_list<AlleleFrequency>{
+        BiallelicFrequency{1_uc},
+        BiallelicFrequency{1_uc},
+        BiallelicFrequency{0_uc}});
+    std::vector<AlleleFrequency> expected_3(std::initializer_list<AlleleFrequency>{
+        MultiallelicFrequency(static_cast<unsigned char>('0'), 0_uc, 0_uc, 1_uc, 0_uc),
+        BiallelicFrequency{1_uc},
+        BiallelicFrequency{0_uc}});
+
+    size_t idx = 0;
+    freqs_0.visit(
+        [&expected_0, &idx](auto&& state) {
+            CHECK(state == std::get<BiallelicFrequency>(expected_0[idx]));
+            idx++;
+        },
+        []([[maybe_unused]] auto&& state) { FAIL(); }
+    );
+
+    idx = 0;
+    freqs_1.visit(
+        [&expected_1, &idx](auto&& state) {
+            CHECK(state == std::get<BiallelicFrequency>(expected_1[idx]));
+            idx++;
+        },
+        []([[maybe_unused]] auto&& state) { FAIL(); }
+    );
+
+    idx = 0;
+    freqs_2.visit(
+        [&expected_2, &idx](auto&& state) {
+            CHECK(state == std::get<BiallelicFrequency>(expected_2[idx]));
+            idx++;
+        },
+        []([[maybe_unused]] auto&& state) { FAIL(); }
+    );
+
+    idx = 0;
+    freqs_3.visit(
+        [&expected_3, &idx](auto&& state) {
+            CHECK(state == std::get<BiallelicFrequency>(expected_3[idx]));
+            idx++;
+        },
+        [&expected_3, &idx]([[maybe_unused]] auto&& state) {
+            CHECK(state == std::get<MultiallelicFrequency>(expected_3[idx]));
             idx++;
         }
     );

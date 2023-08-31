@@ -28,69 +28,69 @@ TEST_CASE("GenomicSequenceStorage Basics", "[GenomicSequenceStorage]") {
     size_t const num_sites_hint    = 10;
     size_t const num_subtrees_hint = 10;
 
-    GenomicSequence sequence_storage(num_sites_hint, num_subtrees_hint);
+    GenomicSequence sequence(num_sites_hint, num_subtrees_hint);
 
     // push_back() and get() a few sites
-    CHECK(sequence_storage.num_sites() == 0);
+    CHECK(sequence.num_sites() == 0);
     SiteId num_sites = 0;
     for (AllelicState allelic_state: {'A', 'C', 'G', 'T'}) {
-        sequence_storage.push_back(allelic_state);
+        sequence.push_back(allelic_state);
         ++num_sites;
     }
-    CHECK(sequence_storage.num_sites() == num_sites);
+    CHECK(sequence.num_sites() == num_sites);
     for (SiteId site_id = 0; site_id < num_sites; ++site_id) {
-        CHECK(sequence_storage.ancestral_state(site_id) == "ACGT"[site_id]);
-        CHECK(sequence_storage[site_id] == "ACGT"[site_id]);
+        CHECK(sequence.ancestral_state(site_id) == "ACGT"[site_id]);
+        CHECK(sequence[site_id] == "ACGT"[site_id]);
     }
 
     // Check that we can push more sites and subtrees than we hinted.
     for (size_t i = 0; i < num_sites_hint + 1; ++i) {
-        sequence_storage.emplace_back('C');
+        sequence.emplace_back('C');
         num_sites++;
-        CHECK(sequence_storage[sequence_storage.num_sites() - 1] == 'C');
-        CHECK(sequence_storage.num_sites() == num_sites);
+        CHECK(sequence[sequence.num_sites() - 1] == 'C');
+        CHECK(sequence.num_sites() == num_sites);
     }
 
     SECTION("Set a few sites vis set()") {
         AllelicState const allelic_state = GENERATE('A', 'C', 'G', 'T');
-        for (SiteId site_id = 0; site_id < sequence_storage.num_sites(); ++site_id) {
-            sequence_storage.set(site_id, allelic_state);
-            CHECK(sequence_storage.ancestral_state(site_id) == allelic_state);
+        for (SiteId site_id = 0; site_id < sequence.num_sites(); ++site_id) {
+            sequence.set(site_id, allelic_state);
+            CHECK(sequence.ancestral_state(site_id) == allelic_state);
         }
     }
 
     SECTION("Set a few sites vis operator[]") {
         AllelicState const allelic_state = GENERATE('A', 'C', 'G', 'T');
-        for (SiteId site_id = 0; site_id < sequence_storage.num_sites(); ++site_id) {
-            sequence_storage[site_id] = allelic_state;
-            CHECK(sequence_storage.ancestral_state(site_id) == allelic_state);
-            CHECK(sequence_storage[site_id] == allelic_state);
+        for (SiteId site_id = 0; site_id < sequence.num_sites(); ++site_id) {
+            sequence[site_id] = allelic_state;
+            CHECK(sequence.ancestral_state(site_id) == allelic_state);
+            CHECK(sequence[site_id] == allelic_state);
         }
     }
 }
 
 TEST_CASE("GenomicSequenceStorage Mutations", "[GenomicSequenceStorage]") {
-    GenomicSequence sequence_storage;
+    GenomicSequence sequence;
 
     // Adding sites does not affect the number of mutations.
-    sequence_storage.push_back('A');
-    sequence_storage.push_back('T');
-    sequence_storage.push_back('C');
-    sequence_storage.push_back('G');
-    sequence_storage.emplace_back('G');
-    CHECK(sequence_storage.num_mutations() == 0);
-    CHECK(sequence_storage.num_sites() == 5);
+    sequence.push_back('A');
+    sequence.push_back('T');
+    sequence.push_back('C');
+    sequence.push_back('G');
+    sequence.emplace_back('G');
+    CHECK(sequence.num_mutations() == 0);
+    CHECK(sequence.num_sites() == 5);
 
     // Adding mutations does affect the number of sites.
-    SiteId       num_sites    = sequence_storage.num_sites();
+    SiteId       num_sites    = sequence.num_sites();
     SiteId const site_id      = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
     TreeId const tree_id      = GENERATE(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u);
     NodeId const node_id      = GENERATE(1u, 2u, 4u, 5u);
     AllelicState parent_state = 'A';
     for (AllelicState const allelic_state: {'A', 'C', 'G', 'T'}) {
-        sequence_storage.emplace_back(site_id, tree_id, node_id, allelic_state, parent_state);
-        sequence_storage.push_back(Mutation{site_id, tree_id, node_id, allelic_state, parent_state});
-        CHECK(sequence_storage.num_sites() == num_sites);
+        sequence.emplace_back(site_id, tree_id, node_id, allelic_state, parent_state);
+        sequence.push_back(Mutation{site_id, tree_id, node_id, allelic_state, parent_state});
+        CHECK(sequence.num_sites() == num_sites);
     }
-    CHECK(sequence_storage.num_mutations() == 8);
+    CHECK(sequence.num_mutations() == 8);
 }

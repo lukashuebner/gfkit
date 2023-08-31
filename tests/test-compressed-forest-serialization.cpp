@@ -208,26 +208,43 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     // --- Divergence ---
     SuccinctForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
 
-    SampleSet sample_set_1(sequence_forest.num_samples());
-    SampleSet sample_set_2(sequence_forest.num_samples());
-    bool      flip = false;
-    for (SampleId sample: forest.leaves()) {
-        if (flip) {
-            sample_set_1.add(sample);
-        } else {
-            sample_set_2.add(sample);
+    {
+        SampleSet sample_set_1(sequence_forest.num_samples());
+        SampleSet sample_set_2(sequence_forest.num_samples());
+        bool      flip = false;
+        for (SampleId sample: forest.leaves()) {
+            if (flip) {
+                sample_set_1.add(sample);
+            } else {
+                sample_set_2.add(sample);
+            }
+            flip = !flip;
         }
-        flip = !flip;
+
+        double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
+        double const tskit_divergence = sequence_forest.tree_sequence().divergence(sample_set_1, sample_set_2);
+        CHECK(sfkit_divergence == Approx(tskit_divergence).epsilon(1e-4));
     }
 
-    double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
-    double const tskit_divergence = sequence_forest.tree_sequence().divergence(sample_set_1, sample_set_2);
-    CHECK(sfkit_divergence == Approx(tskit_divergence).epsilon(1e-4));
-
     // --- Diversity ---
-    double const sfkit_diversity = sequence_forest.diversity();
-    double const tskit_diversity = sequence_forest.tree_sequence().diversity();
-    CHECK(sfkit_diversity == Approx(tskit_diversity).epsilon(1e-4));
+    {
+        double const sfkit_diversity = sequence_forest.diversity();
+        double const tskit_diversity = sequence_forest.tree_sequence().diversity();
+        CHECK(sfkit_diversity == Approx(tskit_diversity).epsilon(1e-4));
+    }
+
+    // --- f{2,3,4} ---
+    constexpr size_t       num_sample_sets = 4;
+    std::vector<SampleSet> sample_sets(4, sequence_forest.num_samples());
+    size_t                 idx = 0;
+    for (SampleId sample: forest.leaves()) {
+        sample_sets[idx].add(sample);
+        idx = (idx + 1ul) % num_sample_sets;
+    }
+    double const sfkit_f4 = sequence_forest.f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
+    double const tskit_f4 =
+        sequence_forest.tree_sequence().f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
+    CHECK(sfkit_f4 == Approx(tskit_f4).epsilon(1e-4));
 
     // Benchmark computing the number of segregating sites
     SiteId const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();

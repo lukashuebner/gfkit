@@ -37,6 +37,8 @@ register_test(test-diversity FILES test-diversity.cpp tskit-testlib/testlib.cpp 
 
 register_test(test-divergence FILES test-divergence.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
+register_test(test-pattersons-f-stats FILES test-pattersons-f-stats.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
+
 register_test(test-segregating-sites FILES test-segregating-sites.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
 
 register_test(test-tajimas-d FILES test-tajimas-d.cpp LIBRARIES tskit)
