@@ -246,6 +246,14 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
         sequence_forest.tree_sequence().f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
     CHECK(sfkit_f4 == Approx(tskit_f4).epsilon(1e-4));
 
+    double const sfkit_f3 = sequence_forest.f3(sample_sets[0], sample_sets[1], sample_sets[2]);
+    double const tskit_f3 = sequence_forest.tree_sequence().f3(sample_sets[0], sample_sets[1], sample_sets[2]);
+    CHECK(sfkit_f3 == Approx(tskit_f3).epsilon(1e-4));
+
+    double const sfkit_f2 = sequence_forest.f2(sample_sets[0], sample_sets[1]);
+    double const tskit_f2 = sequence_forest.tree_sequence().f2(sample_sets[0], sample_sets[1]);
+    CHECK(sfkit_f2 == Approx(tskit_f2).epsilon(1e-4));
+
     // Benchmark computing the number of segregating sites
     SiteId const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();
     double const tskit_num_seg_sites = sequence_forest.tree_sequence().num_segregating_sites();

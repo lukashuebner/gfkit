@@ -141,32 +141,97 @@ public:
         return divergence(num_samples_1, allele_freq_1, num_samples_2, allele_freq_2);
     }
 
+    [[nodiscard]] double f2(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+        auto const  allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const  allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const& allele_freqs_3 = allele_freqs_1;
+        auto const& allele_freqs_4 = allele_freqs_2;
+        auto const  num_samples_1  = sample_set_1.popcount();
+        auto const  num_samples_2  = sample_set_2.popcount();
+        auto const  num_samples_3  = num_samples_1;
+        auto const  num_samples_4  = num_samples_2;
+
+        return f4(
+            allele_freqs_1,
+            allele_freqs_2,
+            allele_freqs_3,
+            allele_freqs_4,
+            num_samples_1,
+            num_samples_2,
+            num_samples_3,
+            num_samples_4
+        );
+    }
+
+    [[nodiscard]] double
+    f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
+        auto const  allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const  allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const& allele_freqs_3 = allele_freqs_1;
+        auto const  allele_freqs_4 = allele_frequencies(sample_set_3);
+        auto const  num_samples_1  = sample_set_1.popcount();
+        auto const  num_samples_2  = sample_set_2.popcount();
+        auto const  num_samples_3  = num_samples_1;
+        auto const  num_samples_4  = sample_set_3.popcount();
+
+        return f4(
+            allele_freqs_1,
+            allele_freqs_2,
+            allele_freqs_3,
+            allele_freqs_4,
+            num_samples_1,
+            num_samples_2,
+            num_samples_3,
+            num_samples_4
+        );
+    }
+
     [[nodiscard]] double
     f4(SampleSet const& sample_set_1,
        SampleSet const& sample_set_2,
        SampleSet const& sample_set_3,
        SampleSet const& sample_set_4) {
+        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const allele_freqs_3 = allele_frequencies(sample_set_3);
+        auto const allele_freqs_4 = allele_frequencies(sample_set_4);
+        auto const num_samples_1  = sample_set_1.popcount();
+        auto const num_samples_2  = sample_set_2.popcount();
+        auto const num_samples_3  = sample_set_3.popcount();
+        auto const num_samples_4  = sample_set_4.popcount();
+
+        return f4(
+            allele_freqs_1,
+            allele_freqs_2,
+            allele_freqs_3,
+            allele_freqs_4,
+            num_samples_1,
+            num_samples_2,
+            num_samples_3,
+            num_samples_4
+        );
+    }
+
+    [[nodiscard]] double
+    f4(AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_1,
+       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_2,
+       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_3,
+       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_4,
+       size_t                                              num_samples_1,
+       size_t                                              num_samples_2,
+       size_t                                              num_samples_3,
+       size_t                                              num_samples_4) {
         double f = 0.0;
 
-        auto const allele_freqs_1    = allele_frequencies(sample_set_1);
-        auto const allele_freqs_2    = allele_frequencies(sample_set_2);
-        auto const allele_freqs_3    = allele_frequencies(sample_set_3);
-        auto const allele_freqs_4    = allele_frequencies(sample_set_4);
-        auto       allele_freqs_1_it = allele_freqs_1.cbegin();
-        auto       allele_freqs_2_it = allele_freqs_2.cbegin();
-        auto       allele_freqs_3_it = allele_freqs_3.cbegin();
-        auto       allele_freqs_4_it = allele_freqs_4.cbegin();
-
-        auto const num_samples_1 = sample_set_1.popcount();
-        auto const num_samples_2 = sample_set_2.popcount();
-        auto const num_samples_3 = sample_set_3.popcount();
-        auto const num_samples_4 = sample_set_4.popcount();
+        auto allele_freqs_1_it = allele_freqs_1.cbegin();
+        auto allele_freqs_2_it = allele_freqs_2.cbegin();
+        auto allele_freqs_3_it = allele_freqs_3.cbegin();
+        auto allele_freqs_4_it = allele_freqs_4.cbegin();
 
         while (allele_freqs_1_it != allele_freqs_1.cend()) {
             KASSERT(
-                (allele_freqs_2_it != allele_freqs_2.cend(),
-                 allele_freqs_3_it != allele_freqs_3.cend(),
-                 allele_freqs_4_it != allele_freqs_4.cend()),
+                (allele_freqs_2_it != allele_freqs_2.cend() && allele_freqs_3_it != allele_freqs_3.cend()
+                 && allele_freqs_4_it != allele_freqs_4.cend()),
                 "Allele frequency lists have different lengths (different number of sites).",
                 tdt::assert::light
             );
@@ -179,10 +244,10 @@ public:
                 double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
                 double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
                 double const n_anc_4 = std::get<BiallelicFrequency>(*allele_freqs_4_it).num_ancestral();
-                double const n_der_1 = num_samples_1 - n_anc_1;
-                double const n_der_2 = num_samples_2 - n_anc_2;
-                double const n_der_3 = num_samples_3 - n_anc_3;
-                double const n_der_4 = num_samples_4 - n_anc_4;
+                double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
+                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
+                double const n_der_3 = static_cast<double>(num_samples_3) - n_anc_3;
+                double const n_der_4 = static_cast<double>(num_samples_4) - n_anc_4;
 
                 // denom += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
                 // denom += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
@@ -214,9 +279,9 @@ public:
                     double const n_state_3 = freqs_3_multiallelic[state];
                     double const n_state_4 = freqs_4_multiallelic[state];
                     // double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
-                    double const n_not_state_2 = num_samples_2 - freqs_2_multiallelic[state];
-                    double const n_not_state_3 = num_samples_3 - freqs_3_multiallelic[state];
-                    double const n_not_state_4 = num_samples_4 - freqs_4_multiallelic[state];
+                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
+                    double const n_not_state_3 = static_cast<double>(num_samples_3) - freqs_3_multiallelic[state];
+                    double const n_not_state_4 = static_cast<double>(num_samples_4) - freqs_4_multiallelic[state];
                     f += n_state_1 * n_not_state_2 * n_state_3 * n_not_state_4
                          - n_state_1 * n_not_state_2 * n_not_state_3 * n_state_4;
                 }
@@ -288,8 +353,8 @@ public:
 
     // This is per sequence length, the other statistics are not
     [[nodiscard]] double fst(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X, then
-        // what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
+        // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X,
+        // then what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
 
         auto const n_1             = sample_set_1.popcount();
         auto const n_2             = sample_set_2.popcount();

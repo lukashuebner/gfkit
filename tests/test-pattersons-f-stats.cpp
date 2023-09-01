@@ -112,6 +112,16 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
         sequence_forest.f4(sample_set_1, sample_set_2, sample_set_3, sample_set_4) == Approx(reference_f4).epsilon(1e-6)
     );
 
+    CHECK(
+        sequence_forest.f3(sample_set_1, sample_set_2, sample_set_3)
+        == Approx(tree_sequence.f3(sample_set_1, sample_set_2, sample_set_3)).epsilon(1e-6)
+    );
+
+    CHECK(
+        sequence_forest.f2(sample_set_1, sample_set_2)
+        == Approx(tree_sequence.f2(sample_set_1, sample_set_2)).epsilon(1e-6)
+    );
+
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }

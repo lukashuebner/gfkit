@@ -278,6 +278,83 @@ void benchmark(
         std::exit(1);
     }
 
+    // --- Benchmark computing Patterson's f{2,3,4} ---
+    constexpr size_t       num_sample_sets = 4;
+    std::vector<SampleSet> sample_sets(num_sample_sets, sequence_forest.num_samples());
+
+    size_t idx = 0;
+    for (SampleId sample: sequence_forest.forest().leaves()) {
+        sample_sets[idx].add(sample);
+        idx = (idx + 1ul) % num_sample_sets;
+    }
+
+    memory_usage.start();
+    timer.start();
+
+    double const sfkit_f4 = sequence_forest.f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
+
+    log_time(warmup, "f4", "sfkit", timer.stop());
+    log_mem(warmup, "f4", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_f4 =
+        sequence_forest.tree_sequence().f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
+
+    log_time(warmup, "f4", "tskit", timer.stop());
+    log_mem(warmup, "f4", "tskit", memory_usage.stop());
+
+    if (sfkit_f4 == Catch::Approx(tskit_f4).epsilon(1e-4)) {
+        std::cerr << "ERROR !! f4 mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_f4 << " vs. " << sfkit_f4 << " (tskit vs. sfkit)" << std::endl;
+        std::exit(1);
+    }
+
+    memory_usage.start();
+    timer.start();
+
+    double const sfkit_f3 = sequence_forest.f3(sample_sets[0], sample_sets[1], sample_sets[2]);
+
+    log_time(warmup, "f3", "sfkit", timer.stop());
+    log_mem(warmup, "f3", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_f3 = sequence_forest.tree_sequence().f3(sample_sets[0], sample_sets[1], sample_sets[2]);
+
+    log_time(warmup, "f3", "tskit", timer.stop());
+    log_mem(warmup, "f3", "tskit", memory_usage.stop());
+
+    if (sfkit_f3 == Catch::Approx(tskit_f3).epsilon(1e-4)) {
+        std::cerr << "ERROR !! f3 mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_f3 << " vs. " << sfkit_f3 << " (tskit vs. sfkit)" << std::endl;
+        std::exit(1);
+    }
+
+    memory_usage.start();
+    timer.start();
+
+    double const sfkit_f2 = sequence_forest.f2(sample_sets[0], sample_sets[1]);
+
+    log_time(warmup, "f2", "sfkit", timer.stop());
+    log_mem(warmup, "f2", "sfkit", memory_usage.stop());
+
+    memory_usage.start();
+    timer.start();
+
+    double const tskit_f2 = sequence_forest.tree_sequence().f2(sample_sets[0], sample_sets[1]);
+
+    log_time(warmup, "f2", "tskit", timer.stop());
+    log_mem(warmup, "f2", "tskit", memory_usage.stop());
+
+    if (sfkit_f2 == Catch::Approx(tskit_f2).epsilon(1e-4)) {
+        std::cerr << "ERROR !! f2 mismatch between tskit and sfkit" << std::endl;
+        std::cerr << "    " << tskit_f2 << " vs. " << sfkit_f2 << " (tskit vs. sfkit)" << std::endl;
+        std::exit(1);
+    }
+
     // --- Benchmark computing the diversity ---
     memory_usage.start();
     timer.start();
