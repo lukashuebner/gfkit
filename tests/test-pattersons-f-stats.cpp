@@ -57,17 +57,30 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     Dataset const& dataset = GENERATE_REF(from_range(datasets));
 
     tsk_treeseq_t tskit_tree_sequence;
-    tsk_id_t      samples[]          = {0, 1, 2, 3};
-    tsk_size_t    sample_set_sizes[] = {1, 1, 1, 1};
-    tsk_id_t      set_indexes[]      = {0, 1, 2, 3};
-    SampleSet     sample_set_1(4);
-    SampleSet     sample_set_2(4);
-    SampleSet     sample_set_3(4);
-    SampleSet     sample_set_4(4);
-    sample_set_1.add(0);
-    sample_set_2.add(1);
-    sample_set_3.add(2);
-    sample_set_4.add(3);
+
+    // f4 setup
+    tsk_id_t   f4_samples[]          = {0, 1, 2, 3};
+    tsk_size_t f4_sample_set_sizes[] = {1, 1, 1, 1};
+    tsk_id_t   f4_set_indexes[]      = {0, 1, 2, 3};
+    auto const f4_sample_set_1       = SampleSet(4).add(0);
+    auto const f4_sample_set_2       = SampleSet(4).add(1);
+    auto const f4_sample_set_3       = SampleSet(4).add(2);
+    auto const f4_sample_set_4       = SampleSet(4).add(3);
+
+    // f3 setup
+    tsk_id_t   f3_samples[]          = {0, 1, 2, 3};
+    tsk_size_t f3_sample_set_sizes[] = {2, 1, 1};
+    tsk_id_t   f3_set_indexes[]      = {0, 1, 2};
+    auto const f3_sample_set_1       = SampleSet(4).add(0).add(1);
+    auto const f3_sample_set_2       = SampleSet(4).add(2);
+    auto const f3_sample_set_3       = SampleSet(4).add(3);
+
+    // f2 setup
+    tsk_id_t   f2_samples[]          = {0, 1, 2, 3};
+    tsk_size_t f2_sample_set_sizes[] = {2, 2};
+    tsk_id_t   f2_set_indexes[]      = {0, 1};
+    auto const f2_sample_set_1       = SampleSet(4).add(0).add(1);
+    auto const f2_sample_set_2       = SampleSet(4).add(2).add(3);
 
     int ret;
     tsk_treeseq_from_text(
@@ -88,10 +101,10 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     ret = tsk_treeseq_f4(
         &tskit_tree_sequence,
         4,
-        sample_set_sizes,
-        samples,
+        f4_sample_set_sizes,
+        f4_samples,
         1,
-        set_indexes,
+        f4_set_indexes,
         0,
         NULL,
         TSK_STAT_SITE,
@@ -99,28 +112,56 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     );
     REQUIRE(ret == 0);
 
+    double reference_f3;
+    ret = tsk_treeseq_f3(
+        &tskit_tree_sequence,
+        3,
+        f3_sample_set_sizes,
+        f3_samples,
+        1,
+        f3_set_indexes,
+        0,
+        NULL,
+        TSK_STAT_SITE,
+        &reference_f3
+    );
+    REQUIRE(ret == 0);
+
+    double reference_f2;
+    ret = tsk_treeseq_f2(
+        &tskit_tree_sequence,
+        2,
+        f2_sample_set_sizes,
+        f2_samples,
+        1,
+        f2_set_indexes,
+        0,
+        NULL,
+        TSK_STAT_SITE,
+        &reference_f2
+    );
+    REQUIRE(ret == 0);
+
     // Test our wrapper around tskit
     TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
     CHECK(
-        tree_sequence.f4(sample_set_1, sample_set_2, sample_set_3, sample_set_4) == Approx(reference_f4).epsilon(1e-6)
+        tree_sequence.f4(f4_sample_set_1, f4_sample_set_2, f4_sample_set_3, f4_sample_set_4)
+        == Approx(reference_f4).epsilon(1e-6)
     );
+    CHECK(tree_sequence.f3(f3_sample_set_1, f3_sample_set_2, f3_sample_set_3) == Approx(reference_f3).epsilon(1e-6));
+    CHECK(tree_sequence.f2(f2_sample_set_1, f2_sample_set_2) == Approx(reference_f2).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    SuccinctForest<PerfectNumericHasher> forest(std::move(tree_sequence));
 
     CHECK(
-        sequence_forest.f4(sample_set_1, sample_set_2, sample_set_3, sample_set_4) == Approx(reference_f4).epsilon(1e-6)
+        forest.f4(f4_sample_set_1, f4_sample_set_2, f4_sample_set_3, f4_sample_set_4)
+        == Approx(reference_f4).epsilon(1e-6)
     );
 
-    CHECK(
-        sequence_forest.f3(sample_set_1, sample_set_2, sample_set_3)
-        == Approx(tree_sequence.f3(sample_set_1, sample_set_2, sample_set_3)).epsilon(1e-6)
-    );
+    CHECK(forest.f3(f3_sample_set_1, f3_sample_set_2, f3_sample_set_3) == Approx(reference_f3).epsilon(1e-6));
 
-    CHECK(
-        sequence_forest.f2(sample_set_1, sample_set_2)
-        == Approx(tree_sequence.f2(sample_set_1, sample_set_2)).epsilon(1e-6)
-    );
+    CHECK(forest.f2(f2_sample_set_1, f2_sample_set_2) == Approx(reference_f2).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);

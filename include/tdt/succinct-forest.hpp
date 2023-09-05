@@ -142,48 +142,145 @@ public:
     }
 
     [[nodiscard]] double f2(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        auto const  allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const  allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const& allele_freqs_3 = allele_freqs_1;
-        auto const& allele_freqs_4 = allele_freqs_2;
-        auto const  num_samples_1  = sample_set_1.popcount();
-        auto const  num_samples_2  = sample_set_2.popcount();
-        auto const  num_samples_3  = num_samples_1;
-        auto const  num_samples_4  = num_samples_2;
-
-        return f4(
-            allele_freqs_1,
-            allele_freqs_2,
-            allele_freqs_3,
-            allele_freqs_4,
-            num_samples_1,
-            num_samples_2,
-            num_samples_3,
-            num_samples_4
+        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const num_samples_1  = sample_set_1.popcount();
+        auto const num_samples_2  = sample_set_2.popcount();
+        KASSERT(
+            num_samples_1 >= 2ul,
+            "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
+            tdt::assert::light
         );
+        KASSERT(
+            num_samples_2 >= 2ul,
+            "We have to draw /two/ samples from the second sample set. It thus must be at least of size 2.",
+            tdt::assert::light
+        );
+
+        double f2 = 0.0;
+
+        auto allele_freqs_1_it = allele_freqs_1.cbegin();
+        auto allele_freqs_2_it = allele_freqs_2.cbegin();
+
+        while (allele_freqs_1_it != allele_freqs_1.cend()) {
+            KASSERT(
+                allele_freqs_2_it != allele_freqs_2.cend(),
+                "Allele frequency lists have different lengths (different number of sites).",
+                tdt::assert::light
+            );
+
+            if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_2_it)) [[likely]] {
+                double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freqs_1_it).num_ancestral();
+                double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
+                double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
+                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
+
+                f2 += n_anc_1 * (n_anc_1 - 1) * n_der_2 * (n_der_2 - 1) - n_anc_1 * n_der_1 * n_anc_2 * n_der_2;
+                f2 += n_der_1 * (n_der_1 - 1) * n_anc_2 * (n_anc_2 - 1) - n_der_1 * n_anc_1 * n_der_2 * n_anc_2;
+            } else {
+                allele_freqs_1_it.force_multiallelicity();
+                allele_freqs_2_it.force_multiallelicity();
+                auto const freqs_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
+                auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_2_it);
+
+                using Idx = typename MultiallelicFrequency::Idx;
+                // TODO Check if the compiler unrolls this
+                KASSERT(
+                    freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states,
+                    "Allele frequency lists have different lengths (different number of states).",
+                    tdt::assert::light
+                );
+                for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
+                    double const n_state_1     = freqs_1_multiallelic[state];
+                    double const n_state_2     = freqs_2_multiallelic[state];
+                    double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
+                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
+                    f2 += n_state_1 * (n_state_1 - 1) * n_not_state_2 * (n_not_state_2 - 1)
+                          - n_state_1 * n_not_state_1 * n_state_2 * n_not_state_2;
+                }
+            }
+
+            allele_freqs_1_it++;
+            allele_freqs_2_it++;
+        }
+
+        return f2 / (static_cast<double>(num_samples_1 * (num_samples_1 - 1) * num_samples_2 * (num_samples_2 - 1)));
     }
 
     [[nodiscard]] double
     f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
-        auto const  allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const  allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const& allele_freqs_3 = allele_freqs_1;
-        auto const  allele_freqs_4 = allele_frequencies(sample_set_3);
-        auto const  num_samples_1  = sample_set_1.popcount();
-        auto const  num_samples_2  = sample_set_2.popcount();
-        auto const  num_samples_3  = num_samples_1;
-        auto const  num_samples_4  = sample_set_3.popcount();
+        double f3 = 0.0;
 
-        return f4(
-            allele_freqs_1,
-            allele_freqs_2,
-            allele_freqs_3,
-            allele_freqs_4,
-            num_samples_1,
-            num_samples_2,
-            num_samples_3,
-            num_samples_4
+        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const allele_freqs_3 = allele_frequencies(sample_set_3);
+        auto const num_samples_1  = sample_set_1.popcount();
+        auto const num_samples_2  = sample_set_2.popcount();
+        auto const num_samples_3  = sample_set_3.popcount();
+        KASSERT(
+            num_samples_1 >= 2ul,
+            "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
+            tdt::assert::light
         );
+
+        auto allele_freqs_1_it = allele_freqs_1.cbegin();
+        auto allele_freqs_2_it = allele_freqs_2.cbegin();
+        auto allele_freqs_3_it = allele_freqs_3.cbegin();
+
+        while (allele_freqs_1_it != allele_freqs_1.cend()) {
+            KASSERT(
+                (allele_freqs_2_it != allele_freqs_2.cend() && allele_freqs_3_it != allele_freqs_3.cend()),
+                "Allele frequency lists have different lengths (different number of sites).",
+                tdt::assert::light
+            );
+
+            if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_2_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_3_it)) [[likely]] {
+                double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freqs_1_it).num_ancestral();
+                double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
+                double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
+                double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
+                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
+                double const n_der_3 = static_cast<double>(num_samples_3) - n_anc_3;
+
+                f3 += n_anc_1 * (n_anc_1 - 1) * n_der_2 * n_der_3 - n_anc_1 * n_der_1 * n_der_2 * n_anc_3;
+                f3 += n_der_1 * (n_der_1 - 1) * n_anc_2 * n_anc_3 - n_der_1 * n_anc_1 * n_anc_2 * n_der_3;
+            } else {
+                allele_freqs_1_it.force_multiallelicity();
+                allele_freqs_2_it.force_multiallelicity();
+                allele_freqs_3_it.force_multiallelicity();
+                auto const freqs_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
+                auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_2_it);
+                auto const freqs_3_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_3_it);
+
+                using Idx = typename MultiallelicFrequency::Idx;
+                // TODO Check if the compiler unrolls this
+                KASSERT(
+                    (freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states
+                     && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states),
+                    "Allele frequency lists have different lengths (different number of states).",
+                    tdt::assert::light
+                );
+                for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
+                    double const n_state_1 = freqs_1_multiallelic[state];
+                    // double const n_state_2     = freqs_2_multiallelic[state];
+                    double const n_state_3     = freqs_3_multiallelic[state];
+                    double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
+                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
+                    double const n_not_state_3 = static_cast<double>(num_samples_3) - freqs_3_multiallelic[state];
+                    f3 += n_state_1 * (n_state_1 - 1) * n_not_state_2 * n_not_state_3
+                          - n_state_1 * n_not_state_1 * n_not_state_2 * n_state_3;
+                }
+            }
+
+            allele_freqs_1_it++;
+            allele_freqs_2_it++;
+            allele_freqs_3_it++;
+        }
+
+        return f3 / (static_cast<double>(num_samples_1 * (num_samples_1 - 1) * num_samples_2 * num_samples_3));
     }
 
     [[nodiscard]] double
@@ -191,6 +288,8 @@ public:
        SampleSet const& sample_set_2,
        SampleSet const& sample_set_3,
        SampleSet const& sample_set_4) {
+        double f4 = 0.0;
+
         auto const allele_freqs_1 = allele_frequencies(sample_set_1);
         auto const allele_freqs_2 = allele_frequencies(sample_set_2);
         auto const allele_freqs_3 = allele_frequencies(sample_set_3);
@@ -199,29 +298,6 @@ public:
         auto const num_samples_2  = sample_set_2.popcount();
         auto const num_samples_3  = sample_set_3.popcount();
         auto const num_samples_4  = sample_set_4.popcount();
-
-        return f4(
-            allele_freqs_1,
-            allele_freqs_2,
-            allele_freqs_3,
-            allele_freqs_4,
-            num_samples_1,
-            num_samples_2,
-            num_samples_3,
-            num_samples_4
-        );
-    }
-
-    [[nodiscard]] double
-    f4(AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_1,
-       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_2,
-       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_3,
-       AlleleFrequencies<AllelicStatePerfectHasher> const& allele_freqs_4,
-       size_t                                              num_samples_1,
-       size_t                                              num_samples_2,
-       size_t                                              num_samples_3,
-       size_t                                              num_samples_4) {
-        double f = 0.0;
 
         auto allele_freqs_1_it = allele_freqs_1.cbegin();
         auto allele_freqs_2_it = allele_freqs_2.cbegin();
@@ -249,11 +325,8 @@ public:
                 double const n_der_3 = static_cast<double>(num_samples_3) - n_anc_3;
                 double const n_der_4 = static_cast<double>(num_samples_4) - n_anc_4;
 
-                // denom += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
-                // denom += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
-
-                f += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
-                f += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
+                f4 += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
+                f4 += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
             } else {
                 allele_freqs_1_it.force_multiallelicity();
                 allele_freqs_2_it.force_multiallelicity();
@@ -282,8 +355,8 @@ public:
                     double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
                     double const n_not_state_3 = static_cast<double>(num_samples_3) - freqs_3_multiallelic[state];
                     double const n_not_state_4 = static_cast<double>(num_samples_4) - freqs_4_multiallelic[state];
-                    f += n_state_1 * n_not_state_2 * n_state_3 * n_not_state_4
-                         - n_state_1 * n_not_state_2 * n_not_state_3 * n_state_4;
+                    f4 += n_state_1 * n_not_state_2 * n_state_3 * n_not_state_4
+                          - n_state_1 * n_not_state_2 * n_not_state_3 * n_state_4;
                 }
             }
 
@@ -293,40 +366,48 @@ public:
             allele_freqs_4_it++;
         }
 
-        return f / (static_cast<double>(num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4));
-    }
-
-    [[nodiscard]] SiteId num_segregating_sites() {
-        return num_segregating_sites(_forest.all_samples());
+        return f4 / (static_cast<double>(num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4));
     }
 
     // TODO Make this const
     [[nodiscard]] SiteId
     num_segregating_sites(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
-        SiteId num_segregating_sites = 0;
+        // We compute the number of segregating sites in this way in order to be compatible with tskit's
+        // definition. See https://doi.org/10.1534/genetics.120.303253 and tskit's trees.c
+        double num_segregating_sites = 0.0;
         allele_frequencies.visit(
             [&num_segregating_sites, num_samples](auto&& state) {
-                if (state.num_ancestral() != 0 && state.num_ancestral() != num_samples) {
-                    num_segregating_sites++;
-                }
+                // Imho, the following would be correct, but that's not what tskit is computing:
+                // (state.num_ancestral() > 0 && state.num_ancestral() < num_samples)
+                num_segregating_sites += (state.num_ancestral() < num_samples);
             },
-            [&num_segregating_sites, num_samples](auto&& state) {
-                for (auto const num_samples_in_state: state) {
-                    if (num_samples_in_state == num_samples) {
-                        return;
-                    }
+            [&num_segregating_sites, num_samples](auto&& states) {
+                // Again, not what my intuition would be but this is what tskit is computing.
+                for (auto const num_samples_in_state: states) {
+                    num_segregating_sites +=
+                        (num_samples_in_state > 0) * (1.0 - static_cast<double>(num_samples_in_state) / num_samples);
                 }
-                num_segregating_sites++;
             }
         );
 
-        return num_segregating_sites;
+        // Add a small constant here to in order to avoid rounding down if we accumulated floating point errors.
+        constexpr double ACCEPTABLE_FP_ERROR = 0.0001;
+        KASSERT(
+            num_segregating_sites - num_segregating_sites < ACCEPTABLE_FP_ERROR,
+            "There are suspiciously many floating point rounding errors.",
+            tdt::assert::light
+        );
+        return static_cast<SiteId>(num_segregating_sites + ACCEPTABLE_FP_ERROR);
     }
 
     [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
         auto const num_samples = sample_set.popcount();
         auto const freqs       = allele_frequencies(sample_set);
         return num_segregating_sites(num_samples, freqs);
+    }
+
+    [[nodiscard]] SiteId num_segregating_sites() {
+        return num_segregating_sites(_forest.all_samples());
     }
 
     [[nodiscard]] double tajimas_d() {
@@ -419,7 +500,7 @@ private:
     CompressedForest  _forest;
     GenomicSequence   _sequence;
 
-    // TODO Split up into CompressedForestIO and SequenceForestIO
-    // TODO Better naming to distinguish between CompressedForest and SequenceForest
+    // TODO Split up into CompressedForestIO and SuccinctForestIO
+    // TODO Better naming to distinguish between CompressedForest and SuccinctForest
     // friend class CompressedForestIO;
 };

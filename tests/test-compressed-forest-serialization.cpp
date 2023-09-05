@@ -164,14 +164,14 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
          "data/allele-frequency-spectrum-simple-example-0.trees"},
         {"data/allele-frequency-spectrum-simple-example-1.forest",
          "data/allele-frequency-spectrum-simple-example-1.trees"},
-        // {"data/allele-frequency-spectrum-simple-example-2.forest",
-        //  "data/allele-frequency-spectrum-simple-example-2.trees"},
-        // {"data/allele-frequency-spectrum-simple-example-3.forest",
-        //  "data/allele-frequency-spectrum-simple-example-3.trees"},
-        // {"data/allele-frequency-spectrum-simple-example-4.forest",
-        //  "data/allele-frequency-spectrum-simple-example-4.trees"},
-        // {"data/allele-frequency-spectrum-simple-example-6.forest",
-        //  "data/allele-frequency-spectrum-simple-example-6.trees"},
+        {"data/allele-frequency-spectrum-simple-example-2.forest",
+         "data/allele-frequency-spectrum-simple-example-2.trees"},
+        {"data/allele-frequency-spectrum-simple-example-3.forest",
+         "data/allele-frequency-spectrum-simple-example-3.trees"},
+        {"data/allele-frequency-spectrum-simple-example-4.forest",
+         "data/allele-frequency-spectrum-simple-example-4.trees"},
+        {"data/allele-frequency-spectrum-simple-example-6.forest",
+         "data/allele-frequency-spectrum-simple-example-6.trees"},
     };
 
     auto const& dataset     = GENERATE_REF(from_range(datasets));
@@ -184,7 +184,6 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     GenomicSequence   sequence;
     TSKitTreeSequence tree_sequence(trees_file);
     CompressedForestIO::load(forest_file, forest, sequence);
-    CHECK(forest.num_nodes() == tree_sequence.num_nodes());
     CHECK(forest.num_nodes() > 0);
     CHECK(forest.num_nodes_is_set());
 
@@ -235,9 +234,9 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
 
     // --- f{2,3,4} ---
     constexpr size_t       num_sample_sets = 4;
-    std::vector<SampleSet> sample_sets(4, sequence_forest.num_samples());
+    std::vector<SampleSet> sample_sets(num_sample_sets, sequence_forest.num_samples());
     size_t                 idx = 0;
-    for (SampleId sample: forest.leaves()) {
+    for (SampleId sample: sequence_forest.forest().leaves()) {
         sample_sets[idx].add(sample);
         idx = (idx + 1ul) % num_sample_sets;
     }

@@ -234,7 +234,7 @@ public:
     double f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) const {
         double                f3;
         constexpr int         num_windows     = 0;
-        constexpr int         num_sample_sets = 4;
+        constexpr int         num_sample_sets = 3;
         std::vector<tsk_id_t> samples_sets;
 
         for (auto const& sample: sample_set_1) {
@@ -271,7 +271,7 @@ public:
     double f2(SampleSet const& sample_set_1, SampleSet const& sample_set_2) const {
         double                f2;
         constexpr int         num_windows     = 0;
-        constexpr int         num_sample_sets = 4;
+        constexpr int         num_sample_sets = 2;
         std::vector<tsk_id_t> samples_sets;
 
         for (auto const& sample: sample_set_1) {
