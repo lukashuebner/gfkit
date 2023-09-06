@@ -284,6 +284,7 @@ void benchmark(
 
     size_t idx = 0;
     for (SampleId sample: sequence_forest.forest().leaves()) {
+        KASSERT(sample < sequence_forest.num_samples(), "Sample id out of range", tdt::assert::light);
         sample_sets[idx].add(sample);
         idx = (idx + 1ul) % num_sample_sets;
     }

@@ -320,10 +320,10 @@ public:
                 double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
                 double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
                 double const n_anc_4 = std::get<BiallelicFrequency>(*allele_freqs_4_it).num_ancestral();
-                double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
-                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
-                double const n_der_3 = static_cast<double>(num_samples_3) - n_anc_3;
-                double const n_der_4 = static_cast<double>(num_samples_4) - n_anc_4;
+                double const n_der_1 = static_cast<double>(num_samples_1 - n_anc_1);
+                double const n_der_2 = static_cast<double>(num_samples_2 - n_anc_2);
+                double const n_der_3 = static_cast<double>(num_samples_3 - n_anc_3);
+                double const n_der_4 = static_cast<double>(num_samples_4 - n_anc_4);
 
                 f4 += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
                 f4 += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
@@ -348,13 +348,13 @@ public:
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
                     double const n_state_1 = freqs_1_multiallelic[state];
-                    // double const n_state_2     = freqs_2_multiallelic[state];
+                    double const n_state_2 = freqs_2_multiallelic[state];
                     double const n_state_3 = freqs_3_multiallelic[state];
                     double const n_state_4 = freqs_4_multiallelic[state];
-                    // double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
-                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
-                    double const n_not_state_3 = static_cast<double>(num_samples_3) - freqs_3_multiallelic[state];
-                    double const n_not_state_4 = static_cast<double>(num_samples_4) - freqs_4_multiallelic[state];
+                    // double const n_not_state_1 = num_samples_1 - n_state_1;
+                    double const n_not_state_2 = static_cast<double>(num_samples_2 - n_state_2);
+                    double const n_not_state_3 = static_cast<double>(num_samples_3 - n_state_3);
+                    double const n_not_state_4 = static_cast<double>(num_samples_4 - n_state_4);
                     f4 += n_state_1 * n_not_state_2 * n_state_3 * n_not_state_4
                           - n_state_1 * n_not_state_2 * n_not_state_3 * n_state_4;
                 }
@@ -366,7 +366,7 @@ public:
             allele_freqs_4_it++;
         }
 
-        return f4 / (static_cast<double>(num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4));
+        return f4 / (num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4);
     }
 
     // TODO Make this const
