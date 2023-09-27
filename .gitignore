@@ -664,3 +664,5 @@ data/*.trees.tsz
 # direnv
 .envrc
 
+# borg
+.nobackup
