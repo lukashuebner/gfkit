@@ -156,7 +156,6 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
         std::string trees_file;
     };
 
-    // TODO Re-enable the other datasets once sfkit is able to handle multiallelic sites.
     // TODO Rename these sample datasets
     // TODO Generate more sample datasets
     std::vector<Dataset> const datasets = {
