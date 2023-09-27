@@ -142,10 +142,10 @@ public:
     }
 
     [[nodiscard]] double f2(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const num_samples_1  = sample_set_1.popcount();
-        auto const num_samples_2  = sample_set_2.popcount();
+        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
+        double const num_samples_1  = sample_set_1.popcount();
+        double const num_samples_2  = sample_set_2.popcount();
         KASSERT(
             num_samples_1 >= 2ul,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
@@ -194,8 +194,8 @@ public:
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
                     double const n_state_1     = freqs_1_multiallelic[state];
                     double const n_state_2     = freqs_2_multiallelic[state];
-                    double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
-                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
+                    double const n_not_state_1 = num_samples_1 - n_state_1;
+                    double const n_not_state_2 = num_samples_2 - n_state_2;
                     f2 += n_state_1 * (n_state_1 - 1) * n_not_state_2 * (n_not_state_2 - 1)
                           - n_state_1 * n_not_state_1 * n_state_2 * n_not_state_2;
                 }
@@ -205,19 +205,19 @@ public:
             allele_freqs_2_it++;
         }
 
-        return f2 / (static_cast<double>(num_samples_1 * (num_samples_1 - 1) * num_samples_2 * (num_samples_2 - 1)));
+        return f2 / (num_samples_1 * (num_samples_1 - 1) * num_samples_2 * (num_samples_2 - 1));
     }
 
     [[nodiscard]] double
     f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
         double f3 = 0.0;
 
-        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const allele_freqs_3 = allele_frequencies(sample_set_3);
-        auto const num_samples_1  = sample_set_1.popcount();
-        auto const num_samples_2  = sample_set_2.popcount();
-        auto const num_samples_3  = sample_set_3.popcount();
+        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const   allele_freqs_3 = allele_frequencies(sample_set_3);
+        double const num_samples_1  = sample_set_1.popcount();
+        double const num_samples_2  = sample_set_2.popcount();
+        double const num_samples_3  = sample_set_3.popcount();
         KASSERT(
             num_samples_1 >= 2ul,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
@@ -241,9 +241,9 @@ public:
                 double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freqs_1_it).num_ancestral();
                 double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
                 double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
-                double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
-                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
-                double const n_der_3 = static_cast<double>(num_samples_3) - n_anc_3;
+                double const n_der_1 = num_samples_1 - n_anc_1;
+                double const n_der_2 = num_samples_2 - n_anc_2;
+                double const n_der_3 = num_samples_3 - n_anc_3;
 
                 f3 += n_anc_1 * (n_anc_1 - 1) * n_der_2 * n_der_3 - n_anc_1 * n_der_1 * n_der_2 * n_anc_3;
                 f3 += n_der_1 * (n_der_1 - 1) * n_anc_2 * n_anc_3 - n_der_1 * n_anc_1 * n_anc_2 * n_der_3;
@@ -264,12 +264,12 @@ public:
                     tdt::assert::light
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
-                    double const n_state_1 = freqs_1_multiallelic[state];
-                    // double const n_state_2     = freqs_2_multiallelic[state];
+                    double const n_state_1     = freqs_1_multiallelic[state];
+                    double const n_state_2     = freqs_2_multiallelic[state];
                     double const n_state_3     = freqs_3_multiallelic[state];
-                    double const n_not_state_1 = num_samples_1 - freqs_1_multiallelic[state];
-                    double const n_not_state_2 = static_cast<double>(num_samples_2) - freqs_2_multiallelic[state];
-                    double const n_not_state_3 = static_cast<double>(num_samples_3) - freqs_3_multiallelic[state];
+                    double const n_not_state_1 = num_samples_1 - n_state_1;
+                    double const n_not_state_2 = num_samples_2 - n_state_2;
+                    double const n_not_state_3 = num_samples_3 - n_state_3;
                     f3 += n_state_1 * (n_state_1 - 1) * n_not_state_2 * n_not_state_3
                           - n_state_1 * n_not_state_1 * n_not_state_2 * n_state_3;
                 }
@@ -280,7 +280,7 @@ public:
             allele_freqs_3_it++;
         }
 
-        return f3 / (static_cast<double>(num_samples_1 * (num_samples_1 - 1) * num_samples_2 * num_samples_3));
+        return f3 / (num_samples_1 * (num_samples_1 - 1) * num_samples_2 * num_samples_3);
     }
 
     [[nodiscard]] double
@@ -290,14 +290,14 @@ public:
        SampleSet const& sample_set_4) {
         double f4 = 0.0;
 
-        auto const allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const allele_freqs_3 = allele_frequencies(sample_set_3);
-        auto const allele_freqs_4 = allele_frequencies(sample_set_4);
-        auto const num_samples_1  = sample_set_1.popcount();
-        auto const num_samples_2  = sample_set_2.popcount();
-        auto const num_samples_3  = sample_set_3.popcount();
-        auto const num_samples_4  = sample_set_4.popcount();
+        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
+        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
+        auto const   allele_freqs_3 = allele_frequencies(sample_set_3);
+        auto const   allele_freqs_4 = allele_frequencies(sample_set_4);
+        double const num_samples_1  = sample_set_1.popcount();
+        double const num_samples_2  = sample_set_2.popcount();
+        double const num_samples_3  = sample_set_3.popcount();
+        double const num_samples_4  = sample_set_4.popcount();
 
         auto allele_freqs_1_it = allele_freqs_1.cbegin();
         auto allele_freqs_2_it = allele_freqs_2.cbegin();
@@ -320,11 +320,13 @@ public:
                 double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
                 double const n_anc_3 = std::get<BiallelicFrequency>(*allele_freqs_3_it).num_ancestral();
                 double const n_anc_4 = std::get<BiallelicFrequency>(*allele_freqs_4_it).num_ancestral();
-                double const n_der_1 = static_cast<double>(num_samples_1 - n_anc_1);
-                double const n_der_2 = static_cast<double>(num_samples_2 - n_anc_2);
-                double const n_der_3 = static_cast<double>(num_samples_3 - n_anc_3);
-                double const n_der_4 = static_cast<double>(num_samples_4 - n_anc_4);
+                double const n_der_1 = num_samples_1 - n_anc_1;
+                double const n_der_2 = num_samples_2 - n_anc_2;
+                double const n_der_3 = num_samples_3 - n_anc_3;
+                double const n_der_4 = num_samples_4 - n_anc_4;
 
+                // TODO Can we save some computations by rearranging these formulas or does the compiler already do this
+                // for us?
                 f4 += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
                 f4 += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
             } else {
