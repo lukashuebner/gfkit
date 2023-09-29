@@ -376,19 +376,20 @@ public:
     num_segregating_sites(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
         // We compute the number of segregating sites in this way in order to be compatible with tskit's
         // definition. See https://doi.org/10.1534/genetics.120.303253 and tskit's trees.c
-        double num_segregating_sites = 0.0;
+        size_t num_segregating_sites = 0;
         allele_frequencies.visit(
             [&num_segregating_sites, num_samples](auto&& state) {
-                // Imho, the following would be correct, but that's not what tskit is computing:
-                // (state.num_ancestral() > 0 && state.num_ancestral() < num_samples)
-                num_segregating_sites += (state.num_ancestral() < num_samples);
+                num_segregating_sites += (state.num_ancestral() > 0 && state.num_ancestral() < num_samples);
             },
             [&num_segregating_sites, num_samples](auto&& states) {
-                // Again, not what my intuition would be but this is what tskit is computing.
+                size_t num_states = 0;
                 for (auto const num_samples_in_state: states) {
-                    num_segregating_sites +=
-                        (num_samples_in_state > 0) * (1.0 - static_cast<double>(num_samples_in_state) / num_samples);
+                    if (num_samples_in_state > 0ul) {
+                        num_states++;
+                    }
                 }
+                KASSERT(num_states > 0ul, "There are no allelic states at this site.", tdt::assert::light);
+                num_segregating_sites += num_states - 1;
             }
         );
 
@@ -399,7 +400,7 @@ public:
             "There are suspiciously many floating point rounding errors.",
             tdt::assert::light
         );
-        return static_cast<SiteId>(num_segregating_sites + ACCEPTABLE_FP_ERROR);
+        return asserting_cast<SiteId>(num_segregating_sites);
     }
 
     [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
