@@ -147,12 +147,12 @@ public:
         double const num_samples_1  = sample_set_1.popcount();
         double const num_samples_2  = sample_set_2.popcount();
         KASSERT(
-            num_samples_1 >= 2ul,
+            num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
             tdt::assert::light
         );
         KASSERT(
-            num_samples_2 >= 2ul,
+            num_samples_2 >= 2.0,
             "We have to draw /two/ samples from the second sample set. It thus must be at least of size 2.",
             tdt::assert::light
         );
@@ -219,7 +219,7 @@ public:
         double const num_samples_2  = sample_set_2.popcount();
         double const num_samples_3  = sample_set_3.popcount();
         KASSERT(
-            num_samples_1 >= 2ul,
+            num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
             tdt::assert::light
         );
@@ -280,7 +280,7 @@ public:
             allele_freqs_3_it++;
         }
 
-        return f3 / (num_samples_1 * (num_samples_1 - 1) * num_samples_2 * num_samples_3);
+        return f3 / (num_samples_1 * (num_samples_1 - 1.0) * num_samples_2 * num_samples_3);
     }
 
     [[nodiscard]] double
@@ -393,13 +393,6 @@ public:
             }
         );
 
-        // Add a small constant here to in order to avoid rounding down if we accumulated floating point errors.
-        constexpr double ACCEPTABLE_FP_ERROR = 0.0001;
-        KASSERT(
-            num_segregating_sites - num_segregating_sites < ACCEPTABLE_FP_ERROR,
-            "There are suspiciously many floating point rounding errors.",
-            tdt::assert::light
-        );
         return asserting_cast<SiteId>(num_segregating_sites);
     }
 
