@@ -2,7 +2,6 @@
 
 import msprime
 import concurrent.futures
-from os.path import isfile
 
 RANDOM_NAMES_FILE: str = "random-names.txt"
 OUTPUT_DIR: str = "."
@@ -67,6 +66,7 @@ def two_population_model(pop1_size: int, pop2_size: int, ancestral_size: int, sp
     )
     ts = msprime.sim_mutations(ts, rate=mut_rate, random_seed=seed)
     ts.dump(filename)
+    return ts
 
 # --- Model with four populations ---
 def four_population_model(pop1_size: int, pop2_size: int, pop3_size: int, pop4_size: int,
@@ -129,9 +129,9 @@ def four_population_model(pop1_size: int, pop2_size: int, pop3_size: int, pop4_s
     ts = msprime.sim_mutations(ts, rate=mut_rate, random_seed=seed)
     ts.dump(filename)
 
-with concurrent.futures.ProcessPoolExecutor() as executor:
+with concurrent.futures.ProcessPoolExecutor(20) as executor:
     with open(RANDOM_NAMES_FILE) as file:
-        names = [line.rstrip() + ".trees" for line in file]
+        names = ["simulated-" + line.rstrip() + ".trees" for line in file]
     name = iter(names)
 
     # Single population model
@@ -139,8 +139,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
         datasets_csv.write("name,population_size,sequence_length,mutation_rate,num_individuals,recombination_rate,seed\n")
         for population_size in [1e+4, 1e+5, 1e+6, 1e+7, 1e+8, 1e+9]:
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{population_size},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
             executor.submit(
                 single_population_model,
@@ -155,8 +153,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
         for sequence_length in [1e+6, 1e+7, 1e+8, 1e+9, 1e+10]:
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{DEFAULT_POPULATION_SIZE},{sequence_length},{DEFAULT_MUTATION_RATE},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
             executor.submit(
                 single_population_model,
@@ -171,8 +167,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
         for mutation_rate in [1e-8, 1e-7, 1e-6]:
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{DEFAULT_POPULATION_SIZE},{DEFAULT_SEQUENCE_LENGTH},{mutation_rate},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
             executor.submit(
                 single_population_model,
@@ -187,8 +181,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
         for num_individuals in [10, 100, 1000, 10000]:
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{DEFAULT_POPULATION_SIZE},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{num_individuals},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
             executor.submit(
                 single_population_model,
@@ -203,8 +195,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
         for recombination_rate in [1e-8, 1e-7, 1e-6]:
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{DEFAULT_POPULATION_SIZE},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{DEFAULT_NUM_INDIVIDUALS},{recombination_rate},{BASE_SEED}\n")
             executor.submit(
                 single_population_model,
@@ -227,8 +217,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(pop2_fraction * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{DEFAULT_SPLIT_TIME},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -249,8 +237,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(0.5 * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{split_time},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -271,8 +257,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(0.5 * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{DEFAULT_SPLIT_TIME},{num_samples_per_population},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -293,8 +277,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(0.5 * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{DEFAULT_SPLIT_TIME},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{recombination_rate},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -315,8 +297,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(0.5 * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{DEFAULT_SPLIT_TIME},{DEFAULT_NUM_INDIVIDUALS},{sequence_length},{DEFAULT_MUTATION_RATE},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -337,8 +317,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                 pop2_size = int(0.5 * population_size)
                 ancestral_size = int(0.5 * population_size)
                 file = next(name)
-                if isfile(file):
-                    continue
                 datasets_csv.write(f"{file},{pop1_size},{pop2_size},{ancestral_size},{DEFAULT_SPLIT_TIME},{DEFAULT_NUM_INDIVIDUALS},{DEFAULT_SEQUENCE_LENGTH},{mut_rate},{DEFAULT_RECOMBINATION_RATE},{BASE_SEED}\n")
                 executor.submit(
                     two_population_model,
@@ -371,8 +349,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
                         pop234_size = int((pop2_fraction + pop3_fraction + pop4_fraction) * DEFAULT_POPULATION_SIZE)
                         pop1234_size = int((pop1_fraction + pop2_fraction + pop3_fraction + pop4_fraction) * DEFAULT_POPULATION_SIZE)
                         file = next(name)
-                        if isfile(file):
-                            continue
                         datasets_csv.write(f"{file},{pop1_size},{pop2_size},{pop3_size},{pop4_size},{pop34_size},{pop234_size},{pop1234_size},{DEFAULT_SPLIT_TIME},{DEFAULT_SPLIT_TIME},{DEFAULT_SPLIT_TIME},{DEFAULT_MIGRATION_PROPORTION},{DEFAULT_RECOMBINATION_RATE},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{BASE_SEED}\n")
                         executor.submit(
                             four_population_model,
@@ -403,8 +379,6 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
             pop234_size = int((pop2_fraction + pop3_fraction + pop4_fraction) * DEFAULT_POPULATION_SIZE)
             pop1234_size = int((pop1_fraction + pop2_fraction + pop3_fraction + pop4_fraction) * DEFAULT_POPULATION_SIZE)
             file = next(name)
-            if isfile(file):
-                continue
             datasets_csv.write(f"{file},{pop1_size},{pop2_size},{pop3_size},{pop4_size},{pop34_size},{pop234_size},{pop1234_size},{DEFAULT_SPLIT_TIME},{DEFAULT_SPLIT_TIME},{DEFAULT_SPLIT_TIME},{migration_proportion},{DEFAULT_RECOMBINATION_RATE},{DEFAULT_SEQUENCE_LENGTH},{DEFAULT_MUTATION_RATE},{BASE_SEED}\n")
             executor.submit(
                 four_population_model,
