@@ -9,6 +9,7 @@
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/forest-compressor.hpp"
+#include "tdt/samples/num-samples-below.hpp"
 #include "tdt/sequence/allele-frequencies.hpp"
 #include "tdt/sequence/allele-frequency-spectrum.hpp"
 #include "tdt/sequence/genomic-sequence-storage-factory.hpp"
@@ -19,9 +20,6 @@
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class SuccinctForest {
 public:
-    using MultiallelicFrequency = typename AlleleFrequencies<AllelicStatePerfectHasher>::MultiallelicFrequency;
-    using BiallelicFrequency    = typename AlleleFrequencies<AllelicStatePerfectHasher>::BiallelicFrequency;
-
     SuccinctForest(
         TSKitTreeSequence&& tree_sequence, CompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
     )
@@ -42,13 +40,69 @@ public:
         return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, sample_set);
     }
 
+    template <NumSamplesBelowAccessorT NumSamplesBelowAccessor = NumSamplesBelow>
+    auto allele_frequencies(NumSamplesBelowAccessor const& num_samples_below) {
+        return AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelowAccessor>(
+            _forest,
+            _sequence,
+            num_samples_below
+        );
+    }
+
+    auto allele_frequencies(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+        auto num_sample_below =
+            std::make_shared<NumSamplesBelowTwo>(_forest.postorder_edges(), sample_set_1, sample_set_2);
+        return std::tuple(
+            allele_frequencies(NumSamplesBelowTwoAccessor(num_sample_below, 0)),
+            allele_frequencies(NumSamplesBelowTwoAccessor(num_sample_below, 1))
+        );
+    }
+
+    auto
+    allele_frequencies(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
+        SampleSet empty_sample_set  = SampleSet(sample_set_1.overall_num_samples());
+        auto      num_samples_below = std::make_shared<NumSamplesBelowFour>(
+            _forest.postorder_edges(),
+            sample_set_1,
+            sample_set_2,
+            sample_set_3,
+            empty_sample_set
+        );
+        return std::tuple(
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 0)),
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 1)),
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 2))
+        );
+    }
+
+    auto allele_frequencies(
+        SampleSet const& sample_set_1,
+        SampleSet const& sample_set_2,
+        SampleSet const& sample_set_3,
+        SampleSet const& sample_set_4
+    ) {
+        auto num_samples_below = std::make_shared<NumSamplesBelowFour>(
+            _forest.postorder_edges(),
+            sample_set_1,
+            sample_set_2,
+            sample_set_3,
+            sample_set_4
+        );
+        return std::tuple(
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 0)),
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 1)),
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 2)),
+            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 3))
+        );
+    }
+
     // TODO Make this const
     [[nodiscard]] double diversity() {
         return diversity(_forest.all_samples());
     }
 
-    [[nodiscard]] double
-    diversity(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
+    template <typename AlleleFrequenciesT = AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelow>>
+    [[nodiscard]] double diversity(SampleId num_samples, AlleleFrequenciesT allele_frequencies) {
         auto const n  = num_samples;
         double     pi = 0.0;
 
@@ -86,12 +140,16 @@ public:
         return AlleleFrequencySpectrum<AllelicStatePerfectHasher>(allele_frequencies(sample_set));
     }
 
+    template <typename AlleleFrequenciesT = AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelow>>
     [[nodiscard]] double divergence(
-        SampleId                                     num_samples_1,
-        AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies_1,
-        SampleId                                     num_samples_2,
-        AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies_2
+        SampleId           num_samples_1,
+        AlleleFrequenciesT allele_frequencies_1,
+        SampleId           num_samples_2,
+        AlleleFrequenciesT allele_frequencies_2
     ) {
+        using MultiallelicFrequency = typename AlleleFrequenciesT::MultiallelicFrequency;
+        using BiallelicFrequency    = typename AlleleFrequenciesT::BiallelicFrequency;
+
         double divergence       = 0.0;
         auto   allele_freq_1_it = allele_frequencies_1.cbegin();
         auto   allele_freq_2_it = allele_frequencies_2.cbegin();
@@ -132,57 +190,58 @@ public:
         return divergence / (static_cast<double>(num_samples_1 * num_samples_2));
     }
 
-    [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+    [[nodiscard]] double divergence(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
         // TODO Possibly compute both allele frequencies in parallel (high and low order 32 bit)
-        auto       allele_freq_1 = allele_frequencies(sample_set_1);
-        auto       allele_freq_2 = allele_frequencies(sample_set_2);
-        auto const num_samples_1 = sample_set_1.popcount();
-        auto const num_samples_2 = sample_set_2.popcount();
-        return divergence(num_samples_1, allele_freq_1, num_samples_2, allele_freq_2);
+        auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
+        auto const num_samples_0              = sample_set_0.popcount();
+        auto const num_samples_1              = sample_set_1.popcount();
+        return divergence(num_samples_0, allele_freqs_0, num_samples_1, allele_freqs_1);
     }
 
-    [[nodiscard]] double f2(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
-        double const num_samples_1  = sample_set_1.popcount();
-        double const num_samples_2  = sample_set_2.popcount();
+    [[nodiscard]] double f2(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
+        auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
+        using BiallelicFrequency              = typename decltype(allele_freqs_0)::BiallelicFrequency;
+        using MultiallelicFrequency           = typename decltype(allele_freqs_0)::MultiallelicFrequency;
+
+        double const num_samples_0 = sample_set_0.popcount();
+        double const num_samples_1 = sample_set_1.popcount();
         KASSERT(
-            num_samples_1 >= 2.0,
+            num_samples_0 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
             tdt::assert::light
         );
         KASSERT(
-            num_samples_2 >= 2.0,
+            num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the second sample set. It thus must be at least of size 2.",
             tdt::assert::light
         );
 
         double f2 = 0.0;
 
+        auto allele_freqs_0_it = allele_freqs_0.cbegin();
         auto allele_freqs_1_it = allele_freqs_1.cbegin();
-        auto allele_freqs_2_it = allele_freqs_2.cbegin();
 
-        while (allele_freqs_1_it != allele_freqs_1.cend()) {
+        while (allele_freqs_0_it != allele_freqs_1.cend()) {
             KASSERT(
-                allele_freqs_2_it != allele_freqs_2.cend(),
+                allele_freqs_1_it != allele_freqs_1.cend(),
                 "Allele frequency lists have different lengths (different number of sites).",
                 tdt::assert::light
             );
 
-            if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
-                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_2_it)) [[likely]] {
+            if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_0_it)
+                && std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)) [[likely]] {
+                double const n_anc_0 = std::get<BiallelicFrequency>(*allele_freqs_0_it).num_ancestral();
                 double const n_anc_1 = std::get<BiallelicFrequency>(*allele_freqs_1_it).num_ancestral();
-                double const n_anc_2 = std::get<BiallelicFrequency>(*allele_freqs_2_it).num_ancestral();
+                double const n_der_0 = static_cast<double>(num_samples_0) - n_anc_0;
                 double const n_der_1 = static_cast<double>(num_samples_1) - n_anc_1;
-                double const n_der_2 = static_cast<double>(num_samples_2) - n_anc_2;
 
-                f2 += n_anc_1 * (n_anc_1 - 1) * n_der_2 * (n_der_2 - 1) - n_anc_1 * n_der_1 * n_anc_2 * n_der_2;
-                f2 += n_der_1 * (n_der_1 - 1) * n_anc_2 * (n_anc_2 - 1) - n_der_1 * n_anc_1 * n_der_2 * n_anc_2;
+                f2 += n_anc_0 * (n_anc_0 - 1) * n_der_1 * (n_der_1 - 1) - n_anc_0 * n_der_0 * n_anc_1 * n_der_1;
+                f2 += n_der_0 * (n_der_0 - 1) * n_anc_1 * (n_anc_1 - 1) - n_der_0 * n_anc_0 * n_der_1 * n_anc_1;
             } else {
+                allele_freqs_0_it.force_multiallelicity();
                 allele_freqs_1_it.force_multiallelicity();
-                allele_freqs_2_it.force_multiallelicity();
-                auto const freqs_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
-                auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_2_it);
+                auto const freqs_1_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_0_it);
+                auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
                 // TODO Check if the compiler unrolls this
@@ -192,32 +251,35 @@ public:
                     tdt::assert::light
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
-                    double const n_state_1     = freqs_1_multiallelic[state];
-                    double const n_state_2     = freqs_2_multiallelic[state];
-                    double const n_not_state_1 = num_samples_1 - n_state_1;
-                    double const n_not_state_2 = num_samples_2 - n_state_2;
-                    f2 += n_state_1 * (n_state_1 - 1) * n_not_state_2 * (n_not_state_2 - 1)
-                          - n_state_1 * n_not_state_1 * n_state_2 * n_not_state_2;
+                    double const n_state_0     = freqs_1_multiallelic[state];
+                    double const n_state_1     = freqs_2_multiallelic[state];
+                    double const n_not_state_1 = num_samples_0 - n_state_0;
+                    double const n_not_state_2 = num_samples_1 - n_state_1;
+                    f2 += n_state_0 * (n_state_0 - 1) * n_not_state_2 * (n_not_state_2 - 1)
+                          - n_state_0 * n_not_state_1 * n_state_1 * n_not_state_2;
                 }
             }
 
+            allele_freqs_0_it++;
             allele_freqs_1_it++;
-            allele_freqs_2_it++;
         }
 
-        return f2 / (num_samples_1 * (num_samples_1 - 1) * num_samples_2 * (num_samples_2 - 1));
+        return f2 / (num_samples_0 * (num_samples_0 - 1) * num_samples_1 * (num_samples_1 - 1));
     }
 
     [[nodiscard]] double
     f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
         double f3 = 0.0;
 
-        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const   allele_freqs_3 = allele_frequencies(sample_set_3);
-        double const num_samples_1  = sample_set_1.popcount();
-        double const num_samples_2  = sample_set_2.popcount();
-        double const num_samples_3  = sample_set_3.popcount();
+        auto const [allele_freqs_1, allele_freqs_2, allele_freqs_3] =
+            allele_frequencies(sample_set_1, sample_set_2, sample_set_3);
+
+        using MultiallelicFrequency = typename decltype(allele_freqs_1)::MultiallelicFrequency;
+        using BiallelicFrequency    = typename decltype(allele_freqs_1)::BiallelicFrequency;
+
+        double const num_samples_1 = sample_set_1.popcount();
+        double const num_samples_2 = sample_set_2.popcount();
+        double const num_samples_3 = sample_set_3.popcount();
         KASSERT(
             num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
@@ -290,14 +352,15 @@ public:
        SampleSet const& sample_set_4) {
         double f4 = 0.0;
 
-        auto const   allele_freqs_1 = allele_frequencies(sample_set_1);
-        auto const   allele_freqs_2 = allele_frequencies(sample_set_2);
-        auto const   allele_freqs_3 = allele_frequencies(sample_set_3);
-        auto const   allele_freqs_4 = allele_frequencies(sample_set_4);
-        double const num_samples_1  = sample_set_1.popcount();
-        double const num_samples_2  = sample_set_2.popcount();
-        double const num_samples_3  = sample_set_3.popcount();
-        double const num_samples_4  = sample_set_4.popcount();
+        auto const [allele_freqs_1, allele_freqs_2, allele_freqs_3, allele_freqs_4] =
+            allele_frequencies(sample_set_1, sample_set_2, sample_set_3, sample_set_4);
+        using MultiallelicFrequency = typename decltype(allele_freqs_1)::MultiallelicFrequency;
+        using BiallelicFrequency    = typename decltype(allele_freqs_1)::BiallelicFrequency;
+
+        double const num_samples_1 = sample_set_1.popcount();
+        double const num_samples_2 = sample_set_2.popcount();
+        double const num_samples_3 = sample_set_3.popcount();
+        double const num_samples_4 = sample_set_4.popcount();
 
         auto allele_freqs_1_it = allele_freqs_1.cbegin();
         auto allele_freqs_2_it = allele_freqs_2.cbegin();
@@ -429,19 +492,18 @@ public:
     }
 
     // This is per sequence length, the other statistics are not
-    [[nodiscard]] double fst(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+    [[nodiscard]] double fst(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
         // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X,
         // then what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
 
-        auto const n_1             = sample_set_1.popcount();
-        auto const n_2             = sample_set_2.popcount();
-        auto const allele_freqs_1  = allele_frequencies(sample_set_1);
-        auto const allele_freqs_2  = allele_frequencies(sample_set_2);
-        auto const sequence_length = _sequence.num_sites();
+        auto const n_0                        = sample_set_0.popcount();
+        auto const n_1                        = sample_set_1.popcount();
+        auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
+        auto const sequence_length            = _sequence.num_sites();
 
-        auto const d_x  = diversity(n_1, allele_freqs_1) / sequence_length;
-        auto const d_y  = diversity(n_2, allele_freqs_2) / sequence_length;
-        auto const d_xy = divergence(n_1, allele_freqs_1, n_2, allele_freqs_2) / sequence_length;
+        auto const d_x  = diversity(n_1, allele_freqs_0) / sequence_length;
+        auto const d_y  = diversity(n_1, allele_freqs_1) / sequence_length;
+        auto const d_xy = divergence(n_0, allele_freqs_0, n_1, allele_freqs_1) / sequence_length;
         auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
         return fst;
     }

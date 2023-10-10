@@ -7,7 +7,9 @@
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "tdt/utils/always_false_v.hpp"
 
-template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
+template <
+    typename AllelicStatePerfectHasher               = PerfectDNAHasher,
+    NumSamplesBelowAccessorT NumSamplesBelowAccessor = NumSamplesBelow>
 class AlleleFrequencies {
 public:
     class BiallelicFrequency {
@@ -121,6 +123,15 @@ public:
         : _forest(compressed_forest),
           _sequence(sequence_store),
           _num_samples_below(compressed_forest.compute_num_samples_below(sample_set)) {}
+
+    AlleleFrequencies(
+        CompressedForest&              compressed_forest,
+        GenomicSequence const&         sequence_store,
+        NumSamplesBelowAccessor const& num_samples_below
+    )
+        : _forest(compressed_forest),
+          _sequence(sequence_store),
+          _num_samples_below(num_samples_below) {}
 
     [[nodiscard]] auto begin() const {
         return allele_frequency_iterator{*this};
@@ -339,7 +350,7 @@ public:
     };
 
 private:
-    CompressedForest&      _forest;
-    GenomicSequence const& _sequence;
-    NumSamplesBelow        _num_samples_below;
+    CompressedForest&       _forest;
+    GenomicSequence const&  _sequence;
+    NumSamplesBelowAccessor _num_samples_below;
 };
