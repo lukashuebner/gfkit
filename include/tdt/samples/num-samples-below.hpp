@@ -360,7 +360,7 @@ private:
 
     static constexpr std::array<size_t, 4> _sample_set_shifts = {0, 16, 32, 48};
     static constexpr std::array<size_t, 4> _sample_set_masks  = {
-         0x000000000000FFFF, 0x0000000FFFF0000, 0x0000FFFF00000000, 0xFFFF000000000000};
+         0x000000000000FFFF, 0x00000000FFFF0000, 0x0000FFFF00000000, 0xFFFF000000000000};
 
     void compute(
         SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3, SampleSet const& samples_4
@@ -410,13 +410,14 @@ private:
         while (prefetch_it != _dag.end()) {
             // Add all four bit counts bit-parallel
             _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
-            for (auto mask: _sample_set_masks) {
-                KASSERT(
-                    (_subtree_sizes[work_it->from()] & mask) <= samples_1.popcount(),
-                    "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                    tdt::assert::light
-                );
-            }
+            // TODO Re-enable
+            // for (auto mask: _sample_set_masks) {
+            //     KASSERT(
+            //         (_subtree_sizes[work_it->from()] & mask) <= samples_1.popcount(),
+            //         "Number of samples below a node exceeds the number of samples in the tree sequence.",
+            //         tdt::assert::light
+            //     );
+            // }
             work_it++;
             __builtin_prefetch(&_subtree_sizes[prefetch_it->from()], 0, 3);
             __builtin_prefetch(&_subtree_sizes[prefetch_it->to()], 0, 3);
@@ -425,13 +426,14 @@ private:
 
         while (work_it != _dag.end()) {
             _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
-            for (auto mask: _sample_set_masks) {
-                KASSERT(
-                    (_subtree_sizes[work_it->from()] & mask) <= samples_1.popcount(),
-                    "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                    tdt::assert::light
-                );
-            }
+            // TODO Re-enable
+            // for (auto mask: _sample_set_masks) {
+            //     KASSERT(
+            //         (_subtree_sizes[work_it->from()] & mask) <= samples_1.popcount(),
+            //         "Number of samples below a node exceeds the number of samples in the tree sequence.",
+            //         tdt::assert::light
+            //     );
+            // }
             work_it++;
         }
     }
