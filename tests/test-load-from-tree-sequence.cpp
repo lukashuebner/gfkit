@@ -24,13 +24,12 @@
 
 using namespace ::Catch::Matchers;
 
-std::string const ts_file1 = "data/generated-pop100-seq100000000-ind10-seed0001.trees";
-std::string const ts_file3 = "data/generated-pop10000-seq10000-ind20-seed0001.trees";
-std::string const ts_file4 = "data/generated-pop10000-seq10000000-ind20-seed0001.trees";
-std::string const ts_file5 = "data/generated-pop100-seq100000-ind100-seed0001.trees";
-std::string const ts_file6 = "data/generated-pop10000-seq100000-ind1000-seed0001.trees";
+std::string const ts_file_mufas  = "data/test-mufasa.trees";
+std::string const ts_file_nala   = "data/test-nala.trees";
+std::string const ts_file_rafiki = "data/test-rafiki.trees";
+std::string const ts_file_sarabi = "data/test-sarabi.trees";
 
-std::vector<std::string> ts_files{ts_file1, ts_file3, ts_file5, ts_file6};
+std::vector<std::string> ts_files{ts_file_mufas, ts_file_nala, ts_file_rafiki, ts_file_sarabi};
 
 TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
