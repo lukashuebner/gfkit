@@ -27,12 +27,12 @@ std::string const ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571
 
 TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serialization]") {
     std::vector<std::string> const ts_files = {
-        "data/allele-frequency-spectrum-simple-example-0.trees",
-        "data/allele-frequency-spectrum-simple-example-1.trees",
-        "data/allele-frequency-spectrum-simple-example-2.trees",
-        "data/allele-frequency-spectrum-simple-example-3.trees",
-        "data/allele-frequency-spectrum-simple-example-4.trees",
-        "data/allele-frequency-spectrum-simple-example-6.trees",
+        "data/test-sarafina.trees",
+        "data/test-scar.trees",
+        "data/test-shenzi.trees",
+        "data/test-banzai.trees",
+        "data/test-ed.trees",
+        "data/test-simba.trees",
     };
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
@@ -159,18 +159,12 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     // TODO Rename these sample datasets
     // TODO Generate more sample datasets
     std::vector<Dataset> const datasets = {
-        {"data/allele-frequency-spectrum-simple-example-0.forest",
-         "data/allele-frequency-spectrum-simple-example-0.trees"},
-        {"data/allele-frequency-spectrum-simple-example-1.forest",
-         "data/allele-frequency-spectrum-simple-example-1.trees"},
-        {"data/allele-frequency-spectrum-simple-example-2.forest",
-         "data/allele-frequency-spectrum-simple-example-2.trees"},
-        {"data/allele-frequency-spectrum-simple-example-3.forest",
-         "data/allele-frequency-spectrum-simple-example-3.trees"},
-        {"data/allele-frequency-spectrum-simple-example-4.forest",
-         "data/allele-frequency-spectrum-simple-example-4.trees"},
-        {"data/allele-frequency-spectrum-simple-example-6.forest",
-         "data/allele-frequency-spectrum-simple-example-6.trees"},
+        {"data/test-sarafina.forest", "data/test-sarafina.trees"},
+        {"data/test-scar.forest", "data/test-scar.trees"},
+        {"data/test-shenzi.forest", "data/test-shenzi.trees"},
+        {"data/test-banzai.forest", "data/test-banzai.trees"},
+        {"data/test-ed.forest", "data/test-ed.trees"},
+        {"data/test-simba.forest", "data/test-simba.trees"},
     };
 
     auto const& dataset     = GENERATE_REF(from_range(datasets));

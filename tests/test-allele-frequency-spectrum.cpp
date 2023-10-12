@@ -389,12 +389,12 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
 
 TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
     std::vector<std::string> const ts_files = {
-        "data/allele-frequency-spectrum-simple-example-0.trees",
-        "data/allele-frequency-spectrum-simple-example-1.trees",
-        "data/allele-frequency-spectrum-simple-example-2.trees",
-        "data/allele-frequency-spectrum-simple-example-3.trees",
-        "data/allele-frequency-spectrum-simple-example-4.trees",
-        "data/allele-frequency-spectrum-simple-example-6.trees",
+        "data/test-sarafina.trees",
+        "data/test-scar.trees",
+        "data/test-shenzi.trees",
+        "data/test-banzai.trees",
+        "data/test-ed.trees",
+        "data/test-simba.trees",
     };
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
