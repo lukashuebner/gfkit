@@ -19,7 +19,7 @@ using namespace ::Catch;
 using namespace ::Catch::Matchers;
 
 // This test case is taken from the tskit test suite (the only test case for the AFS in there that checks values).
-TEST_CASE("Tajima's D tskit example", "[Diversity]") {
+TEST_CASE("Tajima's D tskit example", "[Tajima's D]") {
     struct Testcase {
         std::string ts_file;
         double      tskit_tajimas_d;
@@ -27,8 +27,12 @@ TEST_CASE("Tajima's D tskit example", "[Diversity]") {
 
     // 2, 3, and are multiallelic
     std::vector<Testcase> const testcases = {
-        {"data/allele-frequency-spectrum-simple-example-0.trees", -0.45947037060657214},
-        {"data/allele-frequency-spectrum-simple-example-1.trees", -0.4279734893252207},
+        {"data/test-sarafina.trees", -0.45947037060657214},
+        {"data/test-scar.trees", -0.4279734893252207},
+        {"data/test-shenzi.trees", -0.5179950183615757},
+        {"data/test-banzai.trees", -2.2672645402359284},
+        {"data/test-ed.trees", -2.672895036702143},
+        {"data/test-simba.trees", -2.0469586607448598},
     };
     auto const& testcase        = GENERATE_REF(from_range(testcases));
     auto const& ts_file         = testcase.ts_file;
