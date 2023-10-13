@@ -8,8 +8,8 @@
 #include "tdt/utils/always_false_v.hpp"
 
 template <
-    typename AllelicStatePerfectHasher               = PerfectDNAHasher,
-    NumSamplesBelowAccessorT NumSamplesBelowAccessor = NumSamplesBelow>
+    typename AllelicStatePerfectHasher                = PerfectDNAHasher,
+    NumSamplesBelowAccessorC NumSamplesBelowAccessorT = NumSamplesBelowAccessor<NumSamplesBelow<1>>>
 class AlleleFrequencies {
 public:
     class BiallelicFrequency {
@@ -122,12 +122,12 @@ public:
     )
         : _forest(compressed_forest),
           _sequence(sequence_store),
-          _num_samples_below(compressed_forest.compute_num_samples_below(sample_set)) {}
+          _num_samples_below(NumSamplesBelowFactory::build(compressed_forest.postorder_edges(), sample_set)) {}
 
     AlleleFrequencies(
-        CompressedForest&              compressed_forest,
-        GenomicSequence const&         sequence_store,
-        NumSamplesBelowAccessor const& num_samples_below
+        CompressedForest&               compressed_forest,
+        GenomicSequence const&          sequence_store,
+        NumSamplesBelowAccessorT const& num_samples_below
     )
         : _forest(compressed_forest),
           _sequence(sequence_store),
@@ -157,7 +157,7 @@ public:
         return _sequence;
     }
 
-    [[nodiscard]] NumSamplesBelow const& num_samples_below() const {
+    [[nodiscard]] NumSamplesBelowAccessorT const& num_samples_below() const {
         return _num_samples_below;
     }
 
@@ -288,9 +288,9 @@ public:
                     auto const num_samples_below_this_mutation = _freqs._num_samples_below(mutation.node_id());
                     auto const this_mutations_state            = mutation.allelic_state();
 
-                    // If this mutation is towards neither the derived nor the ancestral state but there is at least one
-                    // sample in this sample set below it, we have to compute the state using the algorithm supporting
-                    // multiallelicity.
+                    // If this mutation is towards neither the derived nor the ancestral state but there is at
+                    // least one sample in this sample set below it, we have to compute the state using the
+                    // algorithm supporting multiallelicity.
                     if (this_mutations_state != derived_state && this_mutations_state != ancestral_state
                         && num_samples_below_this_mutation > 0) [[unlikely]] {
                         _update_state_multiallelic(ancestral_state, mutations_at_site);
@@ -350,7 +350,7 @@ public:
     };
 
 private:
-    CompressedForest&       _forest;
-    GenomicSequence const&  _sequence;
-    NumSamplesBelowAccessor _num_samples_below;
+    CompressedForest&        _forest;
+    GenomicSequence const&   _sequence;
+    NumSamplesBelowAccessorT _num_samples_below;
 };

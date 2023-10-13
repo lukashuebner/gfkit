@@ -18,7 +18,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     dag.num_nodes(0);
 
     SECTION("Empty graph") {
-        NumSamplesBelow num_samples_below(dag, SampleSet{0});
+        auto num_samples_below = NumSamplesBelowFactory::build(dag, SampleSet{0});
         CHECK(num_samples_below.num_nodes_in_dag() == 0);
         CHECK(num_samples_below.num_samples_in_dag() == 0);
         CHECK(num_samples_below.num_samples_in_sample_set() == 0);
@@ -32,7 +32,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
         SampleSet empty_samples(dag.num_leaves());
         REQUIRE(empty_samples.overall_num_samples() == 1);
         REQUIRE(empty_samples.popcount() == 0);
-        NumSamplesBelow empty_num_samples_below(dag, empty_samples);
+        auto empty_num_samples_below = NumSamplesBelowFactory::build(dag, empty_samples);
         CHECK(empty_num_samples_below.num_nodes_in_dag() == 2);
         CHECK(empty_num_samples_below.num_samples_in_dag() == 1);
         CHECK(empty_num_samples_below.num_samples_in_sample_set() == 0);
@@ -41,7 +41,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
 
         SampleSet samples(dag.num_leaves());
         samples.add(0);
-        NumSamplesBelow num_samples_below(dag, samples);
+        auto num_samples_below = NumSamplesBelowFactory::build(dag, samples);
         CHECK(num_samples_below.num_nodes_in_dag() == 2);
         CHECK(num_samples_below.num_samples_in_dag() == 1);
         CHECK(num_samples_below.num_samples_in_sample_set() == 1);
@@ -60,7 +60,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
         dag.compute_num_nodes();
 
         SECTION("Empty sample set") {
-            NumSamplesBelow num_samples_below(dag, SampleSet{5});
+            auto num_samples_below = NumSamplesBelowFactory::build(dag, SampleSet{5});
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 0);
@@ -76,7 +76,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
             samples.add(0);
             samples.add(1);
             samples.add(2);
-            NumSamplesBelow num_samples_below(dag, samples);
+            auto num_samples_below = NumSamplesBelowFactory::build(dag, samples);
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 3);
@@ -91,7 +91,7 @@ TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
             SampleSet samples{5};
             samples.add(0);
             samples.add(2);
-            NumSamplesBelow num_samples_below(dag, samples);
+            auto num_samples_below = NumSamplesBelowFactory::build(dag, samples);
             CHECK(num_samples_below.num_nodes_in_dag() == 5);
             CHECK(num_samples_below.num_samples_in_dag() == 3);
             CHECK(num_samples_below.num_samples_in_sample_set() == 2);
@@ -198,7 +198,7 @@ TEST_CASE("NumSamplesBelow Medium-Sized Example", "[NumSamplesBelow]") {
         SampleSet samples{39};
         samples.add(leaves);
 
-        NumSamplesBelow num_samples_below(dag, samples);
+        auto num_samples_below = NumSamplesBelowFactory::build(dag, samples);
         CHECK(num_samples_below.num_nodes_in_dag() == 39);
         CHECK(num_samples_below.num_samples_in_dag() == leaves.size());
         CHECK(num_samples_below.num_samples_in_sample_set() == leaves.size());
@@ -216,7 +216,7 @@ TEST_CASE("NumSamplesBelow Medium-Sized Example", "[NumSamplesBelow]") {
         samples.add(std::vector<SampleId>{6, 10, 8, 9, 11, 12, 13, 4, 7, 14, 19, 3, 5, 15, 16, 17});
         REQUIRE(samples.popcount() == 16);
 
-        NumSamplesBelow num_samples_below(dag, samples);
+        auto num_samples_below = NumSamplesBelowFactory::build(dag, samples);
         CHECK(num_samples_below.num_nodes_in_dag() == 39);
         CHECK(num_samples_below.num_samples_in_dag() == leaves.size());
         CHECK(num_samples_below.num_samples_in_sample_set() == 16);
@@ -327,24 +327,23 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Two Sample Sets", "[NumSa
     REQUIRE(samples_0.popcount() == 16);
     REQUIRE(samples_1.popcount() == 4);
 
-    NumSamplesBelow num_samples_below_0(dag, samples_0);
-    NumSamplesBelow num_samples_below_1(dag, samples_1);
-    auto            num_samples_below_combined = std::make_shared<NumSamplesBelowTwo>(dag, samples_0, samples_1);
+    auto num_samples_below_0 = NumSamplesBelowFactory::build(dag, samples_0);
+    auto num_samples_below_1 = NumSamplesBelowFactory::build(dag, samples_1);
+    auto [num_samples_below_combined_0, num_samples_below_combined_1] =
+        NumSamplesBelowFactory::build(dag, samples_0, samples_1);
     CHECK(num_samples_below_0.num_nodes_in_dag() == num_samples_below_1.num_nodes_in_dag());
-    CHECK(num_samples_below_0.num_nodes_in_dag() == num_samples_below_combined->num_nodes_in_dag());
+    CHECK(num_samples_below_0.num_nodes_in_dag() == num_samples_below_combined_0.num_nodes_in_dag());
+    CHECK(num_samples_below_1.num_nodes_in_dag() == num_samples_below_combined_1.num_nodes_in_dag());
     CHECK(num_samples_below_1.num_samples_in_dag() == leaves.size());
     CHECK(num_samples_below_0.num_samples_in_sample_set() == 16);
     CHECK(num_samples_below_1.num_samples_in_sample_set() == 4);
     CHECK(num_samples_below_0.num_samples_below(38) == samples_0.popcount());
     CHECK(num_samples_below_1.num_samples_below(38) == samples_1.popcount());
 
-    NumSamplesBelowTwoAccessor accessor_0 = NumSamplesBelowTwoAccessor(num_samples_below_combined, 0);
-    NumSamplesBelowTwoAccessor accessor_1 = NumSamplesBelowTwoAccessor(num_samples_below_combined, 1);
-
     for (NodeId node = 0; node < dag.num_nodes(); ++node) {
-        CHECK(num_samples_below_0.num_samples_below(node) == num_samples_below_combined->num_samples_below(node, 0));
-        CHECK(num_samples_below_1.num_samples_below(node) == num_samples_below_combined->num_samples_below(node, 1));
-        CHECK(num_samples_below_0.num_samples_below(node) == accessor_0.num_samples_below(node));
-        CHECK(num_samples_below_1.num_samples_below(node) == accessor_1.num_samples_below(node));
+        CHECK(num_samples_below_0.num_samples_below(node) == num_samples_below_combined_0(node));
+        CHECK(num_samples_below_1.num_samples_below(node) == num_samples_below_combined_1(node));
+        CHECK(num_samples_below_0.num_samples_below(node) == num_samples_below_0.num_samples_below(node));
+        CHECK(num_samples_below_1.num_samples_below(node) == num_samples_below_1.num_samples_below(node));
     }
 }

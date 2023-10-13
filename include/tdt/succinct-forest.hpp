@@ -16,6 +16,7 @@
 #include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/always_false_v.hpp"
+#include "tdt/utils/tuple_transform.hpp"
 
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class SuccinctForest {
@@ -36,63 +37,51 @@ public:
         _sequence = sequence_factory.move_storage();
     }
 
-    AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies(SampleSet const& sample_set) {
-        return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, sample_set);
+    auto allele_frequencies(SampleSet const& samples) {
+        // return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, samples);
+        auto num_samples_below = NumSamplesBelowAccessor(
+            std::make_shared<NumSamplesBelow<1>>(
+                _forest.postorder_edges(),
+                std::array<std::reference_wrapper<SampleSet const>, 1>{std::cref(samples)}
+            ),
+            0
+        );
+        return allele_frequencies(num_samples_below);
     }
 
-    template <NumSamplesBelowAccessorT NumSamplesBelowAccessor = NumSamplesBelow>
-    auto allele_frequencies(NumSamplesBelowAccessor const& num_samples_below) {
-        return AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelowAccessor>(
+    template <NumSamplesBelowAccessorC NumSamplesBelowAccessorT>
+    auto allele_frequencies(NumSamplesBelowAccessorT const& num_samples_below) {
+        return AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelowAccessorT>(
             _forest,
             _sequence,
             num_samples_below
         );
     }
 
-    auto allele_frequencies(SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
-        auto num_sample_below =
-            std::make_shared<NumSamplesBelowTwo>(_forest.postorder_edges(), sample_set_1, sample_set_2);
-        return std::tuple(
-            allele_frequencies(NumSamplesBelowTwoAccessor(num_sample_below, 0)),
-            allele_frequencies(NumSamplesBelowTwoAccessor(num_sample_below, 1))
+    auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1) {
+        return tuple_transform(
+            [this](auto&& e) { return allele_frequencies(e); },
+            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1)
         );
     }
 
-    auto
-    allele_frequencies(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
-        SampleSet empty_sample_set  = SampleSet(sample_set_1.overall_num_samples());
-        auto      num_samples_below = std::make_shared<NumSamplesBelowFour>(
-            _forest.postorder_edges(),
-            sample_set_1,
-            sample_set_2,
-            sample_set_3,
-            empty_sample_set
-        );
+    auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
+        SampleSet empty_sample_set = SampleSet(samples_0.overall_num_samples());
+        auto [num_samples_below_0, num_samples_below_1, num_samples_below_2, dummy] =
+            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1, samples_2, empty_sample_set);
         return std::tuple(
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 0)),
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 1)),
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 2))
+            allele_frequencies(num_samples_below_0),
+            allele_frequencies(num_samples_below_1),
+            allele_frequencies(num_samples_below_2)
         );
     }
 
     auto allele_frequencies(
-        SampleSet const& sample_set_1,
-        SampleSet const& sample_set_2,
-        SampleSet const& sample_set_3,
-        SampleSet const& sample_set_4
+        SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3
     ) {
-        auto num_samples_below = std::make_shared<NumSamplesBelowFour>(
-            _forest.postorder_edges(),
-            sample_set_1,
-            sample_set_2,
-            sample_set_3,
-            sample_set_4
-        );
-        return std::tuple(
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 0)),
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 1)),
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 2)),
-            allele_frequencies(NumSamplesBelowFourAccessor(num_samples_below, 3))
+        return tuple_transform(
+            [this](auto&& e) { return allele_frequencies(e); },
+            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1, samples_2, samples_3)
         );
     }
 
@@ -101,7 +90,9 @@ public:
         return diversity(_forest.all_samples());
     }
 
-    template <typename AlleleFrequenciesT = AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelow>>
+    template <
+        typename AlleleFrequenciesT =
+            AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelowAccessor<NumSamplesBelow<1>>>>
     [[nodiscard]] double diversity(SampleId num_samples, AlleleFrequenciesT allele_frequencies) {
         auto const n  = num_samples;
         double     pi = 0.0;
@@ -140,7 +131,9 @@ public:
         return AlleleFrequencySpectrum<AllelicStatePerfectHasher>(allele_frequencies(sample_set));
     }
 
-    template <typename AlleleFrequenciesT = AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelow>>
+    template <
+        typename AlleleFrequenciesT =
+            AlleleFrequencies<AllelicStatePerfectHasher, NumSamplesBelowAccessor<NumSamplesBelow<1>>>>
     [[nodiscard]] double divergence(
         SampleId           num_samples_1,
         AlleleFrequenciesT allele_frequencies_1,
@@ -191,7 +184,6 @@ public:
     }
 
     [[nodiscard]] double divergence(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
-        // TODO Possibly compute both allele frequencies in parallel (high and low order 32 bit)
         auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
         auto const num_samples_0              = sample_set_0.popcount();
         auto const num_samples_1              = sample_set_1.popcount();
@@ -268,18 +260,18 @@ public:
     }
 
     [[nodiscard]] double
-    f3(SampleSet const& sample_set_1, SampleSet const& sample_set_2, SampleSet const& sample_set_3) {
+    f3(SampleSet const& sample_set_0, SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
         double f3 = 0.0;
 
         auto const [allele_freqs_1, allele_freqs_2, allele_freqs_3] =
-            allele_frequencies(sample_set_1, sample_set_2, sample_set_3);
+            allele_frequencies(sample_set_0, sample_set_1, sample_set_2);
 
         using MultiallelicFrequency = typename decltype(allele_freqs_1)::MultiallelicFrequency;
         using BiallelicFrequency    = typename decltype(allele_freqs_1)::BiallelicFrequency;
 
-        double const num_samples_1 = sample_set_1.popcount();
-        double const num_samples_2 = sample_set_2.popcount();
-        double const num_samples_3 = sample_set_3.popcount();
+        double const num_samples_1 = sample_set_0.popcount();
+        double const num_samples_2 = sample_set_1.popcount();
+        double const num_samples_3 = sample_set_2.popcount();
         KASSERT(
             num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",

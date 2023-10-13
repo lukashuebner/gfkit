@@ -14,6 +14,8 @@ endif ()
 
 set(MALLOC_COUNT_LIBS "$<$<BOOL:${TDT_BENCHMARK_ENABLE_MALLOC_COUNT}>:malloc_count;dl>")
 target_link_libraries(sfkit PRIVATE tdt CLI11 Catch2::Catch2 "${MALLOC_COUNT_LIBS}")
+# TODO Add -march=native flag via option() and presets
+# target_compile_options(sfkit PRIVATE "-march=native")
 
 if (TDT_BENCHMARK_ENABLE_SANITIZERS)
     add_address_sanitizer(sfkit)

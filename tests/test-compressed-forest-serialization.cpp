@@ -60,9 +60,10 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK(forest_deserialized.num_roots() == forest.num_roots());
     CHECK(forest_deserialized.roots() == forest.roots());
 
-    auto const all_samples                    = forest.all_samples();
-    auto const num_samples_below_deserialized = forest_deserialized.compute_num_samples_below(all_samples);
-    auto const num_samples_below              = forest.compute_num_samples_below(all_samples);
+    auto const all_samples = forest.all_samples();
+    auto const num_samples_below_deserialized =
+        NumSamplesBelowFactory::build(forest_deserialized.postorder_edges(), all_samples);
+    auto const num_samples_below = NumSamplesBelowFactory::build(forest.postorder_edges(), all_samples);
     for (NodeId node_id = 0; node_id < forest.num_nodes(); ++node_id) {
         CHECK(forest_deserialized.is_sample(node_id) == forest.is_sample(node_id));
         CHECK(num_samples_below_deserialized(node_id) == num_samples_below(node_id));

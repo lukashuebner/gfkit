@@ -1,6 +1,7 @@
 #pragma once
 
 // #include <sparsehash/dense_hash_map>
+#include <memory>
 #include <unordered_set>
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -46,9 +47,9 @@ public:
         return _dag_postorder_edges.num_nodes_is_set();
     }
 
-    [[nodiscard]] NumSamplesBelow compute_num_samples_below(SampleSet const& sample_set) const {
-        return NumSamplesBelow(_dag_postorder_edges, sample_set);
-    }
+    // [[nodiscard]] std::shared_ptr<NumSamplesBelow> compute_num_samples_below(SampleSet const& sample_set) const {
+    //     return std::make_shared<NumSamplesBelow>(_dag_postorder_edges, sample_set);
+    // }
 
     [[nodiscard]] bool is_sample(NodeId const node_id) const {
         return _dag_postorder_edges.is_leaf(node_id);
