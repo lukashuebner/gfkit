@@ -65,10 +65,17 @@ public:
         );
     }
 
+    template <typename NumSamplesBelowBaseType = SampleId>
     auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
         SampleSet empty_sample_set = SampleSet(samples_0.overall_num_samples());
         auto [num_samples_below_0, num_samples_below_1, num_samples_below_2, dummy] =
-            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1, samples_2, empty_sample_set);
+            NumSamplesBelowFactory::build<NumSamplesBelowBaseType>(
+                _forest.postorder_edges(),
+                samples_0,
+                samples_1,
+                samples_2,
+                empty_sample_set
+            );
         return std::tuple(
             allele_frequencies(num_samples_below_0),
             allele_frequencies(num_samples_below_1),
@@ -76,12 +83,14 @@ public:
         );
     }
 
+    template <typename NumSamplesBelowBaseType = SampleId>
     auto allele_frequencies(
         SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3
     ) {
         return tuple_transform(
             [this](auto&& e) { return allele_frequencies(e); },
-            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1, samples_2, samples_3)
+            NumSamplesBelowFactory::build<
+                NumSamplesBelowBaseType>(_forest.postorder_edges(), samples_0, samples_1, samples_2, samples_3)
         );
     }
 
@@ -259,12 +268,160 @@ public:
         return f2 / (num_samples_0 * (num_samples_0 - 1) * num_samples_1 * (num_samples_1 - 1));
     }
 
+    [[nodiscard]] double f3(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
+        if (samples_0.popcount() <= UINT16_MAX && samples_1.popcount() <= UINT16_MAX
+            && samples_2.popcount() <= UINT16_MAX) [[likely]] {
+            return _f3_impl<uint16_t>(samples_0, samples_1, samples_2);
+        } else {
+            return _f3_impl<SampleId>(samples_0, samples_1, samples_2);
+        }
+    }
+
     [[nodiscard]] double
-    f3(SampleSet const& sample_set_0, SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
+    f4(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3) {
+        if (samples_0.popcount() <= UINT16_MAX && samples_1.popcount() <= UINT16_MAX
+            && samples_2.popcount() <= UINT16_MAX && samples_3.popcount() <= UINT16_MAX) [[likely]] {
+            return _f4_impl<uint16_t>(samples_0, samples_1, samples_2, samples_3);
+        } else {
+            return _f4_impl<SampleId>(samples_0, samples_1, samples_2, samples_3);
+        }
+    }
+
+    // TODO Make this const
+    [[nodiscard]] SiteId
+    num_segregating_sites(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
+        // We compute the number of segregating sites in this way in order to be compatible with tskit's
+        // definition. See https://doi.org/10.1534/genetics.120.303253 and tskit's trees.c
+        size_t num_segregating_sites = 0;
+        allele_frequencies.visit(
+            [&num_segregating_sites, num_samples](auto&& state) {
+                num_segregating_sites += (state.num_ancestral() > 0 && state.num_ancestral() < num_samples);
+            },
+            [&num_segregating_sites, num_samples](auto&& states) {
+                size_t num_states = 0;
+                for (auto const num_samples_in_state: states) {
+                    if (num_samples_in_state > 0ul) {
+                        num_states++;
+                    }
+                }
+                KASSERT(num_states > 0ul, "There are no allelic states at this site.", tdt::assert::light);
+                num_segregating_sites += num_states - 1;
+            }
+        );
+
+        return asserting_cast<SiteId>(num_segregating_sites);
+    }
+
+    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
+        auto const num_samples = sample_set.popcount();
+        auto const freqs       = allele_frequencies(sample_set);
+        return num_segregating_sites(num_samples, freqs);
+    }
+
+    [[nodiscard]] SiteId num_segregating_sites() {
+        return num_segregating_sites(_forest.all_samples());
+    }
+
+    [[nodiscard]] double tajimas_d() {
+        SampleId const n = num_samples();
+
+        auto const allele_freqs = allele_frequencies(_forest.all_samples());
+        // TODO Does the compiler optimize the following two loops into one?
+        double const T = diversity(n, allele_freqs);
+        double const S = static_cast<double>(num_segregating_sites(n, allele_freqs));
+
+        double h = 0;
+        double g = 0;
+        // TODO are there formulas for computing these values more efficiently?
+        for (SampleId i = 1; i < num_samples(); i++) {
+            h += 1.0 / static_cast<double>(i);
+            g += 1.0 / static_cast<double>(i * i);
+        }
+        double const a = (n + 1) / (3 * (n - 1) * h) - 1 / (h * h);
+        double const b = 2. * (n * n + n + 3) / (9 * n * (n - 1)) - (n + 2) / (h * n) + g / (h * h);
+        double const D = (T - S / h) / sqrt(a * S + (b / (h * h + g)) * S * (S - 1));
+
+        return D;
+    }
+
+    // This is per sequence length, the other statistics are not
+    [[nodiscard]] double fst(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
+        // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of
+        // X, then what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
+
+        auto const n_0                        = sample_set_0.popcount();
+        auto const n_1                        = sample_set_1.popcount();
+        auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
+        auto const sequence_length            = _sequence.num_sites();
+
+        auto const d_x  = diversity(n_1, allele_freqs_0) / sequence_length;
+        auto const d_y  = diversity(n_1, allele_freqs_1) / sequence_length;
+        auto const d_xy = divergence(n_0, allele_freqs_0, n_1, allele_freqs_1) / sequence_length;
+        auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
+        return fst;
+    }
+
+    [[nodiscard]] SiteId num_sites() const {
+        return _sequence.num_sites();
+    }
+
+    [[nodiscard]] SampleId num_samples() const {
+        return _forest.num_samples();
+    }
+
+    [[nodiscard]] SampleSet all_samples() const {
+        return _forest.all_samples();
+    }
+
+    [[nodiscard]] GenomicSequence const& sequence() const {
+        return _sequence;
+    }
+
+    [[nodiscard]] CompressedForest const& forest() const {
+        return _forest;
+    }
+
+    [[nodiscard]] TreeId num_trees() const {
+        return _forest.num_trees();
+    }
+
+    [[nodiscard]] MutationId num_mutations() const {
+        return _sequence.num_mutations();
+    }
+
+    [[nodiscard]] auto num_unique_subtrees() const {
+        return _forest.num_unique_subtrees();
+    }
+
+    [[nodiscard]] auto num_subtrees_with_mutations() const {
+        return _sequence.subtrees_with_mutations().size();
+    }
+
+    [[nodiscard]] TSKitTreeSequence& tree_sequence() {
+        return _tree_sequence;
+    }
+
+    // TODO We should not store this!!
+    [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
+        return _tree_sequence;
+    }
+
+private:
+    TSKitTreeSequence _tree_sequence;
+    CompressedForest  _forest;
+    GenomicSequence   _sequence;
+
+    // TODO Split up into CompressedForestIO and SuccinctForestIO
+    // TODO Better naming to distinguish between CompressedForest and SuccinctForest
+    // friend class CompressedForestIO;
+
+    template <typename NumSamplesBelowBaseType = SampleId>
+    [[nodiscard]] double
+    _f3_impl(SampleSet const& sample_set_0, SampleSet const& sample_set_1, SampleSet const& sample_set_2) {
         double f3 = 0.0;
 
         auto const [allele_freqs_1, allele_freqs_2, allele_freqs_3] =
-            allele_frequencies(sample_set_0, sample_set_1, sample_set_2);
+            allele_frequencies<NumSamplesBelowBaseType>(sample_set_0, sample_set_1, sample_set_2);
 
         using MultiallelicFrequency = typename decltype(allele_freqs_1)::MultiallelicFrequency;
         using BiallelicFrequency    = typename decltype(allele_freqs_1)::BiallelicFrequency;
@@ -337,15 +494,17 @@ public:
         return f3 / (num_samples_1 * (num_samples_1 - 1.0) * num_samples_2 * num_samples_3);
     }
 
-    [[nodiscard]] double
-    f4(SampleSet const& sample_set_1,
-       SampleSet const& sample_set_2,
-       SampleSet const& sample_set_3,
-       SampleSet const& sample_set_4) {
+    template <typename NumSamplesBelowBaseType = SampleId>
+    [[nodiscard]] double _f4_impl(
+        SampleSet const& sample_set_1,
+        SampleSet const& sample_set_2,
+        SampleSet const& sample_set_3,
+        SampleSet const& sample_set_4
+    ) {
         double f4 = 0.0;
 
         auto const [allele_freqs_1, allele_freqs_2, allele_freqs_3, allele_freqs_4] =
-            allele_frequencies(sample_set_1, sample_set_2, sample_set_3, sample_set_4);
+            allele_frequencies<NumSamplesBelowBaseType>(sample_set_1, sample_set_2, sample_set_3, sample_set_4);
         using MultiallelicFrequency = typename decltype(allele_freqs_1)::MultiallelicFrequency;
         using BiallelicFrequency    = typename decltype(allele_freqs_1)::BiallelicFrequency;
 
@@ -380,8 +539,8 @@ public:
                 double const n_der_3 = num_samples_3 - n_anc_3;
                 double const n_der_4 = num_samples_4 - n_anc_4;
 
-                // TODO Can we save some computations by rearranging these formulas or does the compiler already do this
-                // for us?
+                // TODO Can we save some computations by rearranging these formulas or does the compiler already
+                // do this for us?
                 f4 += n_anc_1 * n_der_2 * n_anc_3 * n_der_4 - n_der_1 * n_anc_2 * n_anc_3 * n_der_4;
                 f4 += n_der_1 * n_anc_2 * n_der_3 * n_anc_4 - n_anc_1 * n_der_2 * n_der_3 * n_anc_4;
             } else {
@@ -425,132 +584,4 @@ public:
 
         return f4 / (num_samples_1 * num_samples_2 * num_samples_3 * num_samples_4);
     }
-
-    // TODO Make this const
-    [[nodiscard]] SiteId
-    num_segregating_sites(SampleId num_samples, AlleleFrequencies<AllelicStatePerfectHasher> allele_frequencies) {
-        // We compute the number of segregating sites in this way in order to be compatible with tskit's
-        // definition. See https://doi.org/10.1534/genetics.120.303253 and tskit's trees.c
-        size_t num_segregating_sites = 0;
-        allele_frequencies.visit(
-            [&num_segregating_sites, num_samples](auto&& state) {
-                num_segregating_sites += (state.num_ancestral() > 0 && state.num_ancestral() < num_samples);
-            },
-            [&num_segregating_sites, num_samples](auto&& states) {
-                size_t num_states = 0;
-                for (auto const num_samples_in_state: states) {
-                    if (num_samples_in_state > 0ul) {
-                        num_states++;
-                    }
-                }
-                KASSERT(num_states > 0ul, "There are no allelic states at this site.", tdt::assert::light);
-                num_segregating_sites += num_states - 1;
-            }
-        );
-
-        return asserting_cast<SiteId>(num_segregating_sites);
-    }
-
-    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
-        auto const num_samples = sample_set.popcount();
-        auto const freqs       = allele_frequencies(sample_set);
-        return num_segregating_sites(num_samples, freqs);
-    }
-
-    [[nodiscard]] SiteId num_segregating_sites() {
-        return num_segregating_sites(_forest.all_samples());
-    }
-
-    [[nodiscard]] double tajimas_d() {
-        SampleId const n = num_samples();
-
-        auto const allele_freqs = allele_frequencies(_forest.all_samples());
-        // TODO Does the compiler optimize the following two loops into one?
-        double const T = diversity(n, allele_freqs);
-        double const S = static_cast<double>(num_segregating_sites(n, allele_freqs));
-
-        double h = 0;
-        double g = 0;
-        // TODO are there formulas for computing these values more efficiently?
-        for (SampleId i = 1; i < num_samples(); i++) {
-            h += 1.0 / static_cast<double>(i);
-            g += 1.0 / static_cast<double>(i * i);
-        }
-        double const a = (n + 1) / (3 * (n - 1) * h) - 1 / (h * h);
-        double const b = 2. * (n * n + n + 3) / (9 * n * (n - 1)) - (n + 2) / (h * n) + g / (h * h);
-        double const D = (T - S / h) / sqrt(a * S + (b / (h * h + g)) * S * (S - 1));
-
-        return D;
-    }
-
-    // This is per sequence length, the other statistics are not
-    [[nodiscard]] double fst(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
-        // For sample sets X and Y, if d(X, Y) is the divergence between X and Y, and d(X) is the diversity of X,
-        // then what is computed is $F_{ST} = 1 - 2 * (d(X) + d(Y)) / (d(X) + 2 * d(X, Y) + d(Y))$
-
-        auto const n_0                        = sample_set_0.popcount();
-        auto const n_1                        = sample_set_1.popcount();
-        auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
-        auto const sequence_length            = _sequence.num_sites();
-
-        auto const d_x  = diversity(n_1, allele_freqs_0) / sequence_length;
-        auto const d_y  = diversity(n_1, allele_freqs_1) / sequence_length;
-        auto const d_xy = divergence(n_0, allele_freqs_0, n_1, allele_freqs_1) / sequence_length;
-        auto const fst  = 1.0 - 2.0 * (d_x + d_y) / (d_x + 2.0 * d_xy + d_y);
-        return fst;
-    }
-
-    [[nodiscard]] SiteId num_sites() const {
-        return _sequence.num_sites();
-    }
-
-    [[nodiscard]] SampleId num_samples() const {
-        return _forest.num_samples();
-    }
-
-    [[nodiscard]] SampleSet all_samples() const {
-        return _forest.all_samples();
-    }
-
-    [[nodiscard]] GenomicSequence const& sequence() const {
-        return _sequence;
-    }
-
-    [[nodiscard]] CompressedForest const& forest() const {
-        return _forest;
-    }
-
-    [[nodiscard]] TreeId num_trees() const {
-        return _forest.num_trees();
-    }
-
-    [[nodiscard]] MutationId num_mutations() const {
-        return _sequence.num_mutations();
-    }
-
-    [[nodiscard]] auto num_unique_subtrees() const {
-        return _forest.num_unique_subtrees();
-    }
-
-    [[nodiscard]] auto num_subtrees_with_mutations() const {
-        return _sequence.subtrees_with_mutations().size();
-    }
-
-    [[nodiscard]] TSKitTreeSequence& tree_sequence() {
-        return _tree_sequence;
-    }
-
-    // TODO We should not store this!!
-    [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
-        return _tree_sequence;
-    }
-
-private:
-    TSKitTreeSequence _tree_sequence;
-    CompressedForest  _forest;
-    GenomicSequence   _sequence;
-
-    // TODO Split up into CompressedForestIO and SuccinctForestIO
-    // TODO Better naming to distinguish between CompressedForest and SuccinctForest
-    // friend class CompressedForestIO;
 };

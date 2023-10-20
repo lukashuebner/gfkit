@@ -225,7 +225,7 @@ public:
         SampleSet const&     samples_3
     ) {
         using SetOfSampleSets  = typename NumSamplesBelow<4, BaseType>::SetOfSampleSets;
-        auto num_samples_below = std::make_shared<NumSamplesBelow<4>>(
+        auto num_samples_below = std::make_shared<NumSamplesBelow<4, BaseType>>(
             dag,
             SetOfSampleSets{std::cref(samples_0), std::cref(samples_1), std::cref(samples_2), std::cref(samples_3)}
         );
