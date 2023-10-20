@@ -7,8 +7,11 @@
 #include <tskit.h>
 
 #include "tdt/assertion_levels.hpp"
+#include "tdt/graph/compressed-forest.hpp"
+#include "tdt/load/compressed-forest-serialization.hpp"
 #include "tdt/samples/num-samples-below.hpp"
 #include "tdt/samples/sample-set.hpp"
+#include "tdt/sequence/genomic-sequence-storage.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
@@ -230,7 +233,7 @@ TEST_CASE("NumSamplesBelow Medium-Sized Example", "[NumSamplesBelow]") {
     }
 }
 
-TEST_CASE("NumSamplesBelow Simultaneous Computation of Two Sample Sets", "[NumSamplesBelow]") {
+TEST_CASE("NumSamplesBelow Simultaneous Computation of Two Sample Sets Example", "[NumSamplesBelow]") {
     //                                      38
     //                                ┏━━━━━━┻━━━━━━━┓
     //                               37              ┃
@@ -345,5 +348,81 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Two Sample Sets", "[NumSa
         CHECK(num_samples_below_1.num_samples_below(node) == num_samples_below_combined_1(node));
         CHECK(num_samples_below_0.num_samples_below(node) == num_samples_below_0.num_samples_below(node));
         CHECK(num_samples_below_1.num_samples_below(node) == num_samples_below_1.num_samples_below(node));
+    }
+}
+
+TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simulated", "[NumSamplesBelow]") {
+    std::vector<std::string> const ts_files = {
+        "data/test-sarafina.trees",
+        "data/test-scar.trees",
+        "data/test-shenzi.trees",
+        "data/test-banzai.trees",
+        "data/test-ed.trees",
+        "data/test-simba.trees",
+    };
+    auto const& ts_file = GENERATE_REF(from_range(ts_files));
+
+    TSKitTreeSequence tree_sequence(ts_file);
+
+    ForestCompressor       forest_compressor(tree_sequence);
+    GenomicSequenceFactory sequence_factory(tree_sequence);
+    CompressedForest       forest = forest_compressor.compress(sequence_factory);
+
+    { // Two sample sets at once
+        SampleSet sample_set_0(forest.num_samples());
+        SampleSet sample_set_1(forest.num_samples());
+        bool      flip = false;
+        for (SampleId sample: forest.leaves()) {
+            if (flip) {
+                sample_set_0.add(sample);
+            } else {
+                sample_set_1.add(sample);
+            }
+            flip = !flip;
+        }
+
+        auto num_samples_below_0_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_set_0);
+        auto num_samples_below_1_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_set_1);
+
+        auto [num_samples_below_0, num_samples_below_1] =
+            NumSamplesBelowFactory::build(forest.postorder_edges(), sample_set_0, sample_set_1);
+
+        for (NodeId node = 0; node < forest.num_nodes(); ++node) {
+            CHECK(num_samples_below_0_ref(node) == num_samples_below_0(node));
+            CHECK(num_samples_below_1_ref(node) == num_samples_below_1(node));
+        }
+    }
+
+    { // Four sample sets at once
+        constexpr size_t       num_sample_sets = 4;
+        std::vector<SampleSet> sample_sets(num_sample_sets, forest.num_samples());
+
+        size_t idx = 0;
+        for (SampleId sample: forest.leaves()) {
+            KASSERT(sample < forest.num_samples(), "Sample id out of range", tdt::assert::light);
+            sample_sets[idx].add(sample);
+            idx = (idx + 1ul) % num_sample_sets;
+        }
+
+        auto num_samples_below_0_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[0]);
+        auto num_samples_below_1_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[1]);
+        auto num_samples_below_2_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[2]);
+        auto num_samples_below_3_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[3]);
+
+        auto [num_samples_below_0, num_samples_below_1, num_samples_below_2, num_samples_below_3] =
+            NumSamplesBelowFactory::build(
+                forest.postorder_edges(),
+                sample_sets[0],
+                sample_sets[1],
+                sample_sets[2],
+                sample_sets[3]
+            );
+
+        for (NodeId node = 0; node < forest.num_nodes(); ++node) {
+            CHECK(num_samples_below_0_ref(node) == num_samples_below_0(node));
+            CHECK(num_samples_below_1_ref(node) == num_samples_below_1(node));
+            CHECK(num_samples_below_2_ref(node) == num_samples_below_2(node));
+            CHECK(num_samples_below_3_ref(node) == num_samples_below_3(node));
+        }
     }
 }
