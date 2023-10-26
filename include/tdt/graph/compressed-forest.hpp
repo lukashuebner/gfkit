@@ -47,10 +47,6 @@ public:
         return _dag_postorder_edges.num_nodes_is_set();
     }
 
-    // [[nodiscard]] std::shared_ptr<NumSamplesBelow> compute_num_samples_below(SampleSet const& sample_set) const {
-    //     return std::make_shared<NumSamplesBelow>(_dag_postorder_edges, sample_set);
-    // }
-
     [[nodiscard]] bool is_sample(NodeId const node_id) const {
         return _dag_postorder_edges.is_leaf(node_id);
     }
@@ -81,6 +77,7 @@ public:
         return _dag_postorder_edges.num_edges();
     }
 
+    // TODO We're adding our leaves first, so they have ids [0,num_leaves). Use this to speed up the is_sample() query
     void insert_leaf(NodeId const leaf) {
         _dag_postorder_edges.insert_leaf(leaf);
     }
