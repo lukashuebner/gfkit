@@ -6,6 +6,7 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
+#include "mocks/TsToSfMappingExtractor.hpp"
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/compressed-forest.hpp"
 #include "tdt/load/compressed-forest-serialization.hpp"
@@ -359,7 +360,7 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
         "data/test-banzai.trees",
         "data/test-ed.trees",
         "data/test-simba.trees",
-    };
+        "data/unified_chr21.trees"};
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);
@@ -380,6 +381,8 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
             }
             flip = !flip;
         }
+        REQUIRE(forest.leaves().size() == forest.num_samples());
+        REQUIRE(sample_set_0.popcount() + sample_set_1.popcount() == forest.num_samples());
 
         auto num_samples_below_0_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_set_0);
         auto num_samples_below_1_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_set_1);
@@ -390,6 +393,11 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
         for (NodeId node = 0; node < forest.num_nodes(); ++node) {
             CHECK(num_samples_below_0_ref(node) == num_samples_below_0(node));
             CHECK(num_samples_below_1_ref(node) == num_samples_below_1(node));
+            CHECK(num_samples_below_0(node) + num_samples_below_1(node) <= forest.num_samples());
+        }
+
+        for (auto& root_node: forest.roots()) {
+            CHECK(num_samples_below_0(root_node) + num_samples_below_1(root_node) == forest.num_samples());
         }
     }
 
@@ -403,6 +411,12 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
             sample_sets[idx].add(sample);
             idx = (idx + 1ul) % num_sample_sets;
         }
+        REQUIRE(forest.leaves().size() == forest.num_samples());
+        REQUIRE(
+            sample_sets[0].popcount() + sample_sets[1].popcount() + sample_sets[2].popcount()
+                + sample_sets[3].popcount()
+            == forest.num_samples()
+        );
 
         auto num_samples_below_0_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[0]);
         auto num_samples_below_1_ref = NumSamplesBelowFactory::build(forest.postorder_edges(), sample_sets[1]);
@@ -423,6 +437,19 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
             CHECK(num_samples_below_1_ref(node) == num_samples_below_1(node));
             CHECK(num_samples_below_2_ref(node) == num_samples_below_2(node));
             CHECK(num_samples_below_3_ref(node) == num_samples_below_3(node));
+            CHECK(
+                num_samples_below_0(node) + num_samples_below_1(node) + num_samples_below_2(node)
+                    + num_samples_below_3(node)
+                <= forest.num_samples()
+            );
+        }
+
+        for (auto& root_node: forest.roots()) {
+            CHECK(
+                num_samples_below_0(root_node) + num_samples_below_1(root_node) + num_samples_below_2(root_node)
+                    + num_samples_below_3(root_node)
+                == forest.num_samples()
+            );
         }
     }
 }

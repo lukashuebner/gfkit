@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <optional>
 #include <vector>
 
 #include <kassert/kassert.hpp>
@@ -15,6 +16,7 @@
 #include "tdt/graph/common.hpp"
 #include "tdt/utils/concepts.hpp"
 
+// TODO Remove old code
 // class TsNode2SfSubtreeMapper {
 // public:
 //     void reserve(size_t size) {
@@ -104,7 +106,6 @@
 //     tsl::hopscotch_set<tsk_id_t>                 _requested;
 // };
 
-// TODO Write a general mapper which also supports chaining
 template <typename TsNodeToSubtreeMapper, typename SubtreeToSfNodeMapper>
 class TsToSfNodeMapper {
 public:
@@ -116,6 +117,17 @@ public:
 
     auto operator()(auto const& ts_node_id) const {
         return _subtree_to_sf_node_mapper[_ts_node_to_subtree_mapper[ts_node_id]];
+    }
+
+    std::optional<NodeId> try_map(auto const& ts_node_id) const {
+        auto const subtree_id = _ts_node_to_subtree_mapper[ts_node_id];
+        
+        auto const sf_node_it = _subtree_to_sf_node_mapper.find(subtree_id);
+        if (sf_node_it != _subtree_to_sf_node_mapper.end()) {
+            return std::optional<NodeId>(sf_node_it->second);
+        } else {
+            return std::optional<NodeId>{};
+        }
     }
 
 private:

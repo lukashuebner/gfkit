@@ -34,6 +34,7 @@ TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {
         0
     );
 
+    // TODO Rename sequence_forest to succinct_forest
     SuccinctForest sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.

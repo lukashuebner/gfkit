@@ -202,17 +202,25 @@ public:
     template <typename BaseType = SampleId>
     static NumSamplesBelowAccessor<NumSamplesBelow<1, BaseType>>
     build(EdgeListGraph const& dag, SampleSet const& samples) {
-        using SetOfSampleSets = typename NumSamplesBelow<1, BaseType>::SetOfSampleSets;
+        using SetOfSampleSets          = typename NumSamplesBelow<1, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 1;
+
         auto const num_samples_below =
-            std::make_shared<NumSamplesBelow<1, BaseType>>(dag, SetOfSampleSets{std::cref(samples)});
+            std::make_shared<NumSamplesBelow<num_sample_sets, BaseType>>(dag, SetOfSampleSets{std::cref(samples)});
+
         return NumSamplesBelowAccessor(num_samples_below, 0);
     }
 
     template <typename BaseType = SampleId>
     static auto build(EdgeListGraph const& dag, SampleSet const& samples_0, SampleSet const& samples_1) {
-        using SetOfSampleSets = typename NumSamplesBelow<2, BaseType>::SetOfSampleSets;
-        auto num_samples_below =
-            std::make_shared<NumSamplesBelow<2>>(dag, SetOfSampleSets{std::cref(samples_0), std::cref(samples_1)});
+        using SetOfSampleSets          = typename NumSamplesBelow<2, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 2;
+
+        auto num_samples_below = std::make_shared<NumSamplesBelow<num_sample_sets>>(
+            dag,
+            SetOfSampleSets{std::cref(samples_0), std::cref(samples_1)}
+        );
+
         return std::tuple(NumSamplesBelowAccessor(num_samples_below, 0), NumSamplesBelowAccessor(num_samples_below, 1));
     }
 
@@ -224,11 +232,14 @@ public:
         SampleSet const&     samples_2,
         SampleSet const&     samples_3
     ) {
-        using SetOfSampleSets  = typename NumSamplesBelow<4, BaseType>::SetOfSampleSets;
-        auto num_samples_below = std::make_shared<NumSamplesBelow<4, BaseType>>(
+        using SetOfSampleSets          = typename NumSamplesBelow<4, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 4;
+
+        auto num_samples_below = std::make_shared<NumSamplesBelow<num_sample_sets, BaseType>>(
             dag,
             SetOfSampleSets{std::cref(samples_0), std::cref(samples_1), std::cref(samples_2), std::cref(samples_3)}
         );
+
         return std::tuple(
             NumSamplesBelowAccessor(num_samples_below, 0),
             NumSamplesBelowAccessor(num_samples_below, 1),

@@ -58,6 +58,7 @@ public:
 
 private:
     using MapType = tsl::hopscotch_map<SubtreeHash, NodeId>;
+
     mutable MapType _subtree_to_node_map;
     NodeId          _next_node_id = 0;
 };
