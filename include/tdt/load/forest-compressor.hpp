@@ -95,7 +95,8 @@ public:
                     // Root nodes can have the same ID (if both trees are identical), but don't have in edges. Thus,
                     // we don't need to map their ID.
                     if (subtree_is_root) [[unlikely]] {
-                        sf_node_id = _subtree_to_sf_node.insert_root();
+                        sf_node_id = _subtree_to_sf_node.insert_or_update_node(subtree_id);
+
                         // If the node is a root node in the tree sequence, also add it to the DAG as a root node.
                         forest.insert_root(sf_node_id);
                     } else {

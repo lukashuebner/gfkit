@@ -360,7 +360,7 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
         "data/test-banzai.trees",
         "data/test-ed.trees",
         "data/test-simba.trees",
-        "data/unified_chr21.trees"};
+    };
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);

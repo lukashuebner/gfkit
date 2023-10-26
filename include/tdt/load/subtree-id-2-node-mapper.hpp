@@ -25,6 +25,11 @@ public:
         return _next_node_id++;
     }
 
+    NodeId insert_or_update_node(SubtreeHash const& subtree_id) {
+        _subtree_to_node_map[subtree_id] = _next_node_id;
+        return _next_node_id++;
+    }
+
     // Root nodes might have identical subtrees, thus the mapping is lo longer surjective. As roots are never
     // referred to, we do not need to store them but only assign them a node id.
     NodeId insert_root() {
@@ -58,7 +63,6 @@ public:
 
 private:
     using MapType = tsl::hopscotch_map<SubtreeHash, NodeId>;
-
     mutable MapType _subtree_to_node_map;
     NodeId          _next_node_id = 0;
 };
