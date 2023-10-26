@@ -8,12 +8,12 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/checking_casts.hpp"
-#include "tdt/graph/common.hpp"
-#include "tdt/samples/SampleSet.hpp"
-#include "tdt/sequence/Mutation.hpp"
-#include "tdt/sequence/Sequence.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/samples/SampleSet.hpp"
+#include "sfkit/sequence/Mutation.hpp"
+#include "sfkit/sequence/Sequence.hpp"
 
 using TskMutationView = std::span<tsk_mutation_t const>;
 
@@ -24,7 +24,7 @@ public:
 
         // Load the tree sequence from the .trees file
         ret = tsk_treeseq_load(&_tree_sequence, _trees_file.c_str(), 0);
-        KASSERT(tskit_noerr(ret), "Failed to load tree sequence from the .trees file", tdt::assert::light);
+        KASSERT(tskit_noerr(ret), "Failed to load tree sequence from the .trees file", sfkit::assert::light);
     }
 
     TSKitTreeSequence(tsk_treeseq_t const& tree_sequence) : _tree_sequence(tree_sequence) {}
@@ -127,7 +127,7 @@ public:
 
         auto ret =
             tsk_treeseq_diversity(&_tree_sequence, 1, sample_set_sizes, samples.data(), 0, NULL, TSK_STAT_SITE, &pi);
-        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the diversity.", sfkit::assert::light);
 
         return pi;
     }
@@ -147,7 +147,7 @@ public:
             TSK_STAT_SITE,
             &pi
         );
-        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the diversity.", sfkit::assert::light);
 
         return pi;
     }
@@ -181,7 +181,7 @@ public:
             TSK_STAT_SITE,
             &divergence
         );
-        KASSERT(ret == 0, "Failed to compute the divergence.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the divergence.", sfkit::assert::light);
 
         return divergence;
     }
@@ -226,7 +226,7 @@ public:
             TSK_STAT_SITE,
             &f4
         );
-        KASSERT(ret == 0, "Failed to compute the f4.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the f4.", sfkit::assert::light);
 
         return f4;
     }
@@ -263,7 +263,7 @@ public:
             TSK_STAT_SITE,
             &f3
         );
-        KASSERT(ret == 0, "Failed to compute the f3.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the f3.", sfkit::assert::light);
 
         return f3;
     }
@@ -297,7 +297,7 @@ public:
             TSK_STAT_SITE,
             &f2
         );
-        KASSERT(ret == 0, "Failed to compute the f2.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the f2.", sfkit::assert::light);
 
         return f2;
     }
@@ -320,7 +320,7 @@ public:
             TSK_STAT_SITE,
             &num_seg_sites
         );
-        KASSERT(ret == 0, "Failed to compute the diversity.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to compute the diversity.", sfkit::assert::light);
 
         return num_seg_sites;
     }
@@ -346,7 +346,7 @@ public:
             // reinterpret_cast<double*>(results.data())
             results.data()
         );
-        KASSERT(tskit_noerr(ret), "Failed to compute the allele frequency spectrum", tdt::assert::light);
+        KASSERT(tskit_noerr(ret), "Failed to compute the allele frequency spectrum", sfkit::assert::light);
         return results;
     }
 
@@ -384,7 +384,7 @@ class TSKitTree {
 public:
     TSKitTree(TSKitTreeSequence& tree_sequence) : _tree_sequence(tree_sequence) {
         auto ret = tsk_tree_init(&_tree, &(_tree_sequence.underlying()), 0);
-        KASSERT(ret == 0, "Failed to initialize the tree data structure", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to initialize the tree data structure", sfkit::assert::light);
 
         // Load the first tree
         first();
@@ -397,14 +397,14 @@ public:
 
     bool first() {
         _state = tsk_tree_first(&_tree);
-        KASSERT(_state >= 0, "Failed to goto the first tree.", tdt::assert::light);
+        KASSERT(_state >= 0, "Failed to goto the first tree.", sfkit::assert::light);
         return _state == TSK_TREE_OK;
     }
 
     bool next() {
         _state = tsk_tree_next(&_tree);
         ++_tree_id;
-        KASSERT(_state >= 0, "Failed to goto the next tree.", tdt::assert::light);
+        KASSERT(_state >= 0, "Failed to goto the next tree.", sfkit::assert::light);
         return _state == TSK_TREE_OK;
     }
 
@@ -413,12 +413,12 @@ public:
     }
 
     bool is_valid() const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
         return _state == TSK_TREE_OK;
     }
 
     std::size_t num_roots() const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
         return tsk_tree_get_num_roots(&_tree);
     }
 
@@ -431,19 +431,19 @@ public:
     }
 
     bool is_sample(tsk_id_t node) const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
-        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
+        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", sfkit::assert::light);
         return _tree_sequence.is_sample(node);
     }
 
     tsk_id_t num_children(tsk_id_t node) const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
-        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
+        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", sfkit::assert::light);
         return _tree.num_children[node];
     }
 
     tsk_id_t root() const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
         KASSERT(
             tsk_tree_get_num_roots(&_tree) == 1ul,
             "The tskit tree has more than one root. We do not support this yet."
@@ -467,11 +467,11 @@ public:
         tsk_size_t num_nodes;
         _postorder_nodes_resize();
         ret = tsk_tree_postorder(&_tree, _postorder_nodes.data(), &num_nodes);
-        KASSERT(ret == 0, "Failed to get the postorder traversal of the tree.", tdt::assert::light);
+        KASSERT(ret == 0, "Failed to get the postorder traversal of the tree.", sfkit::assert::light);
         KASSERT(
             num_nodes <= _postorder_nodes.size(),
             "The number of nodes in the postorder traversal is too large to fit into the buffer.",
-            tdt::assert::light
+            sfkit::assert::light
         );
         return std::span{_postorder_nodes}.subspan(0, num_nodes);
     }
@@ -548,8 +548,8 @@ public:
     }
 
     tsk_id_t parent(tsk_id_t const node) const {
-        KASSERT(_state >= 0, "The tree is not valid.", tdt::assert::light);
-        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", tdt::assert::light);
+        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
+        KASSERT(asserting_cast<tsk_size_t>(node) <= max_node_id(), "The node is not valid.", sfkit::assert::light);
         return _tree.parent[node];
     }
 

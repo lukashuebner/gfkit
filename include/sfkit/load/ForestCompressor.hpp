@@ -11,18 +11,18 @@
 #include <tsl/hopscotch_map.h>
 #pragma GCC diagnostic pop
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/checking_casts.hpp"
-#include "tdt/graph/AdjacencyArrayGraph.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/load/SubtreeHashToNodeMapper.hpp"
-#include "tdt/load/SubtreeHasher.hpp"
-#include "tdt/load/TsToSfNodeMapper.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
-#include "tdt/sequence/GenomicSequenceFactory.hpp"
-#include "tdt/tskit.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/AdjacencyArrayGraph.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/sequence/GenomicSequenceFactory.hpp"
+#include "sfkit/tskit.hpp"
+#include "sfkit/utils/concepts.hpp"
 
 // TODO Separate this class into the construction and the storage
 class ForestCompressor {
@@ -160,7 +160,7 @@ private:
             KASSERT(
                 !_subtree_to_sf_node.contains(subtree_hash),
                 "A leaf is present twice in the first tree.",
-                tdt::assert::normal
+                sfkit::assert::normal
             );
             NodeId dag_node_id = _subtree_to_sf_node.insert_node(subtree_hash);
             forest.insert_leaf(dag_node_id);

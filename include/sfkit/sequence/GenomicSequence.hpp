@@ -10,12 +10,12 @@
 #include <tskit/core.h>
 #include <tskit/tables.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/common.hpp"
-#include "tdt/sequence/Mutation.hpp"
-#include "tdt/sequence/Sequence.hpp"
-#include "tdt/sequence/TSKitSiteToTreeMapper.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/sequence/Mutation.hpp"
+#include "sfkit/sequence/Sequence.hpp"
+#include "sfkit/sequence/TSKitSiteToTreeMapper.hpp"
+#include "sfkit/tskit.hpp"
 
 class GenomicSequence {
 public:
@@ -34,25 +34,25 @@ public:
     }
 
     [[nodiscard]] AllelicState ancestral_state(SiteId site_id) const {
-        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
-        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        KASSERT(site_id >= 0, "Site ID is invalid.", sfkit::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", sfkit::assert::light);
         return _sites[asserting_cast<size_t>(site_id)];
     }
 
     [[nodiscard]] AllelicState& ancestral_state(SiteId site_id) {
-        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
-        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        KASSERT(site_id >= 0, "Site ID is invalid.", sfkit::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", sfkit::assert::light);
         return _sites[asserting_cast<size_t>(site_id)];
     }
 
     [[nodiscard]] Mutation const& mutation_by_id(size_t mutation_id) const {
-        KASSERT(mutation_id < _mutations.size(), "Mutation ID is out of bounds", tdt::assert::light);
+        KASSERT(mutation_id < _mutations.size(), "Mutation ID is out of bounds", sfkit::assert::light);
         return _mutations[mutation_id];
     }
 
     void set(SiteId site_id, AllelicState state) {
-        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
-        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", tdt::assert::light);
+        KASSERT(site_id >= 0, "Site ID is invalid.", sfkit::assert::light);
+        KASSERT(asserting_cast<size_t>(site_id) < _sites.size(), "Site ID is out of bounds", sfkit::assert::light);
         _sites[asserting_cast<size_t>(site_id)] = state;
     }
 
@@ -91,12 +91,12 @@ public:
     }
 
     [[nodiscard]] AllelicState& operator[](SiteId site_id) {
-        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
+        KASSERT(site_id >= 0, "Site ID is invalid.", sfkit::assert::light);
         return _sites[asserting_cast<size_t>(site_id)];
     }
 
     void build_mutation_indices() {
-        KASSERT(mutations_are_sorted_by_site(), "Mutations are not sorted by site.", tdt::assert::light);
+        KASSERT(mutations_are_sorted_by_site(), "Mutations are not sorted by site.", sfkit::assert::light);
         _mutation_indices.clear();
         _mutation_indices.reserve(_sites.size());
         MutationId mutation_idx = 0;
@@ -111,7 +111,7 @@ public:
         KASSERT(
             _mutations.size() == asserting_cast<size_t>(mutation_idx),
             "Mutation index is not at the end of the mutation vector",
-            tdt::assert::light
+            sfkit::assert::light
         );
         // Add sentinel
         _mutation_indices.push_back(mutation_idx);
@@ -136,17 +136,17 @@ public:
     }
 
     [[nodiscard]] MutationView mutations_at_site(SiteId const site_id) const {
-        KASSERT(site_id >= 0, "Site ID is invalid.", tdt::assert::light);
-        KASSERT(_mutation_indices_valid, "Mutations indices need to be rebuild first.", tdt::assert::light);
+        KASSERT(site_id >= 0, "Site ID is invalid.", sfkit::assert::light);
+        KASSERT(_mutation_indices_valid, "Mutations indices need to be rebuild first.", sfkit::assert::light);
         KASSERT(
             asserting_cast<size_t>(site_id) < _mutation_indices.size() + 1,
             "Site ID is out of bounds",
-            tdt::assert::light
+            sfkit::assert::light
         );
         KASSERT(
             _mutations.size() == _mutation_indices.back(),
             "The _mutations_indices sentinel seems to be broken.",
-            tdt::assert::light
+            sfkit::assert::light
         );
         return std::span(_mutations)
             .subspan(

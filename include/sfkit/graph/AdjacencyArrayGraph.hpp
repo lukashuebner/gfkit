@@ -4,10 +4,10 @@
 
 #include <kassert/kassert.hpp>
 
-#include "common.hpp"
 #include "EdgeListGraph.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/checking_casts.hpp"
+#include "common.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/checking_casts.hpp"
 
 class AdjacencyArrayGraph {
 public:
@@ -43,7 +43,7 @@ public:
         });
 
 // TODO Check that there are no duplicate edges
-#if KASSERT_ENABLED(TDT_ASSERTION_LEVEL_NORMAL)
+#if KASSERT_ENABLED(SFKIT_ASSERTION_LEVEL_NORMAL)
         std::for_each(_adjacency_array.begin(), _adjacency_array.end(), [](auto& vertex) {
             auto last = std::unique(vertex.begin(), vertex.end());
             vertex.erase(last, vertex.end());
@@ -62,8 +62,8 @@ public:
     }
 
     bool has_edge(NodeId from, NodeId to) const {
-        KASSERT(from < num_nodes(), "from vertex id greater than the maximum vertex id.", tdt::assert::light);
-        KASSERT(to < num_nodes(), "to vertex id greater than the maximum vertex id.", tdt::assert::light);
+        KASSERT(from < num_nodes(), "from vertex id greater than the maximum vertex id.", sfkit::assert::light);
+        KASSERT(to < num_nodes(), "to vertex id greater than the maximum vertex id.", sfkit::assert::light);
 
         // TODO For sparse graphs, maybe a linear search is faster
         auto const& vertex = _adjacency_array[from];
@@ -71,7 +71,7 @@ public:
     }
 
     std::vector<NodeId> const& adjacent_vertices(NodeId vertex) const {
-        KASSERT(vertex < num_nodes(), "vertex id greater than the maximum vertex id.", tdt::assert::light);
+        KASSERT(vertex < num_nodes(), "vertex id greater than the maximum vertex id.", sfkit::assert::light);
         return _adjacency_array[vertex];
     }
 

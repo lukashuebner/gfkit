@@ -6,17 +6,17 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/samples/NumSamplesBelow.hpp"
-#include "tdt/sequence/AlleleFrequencies.hpp"
-#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
-#include "tdt/sequence/GenomicSequenceFactory.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
-#include "tdt/tskit.hpp"
-#include "tdt/utils/always_false_v.hpp"
-#include "tdt/utils/tuple_transform.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/sequence/AlleleFrequencies.hpp"
+#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/sequence/GenomicSequenceFactory.hpp"
+#include "sfkit/tskit.hpp"
+#include "sfkit/utils/always_false_v.hpp"
+#include "sfkit/utils/tuple_transform.hpp"
 
 template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
 class SuccinctForest {
@@ -158,7 +158,7 @@ public:
             KASSERT(
                 allele_freq_2_it != allele_frequencies_2.cend(),
                 "Allele frequency lists have different lengths (different number of sites).",
-                tdt::assert::light
+                sfkit::assert::light
             );
 
             if (std::holds_alternative<BiallelicFrequency>(*allele_freq_1_it)
@@ -207,12 +207,12 @@ public:
         KASSERT(
             num_samples_0 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
-            tdt::assert::light
+            sfkit::assert::light
         );
         KASSERT(
             num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the second sample set. It thus must be at least of size 2.",
-            tdt::assert::light
+            sfkit::assert::light
         );
 
         double f2 = 0.0;
@@ -224,7 +224,7 @@ public:
             KASSERT(
                 allele_freqs_1_it != allele_freqs_1.cend(),
                 "Allele frequency lists have different lengths (different number of sites).",
-                tdt::assert::light
+                sfkit::assert::light
             );
 
             if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_0_it)
@@ -246,7 +246,7 @@ public:
                 KASSERT(
                     freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states,
                     "Allele frequency lists have different lengths (different number of states).",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
                     double const n_state_0     = freqs_1_multiallelic[state];
@@ -301,7 +301,7 @@ public:
                         num_states++;
                     }
                 }
-                KASSERT(num_states > 0ul, "There are no allelic states at this site.", tdt::assert::light);
+                KASSERT(num_states > 0ul, "There are no allelic states at this site.", sfkit::assert::light);
                 num_segregating_sites += num_states - 1;
             }
         );
@@ -428,7 +428,7 @@ private:
         KASSERT(
             num_samples_1 >= 2.0,
             "We have to draw /two/ samples from the first sample set. It thus must be at least of size 2.",
-            tdt::assert::light
+            sfkit::assert::light
         );
 
         auto allele_freqs_1_it = allele_freqs_1.cbegin();
@@ -439,7 +439,7 @@ private:
             KASSERT(
                 (allele_freqs_2_it != allele_freqs_2.cend() && allele_freqs_3_it != allele_freqs_3.cend()),
                 "Allele frequency lists have different lengths (different number of sites).",
-                tdt::assert::light
+                sfkit::assert::light
             );
 
             if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
@@ -467,7 +467,7 @@ private:
                     (freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states
                      && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states),
                     "Allele frequency lists have different lengths (different number of states).",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
                     double const n_state_1     = freqs_1_multiallelic[state];
@@ -518,7 +518,7 @@ private:
                 (allele_freqs_2_it != allele_freqs_2.cend() && allele_freqs_3_it != allele_freqs_3.cend()
                  && allele_freqs_4_it != allele_freqs_4.cend()),
                 "Allele frequency lists have different lengths (different number of sites).",
-                tdt::assert::light
+                sfkit::assert::light
             );
 
             if (std::holds_alternative<BiallelicFrequency>(*allele_freqs_1_it)
@@ -554,7 +554,7 @@ private:
                         && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states
                         && freqs_3_multiallelic.num_states == freqs_4_multiallelic.num_states,
                     "Allele frequency lists have different lengths (different number of states).",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
                 for (Idx state = 0; state < freqs_1_multiallelic.num_states; state++) {
                     double const n_state_1 = freqs_1_multiallelic[state];

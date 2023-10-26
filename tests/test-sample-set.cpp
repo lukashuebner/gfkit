@@ -8,9 +8,9 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/samples/NumSamplesBelow.hpp"
-#include "tdt/samples/SampleSet.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/SampleSet.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;

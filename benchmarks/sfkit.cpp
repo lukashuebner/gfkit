@@ -6,15 +6,15 @@
 #include <CLI/Config.hpp>
 #include <CLI/Formatter.hpp>
 #include <catch2/catch_approx.hpp>
-#include <tdt/SuccinctForest.hpp>
-#include <tdt/load/ForestCompressor.hpp>
-#include <tdt/tskit.hpp>
 
 #include "perf.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/CompressedForestIO.hpp"
-#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/CompressedForestIO.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/tskit.hpp"
 #include "timer.hpp"
 
 constexpr double FLOAT_EQ_EPS = 1e-4;
@@ -287,7 +287,7 @@ void benchmark(
 
     size_t idx = 0;
     for (SampleId sample: sequence_forest.forest().leaves()) {
-        KASSERT(sample < sequence_forest.num_samples(), "Sample id out of range", tdt::assert::light);
+        KASSERT(sample < sequence_forest.num_samples(), "Sample id out of range", sfkit::assert::light);
         sample_sets[idx].add(sample);
         idx = (idx + 1ul) % num_sample_sets;
     }

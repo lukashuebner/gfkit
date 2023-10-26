@@ -4,8 +4,8 @@
 
 #include <kassert/kassert.hpp>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/utils/xxhash.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/utils/xxhash.hpp"
 
 using NodeId = uint32_t;
 using TreeId = uint32_t;
@@ -20,22 +20,22 @@ public:
     Edge(NodeId from, NodeId to) : _from(from), _to(to) {}
 
     NodeId from() const {
-        KASSERT(_from != INVALID_NODE_ID, "Invalid node ID.", tdt::assert::light);
+        KASSERT(_from != INVALID_NODE_ID, "Invalid node ID.", sfkit::assert::light);
         return _from;
     }
 
     void from(NodeId const from) {
-        KASSERT(_from != INVALID_NODE_ID, "Invalid node ID.", tdt::assert::light);
+        KASSERT(_from != INVALID_NODE_ID, "Invalid node ID.", sfkit::assert::light);
         _from = from;
     }
 
     NodeId to() const {
-        KASSERT(_to != INVALID_NODE_ID, "Invalid node ID.", tdt::assert::light);
+        KASSERT(_to != INVALID_NODE_ID, "Invalid node ID.", sfkit::assert::light);
         return _to;
     }
 
     void to(NodeId const to) {
-        KASSERT(_to != INVALID_NODE_ID, "Invalid node ID.", tdt::assert::light);
+        KASSERT(_to != INVALID_NODE_ID, "Invalid node ID.", sfkit::assert::light);
         _to = to;
     }
 

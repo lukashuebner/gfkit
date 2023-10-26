@@ -3,9 +3,9 @@
 #include <variant>
 #include <vector>
 
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
-#include "tdt/utils/always_false_v.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/utils/always_false_v.hpp"
 
 template <
     typename AllelicStatePerfectHasher                = PerfectDNAHasher,
@@ -47,12 +47,12 @@ public:
               _ancestral_state(ancestral_state) {}
 
         [[nodiscard]] SampleId operator[](Idx idx) const {
-            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", tdt::assert::light);
+            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
             return _num_samples_in_state[idx];
         }
 
         SampleId& operator[](Idx idx) {
-            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", tdt::assert::light);
+            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
             return _num_samples_in_state[idx];
         }
 
@@ -86,7 +86,7 @@ public:
             KASSERT(
                 _ancestral_state != InvalidAllelicState,
                 "The ancestral state has not been set.",
-                tdt::assert::light
+                sfkit::assert::light
             );
             return _ancestral_state;
         }
@@ -95,7 +95,7 @@ public:
             KASSERT(
                 _ancestral_state != InvalidAllelicState,
                 "The ancestral state has not been set.",
-                tdt::assert::light
+                sfkit::assert::light
             );
             return AllelicStatePerfectHasher::to_idx(_ancestral_state);
         }
@@ -263,7 +263,7 @@ public:
         // Maybe it's faster (it's certainly simpler) to just use multiallelic iterator for all sites.
         void _update_state() {
             // TODO Can we improve performance by knowing if a site is bi- or multiallelic?
-            KASSERT(_site < num_sites(), "Site index out of bounds", tdt::assert::light);
+            KASSERT(_site < num_sites(), "Site index out of bounds", sfkit::assert::light);
 
             SampleId           num_ancestral     = num_samples_in_sample_set();
             AllelicState const ancestral_state   = _freqs._sequence.ancestral_state(_site);
@@ -302,14 +302,14 @@ public:
                             KASSERT(
                                 num_ancestral + num_samples_below_this_mutation <= num_samples_in_sample_set(),
                                 "There should never be more samples in the ancestral state than total samples.",
-                                tdt::assert::light
+                                sfkit::assert::light
                             );
                             num_ancestral += num_samples_below_this_mutation;
                         } else {
                             KASSERT(
                                 num_ancestral >= num_samples_below_this_mutation,
                                 "There should never be more samples in the derived state than total samples.",
-                                tdt::assert::light
+                                sfkit::assert::light
                             );
                             num_ancestral -= num_samples_below_this_mutation;
                         }
@@ -340,7 +340,7 @@ public:
                 KASSERT(
                     state_freqs.valid(num_samples_in_sample_set()),
                     "The number of samples per state does not sum up to the total number of samples.",
-                    tdt::assert::normal
+                    sfkit::assert::normal
                 );
             }
 

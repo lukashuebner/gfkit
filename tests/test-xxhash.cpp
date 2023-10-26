@@ -3,7 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <xxhash.h>
 
-#include "tdt/utils/xxhash.hpp"
+#include "sfkit/utils/xxhash.hpp"
 
 TEST_CASE("XXH128_hash_t comparison", "[xxhash]") {
     XXH128_hash_t const hash1 = {0, 0};

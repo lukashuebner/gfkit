@@ -7,12 +7,12 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/SuccinctForest.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/CompressedForestIO.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/CompressedForestIO.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
@@ -71,6 +71,6 @@ TEST_CASE("Divergence tskit example", "[Divergence]") {
 
     CHECK(forest.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }

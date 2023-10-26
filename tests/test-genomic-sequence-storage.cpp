@@ -4,10 +4,10 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
-#include <tdt/graph/common.hpp>
-#include <tdt/sequence/GenomicSequence.hpp>
 
-#include "tdt/assertion_levels.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
 
 using namespace Catch::Matchers;
 

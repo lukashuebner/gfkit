@@ -4,11 +4,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "tdt/checking_casts.hpp"
-#include "tdt/graph/common.hpp"
-#include "tdt/load/SubtreeHashToNodeMapper.hpp"
-#include "tdt/load/SubtreeHasher.hpp"
-#include "tdt/load/TsToSfNodeMapper.hpp"
+#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/load/TsToSfNodeMapper.hpp"
 
 class Ts2SfMappingExtractor {
 public:
@@ -36,8 +36,8 @@ public:
     }
 
     NodeId operator()(TreeId const tree, tsk_id_t const ts_id) {
-        KASSERT(tree < _mappings.size(), "Tree ID out of bounds.", tdt::assert::light);
-        KASSERT(_mappings[tree].find(ts_id) != _mappings[tree].end(), "TS node ID not found.", tdt::assert::normal);
+        KASSERT(tree < _mappings.size(), "Tree ID out of bounds.", sfkit::assert::light);
+        KASSERT(_mappings[tree].find(ts_id) != _mappings[tree].end(), "TS node ID not found.", sfkit::assert::normal);
         return _mappings[tree][ts_id];
     }
 

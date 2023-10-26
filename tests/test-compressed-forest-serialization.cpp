@@ -12,13 +12,13 @@
 
 #include "cereal/archives/binary.hpp"
 #include "cereal/cereal.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/load/CompressedForestIO.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/load/CompressedForestIO.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/tskit.hpp"
 
 using namespace ::Catch::Matchers;
 using Catch::Approx;

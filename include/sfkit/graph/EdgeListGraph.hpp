@@ -16,8 +16,8 @@
 #include <kassert/kassert.hpp>
 
 #include "common.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/samples/SampleSet.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/samples/SampleSet.hpp"
 
 using EdgeList = std::vector<Edge>;
 
@@ -73,12 +73,12 @@ public:
     }
 
     std::vector<NodeId> const& roots() const {
-        KASSERT(_unique_nodes(_roots), "Roots are not unique", tdt::assert::heavy);
+        KASSERT(_unique_nodes(_roots), "Roots are not unique", sfkit::assert::heavy);
         return _roots;
     }
 
     NodeId num_roots() const {
-        KASSERT(_unique_nodes(_roots), "Roots are not unique", tdt::assert::heavy);
+        KASSERT(_unique_nodes(_roots), "Roots are not unique", sfkit::assert::heavy);
         return asserting_cast<NodeId>(_roots.size());
     }
 
@@ -87,12 +87,12 @@ public:
     }
 
     std::vector<NodeId> const& leaves() const {
-        KASSERT(_unique_nodes(_leaves), "Leaves are not unique", tdt::assert::heavy);
+        KASSERT(_unique_nodes(_leaves), "Leaves are not unique", sfkit::assert::heavy);
         return _leaves;
     }
 
     SampleId num_leaves() const {
-        KASSERT(_unique_nodes(_leaves), "Leaves are not unique", tdt::assert::heavy);
+        KASSERT(_unique_nodes(_leaves), "Leaves are not unique", sfkit::assert::heavy);
         return asserting_cast<SampleId>(_leaves.size());
     }
 
@@ -160,12 +160,12 @@ public:
     }
 
     void num_nodes(NodeId num_nodes) {
-        KASSERT(!num_nodes_is_set(), "The number of nodes is already set", tdt::assert::light);
+        KASSERT(!num_nodes_is_set(), "The number of nodes is already set", sfkit::assert::light);
         _num_nodes = num_nodes;
     }
 
     [[nodiscard]] NodeId num_nodes() const {
-        KASSERT(num_nodes_is_set(), "The number of nodes is not set", tdt::assert::light);
+        KASSERT(num_nodes_is_set(), "The number of nodes is not set", sfkit::assert::light);
         return _num_nodes;
     }
 
@@ -235,7 +235,7 @@ public:
                 sort_edges([](Edge const& a, Edge const& b) { return a.to() < b.to(); }, TraversalOrder::Unordered);
                 break;
             default:
-                KASSERT(false, "Invalid sort_by value", tdt::assert::light);
+                KASSERT(false, "Invalid sort_by value", sfkit::assert::light);
                 break;
         }
     }
@@ -253,7 +253,7 @@ public:
                 });
                 break;
             default:
-                KASSERT(false, "Invalid sort_by value", tdt::assert::light);
+                KASSERT(false, "Invalid sort_by value", sfkit::assert::light);
                 return false;
                 break;
         }

@@ -4,13 +4,13 @@
 #include <kassert/kassert.hpp>
 
 #include "mocks/TsToSfMappingExtractor.hpp"
-#include "tdt/SuccinctForest.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/AdjacencyArrayGraph.hpp"
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/graph/common.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/AdjacencyArrayGraph.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/utils/concepts.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace Catch::Matchers;

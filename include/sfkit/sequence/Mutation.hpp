@@ -4,8 +4,8 @@
 
 #include <tskit/core.h>
 
-#include "tdt/graph/common.hpp"
-#include "tdt/sequence/Sequence.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/sequence/Sequence.hpp"
 
 using MutationId = uint32_t;
 
@@ -13,9 +13,7 @@ class Mutation {
 public:
     Mutation() = default;
 
-    Mutation(
-        SiteId site_id, TreeId tree_id, NodeId node_id, AllelicState state, AllelicState parent_state
-    ) noexcept
+    Mutation(SiteId site_id, TreeId tree_id, NodeId node_id, AllelicState state, AllelicState parent_state) noexcept
         : _site_id(site_id),
           _parent_state(parent_state),
           _derived_state(state),

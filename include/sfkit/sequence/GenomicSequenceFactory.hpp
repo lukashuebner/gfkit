@@ -3,12 +3,10 @@
 #include <kassert/kassert.hpp>
 #include <tskit/core.h>
 
-// TODO Move tdt/ to sfkit/
-// TODO Rename this file and genomic-sequence-storage file
-#include "tdt/assertion_levels.hpp"
-#include "tdt/load/TsToSfNodeMapper.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/tskit.hpp"
 
 // We interleaf building the genomic sequence storage with building the forest to save memory.
 // To build the genomic sequence storage, we need the mapping of ts nodes to sf subtree ids for all trees.
@@ -33,7 +31,7 @@ public:
         // KASSERT(
         //     ts_node2sf_subtree.num_requested() == ts_node2sf_subtree.size(),
         //     "The number of requested and mapped ts node IDs differ.",
-        //     tdt::assert::light
+        //     sfkit::assert::light
         // );
         while (_mutation_it != _mutations_end) {
             // TODO Use less bits for site and tree ids
@@ -42,7 +40,7 @@ public:
             KASSERT(
                 sites_tree_id >= tree_id,
                 "We seemed to have missed processing a mutation. Are the mutations sorted by tree id?",
-                tdt::assert::light
+                sfkit::assert::light
             );
             if (sites_tree_id > tree_id) {
                 return false; // Continue later, first the Forest compressor needs to extend the DAG and compute the new
@@ -50,15 +48,15 @@ public:
             }
 
             NodeId const sf_node_id = ts_to_sf_node(asserting_cast<size_t>(_mutation_it->node));
-            KASSERT(_mutation_it->node != TSK_NULL, "Mutation node is null", tdt::assert::light);
-            KASSERT(_mutation_it->derived_state_length == 1u, "Derived state length is not 1", tdt::assert::light);
+            KASSERT(_mutation_it->node != TSK_NULL, "Mutation node is null", sfkit::assert::light);
+            KASSERT(_mutation_it->derived_state_length == 1u, "Derived state length is not 1", sfkit::assert::light);
 
             AllelicState const derived_state = *_mutation_it->derived_state;
             tsk_id_t const     mutation_id   = asserting_cast<tsk_id_t>(_sequence.num_mutations());
             KASSERT(
                 mutation_id == _mutation_it->id,
                 "Mutation ID is not equal to the index in the mutations vector",
-                tdt::assert::light
+                sfkit::assert::light
             );
 
             tsk_id_t const     parent_mutation_id = _mutation_it->parent;
@@ -77,15 +75,15 @@ public:
         KASSERT(
             _finalized,
             "Storage has not been finalized yet (we need to build the mutation indiced).",
-            tdt::assert::light
+            sfkit::assert::light
         );
-        KASSERT(!_moved, "Storage has already been moved", tdt::assert::light);
+        KASSERT(!_moved, "Storage has already been moved", sfkit::assert::light);
         _moved = true;
         return std::move(_sequence);
     }
 
     void finalize() {
-        KASSERT(!_finalized, "Storage has already been finalized", tdt::assert::light);
+        KASSERT(!_finalized, "Storage has already been finalized", sfkit::assert::light);
         _finalized = true;
         _sequence.build_mutation_indices();
     }
@@ -102,13 +100,13 @@ private:
     void _set_ancestral_states(TSKitTreeSequence const& tree_sequence) {
         // Store ancestral states
         for (auto&& site: tree_sequence.sites()) {
-            KASSERT(site.ancestral_state_length == 1u, "Ancestral state length is not 1", tdt::assert::light);
+            KASSERT(site.ancestral_state_length == 1u, "Ancestral state length is not 1", sfkit::assert::light);
             _sequence.emplace_back(*site.ancestral_state);
         }
         KASSERT(
             _sequence.num_sites() == tree_sequence.num_sites(),
             "Number of sites reported by num_sites() and in the sites() iterator does not match",
-            tdt::assert::light
+            sfkit::assert::light
         );
     }
 };

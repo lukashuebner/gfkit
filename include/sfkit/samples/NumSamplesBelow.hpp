@@ -6,12 +6,11 @@
 
 #include <kassert/kassert.hpp>
 
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/samples/SampleSet.hpp"
-// TODO Unify naming of files
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/samples/SampleSet.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/samples/SampleSet.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/samples/SampleSet.hpp"
 
 namespace stdx = std::experimental;
 
@@ -35,20 +34,20 @@ public:
     NumSamplesBelow(EdgeListGraph const& dag_postorder_edges, SetOfSampleSets const& samples)
         : _dag(dag_postorder_edges) {
         // Check inputs
-        KASSERT(_dag.check_postorder(), "DAG edges are not post-ordered.", tdt::assert::normal);
-        KASSERT(_dag.num_nodes() >= _dag.num_leaves(), "DAG has less nodes than leaves.", tdt::assert::light);
+        KASSERT(_dag.check_postorder(), "DAG edges are not post-ordered.", sfkit::assert::normal);
+        KASSERT(_dag.num_nodes() >= _dag.num_leaves(), "DAG has less nodes than leaves.", sfkit::assert::light);
         for (auto sample_set: samples) {
             KASSERT(
                 _dag.num_leaves() <= sample_set.get().overall_num_samples(),
                 "Number of leaves in the DAG is greater than he number of overall samples representable in the subtree "
                 "size object. (NOT the number of samples actually in the SampleSet)",
-                tdt::assert::light
+                sfkit::assert::light
             );
             KASSERT(
                 sample_set.get().popcount() <= sample_set.get().overall_num_samples(),
                 "Number of samples in sample set is greater than he number of overall samples representable in the "
                 "subtree size object. (NOT the number of samples actually in the SampleSet)",
-                tdt::assert::light
+                sfkit::assert::light
             );
             // Will make redundant comprisons, but will only execute in DEBUG mode anyway
             for (auto other_sample_set: samples) {
@@ -57,7 +56,7 @@ public:
                     "Sample sets have different number of overall representable samples. (NOT the number of samples "
                     "actually "
                     "in the SampleSet)",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
             }
         }
@@ -76,8 +75,8 @@ public:
     }
 
     [[nodiscard]] SampleId num_samples_below(NodeId node_id, SampleSetId sample_set_id) const {
-        KASSERT(node_id < _subtree_sizes.size(), "Subtree ID out of bounds.", tdt::assert::light);
-        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", tdt::assert::light);
+        KASSERT(node_id < _subtree_sizes.size(), "Subtree ID out of bounds.", sfkit::assert::light);
+        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", sfkit::assert::light);
 
         return _subtree_sizes[node_id][sample_set_id];
     }
@@ -95,7 +94,7 @@ public:
     }
 
     [[nodiscard]] SampleId num_samples_in_sample_set(SampleSetId sample_set_id) const {
-        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", tdt::assert::light);
+        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", sfkit::assert::light);
         return _num_samples_in_sample_set[sample_set_id];
     }
 
@@ -106,7 +105,7 @@ private:
     std::vector<simd_t>     _subtree_sizes;
 
     void _compute(SetOfSampleSets const& samples) {
-        KASSERT(_subtree_sizes.size() == 0ul, "Subtree sizes already computed.", tdt::assert::light);
+        KASSERT(_subtree_sizes.size() == 0ul, "Subtree sizes already computed.", sfkit::assert::light);
         _subtree_sizes.resize(_dag.num_nodes(), 0);
 
         KASSERT(samples.size() == N);
@@ -135,7 +134,7 @@ private:
                 KASSERT(
                     (_subtree_sizes[work_it->from()][sample_set_idx]) <= _num_samples_in_sample_set[sample_set_idx],
                     "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
             }
 
@@ -152,7 +151,7 @@ private:
                 KASSERT(
                     (_subtree_sizes[work_it->from()][sample_set_idx]) <= _num_samples_in_sample_set[sample_set_idx],
                     "Number of samples below a node exceeds the number of samples in the tree sequence.",
-                    tdt::assert::light
+                    sfkit::assert::light
                 );
             }
 

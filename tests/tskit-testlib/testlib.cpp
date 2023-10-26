@@ -28,7 +28,7 @@
 
 #include <kassert/kassert.hpp>
 
-#include "tdt/checking_casts.hpp"
+#include "sfkit/checking_casts.hpp"
 
 char* _tmp_file_name;
 FILE* _devnull;
@@ -148,8 +148,7 @@ char const* multi_tree_back_recurrent_mutations = "0    6   1  -1\n"  // to deri
 
 /* Two (diploid) individuals */
 char const* multi_tree_back_recurrent_individuals = "0      0.2,1.5    -1,-1\n"
-                                               "0      0.0,0.0    -1,-1\n";
-
+                                                    "0      0.0,0.0    -1,-1\n";
 
 // Same as above but with back and recurring mutations and multiple derived states
 /*
@@ -212,27 +211,25 @@ char const* multi_derived_states_individuals = "0      0.2,1.5    -1,-1\n"
 
 // Simple example with multiple derived states
 /* Simple single tree example. */
-char const* single_tree_multi_derived_states_nodes = 
-                                   /*          6          */
-    "1  0   -1   -1\n"             /*         / \         */
-    "1  0   -1   -1\n"             /*        /   \        */
-    "1  0   -1   -1\n"             /*       /     \       */
-    "1  0   -1   -1\n"             /*      /       5      */
-    "0  1   -1   -1\n"             /*     4       / \     */
-    "0  2   -1   -1\n"             /*    / \     /   \    */
-    "0  3   -1   -1\n";            /*   0   1   2     3   */
-    
-char const* single_tree_multi_derived_states_edges =
-    "0  1   4   0,1\n"
-    "0  1   5   2,3\n"
-    "0  1   6   4,5\n";
+char const* single_tree_multi_derived_states_nodes =
+    /*          6          */
+    "1  0   -1   -1\n"  /*         / \         */
+    "1  0   -1   -1\n"  /*        /   \        */
+    "1  0   -1   -1\n"  /*       /     \       */
+    "1  0   -1   -1\n"  /*      /       5      */
+    "0  1   -1   -1\n"  /*     4       / \     */
+    "0  2   -1   -1\n"  /*    / \     /   \    */
+    "0  3   -1   -1\n"; /*   0   1   2     3   */
+
+char const* single_tree_multi_derived_states_edges = "0  1   4   0,1\n"
+                                                     "0  1   5   2,3\n"
+                                                     "0  1   6   4,5\n";
 
 char const* single_tree_multi_derived_states_sites = "0.5    0\n";
 
 /* site, node, derived_state, [parent, time] */
-char const* single_tree_multi_derived_states_mutations =
-    "0    1     1   -1\n"  // To derived state 1
-    "0    5     2   -1\n"; // To derived state 2
+char const* single_tree_multi_derived_states_mutations = "0    1     1   -1\n"  // To derived state 1
+                                                         "0    5     2   -1\n"; // To derived state 2
 // node 0: ancestral state 0
 // node 1: derived state 1
 // node 2: derived state 2

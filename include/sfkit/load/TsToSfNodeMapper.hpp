@@ -13,8 +13,8 @@
 #include <tsl/hopscotch_set.h>
 #pragma GCC diagnostic pop
 
-#include "tdt/graph/common.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/utils/concepts.hpp"
 
 template <typename TsNodeToSubtreeMapper, typename SubtreeToSfNodeMapper>
 class TsToSfNodeMapper {
@@ -31,7 +31,7 @@ public:
 
     std::optional<NodeId> try_map(auto const& ts_node_id) const {
         auto const subtree_id = _ts_node_to_subtree_mapper[ts_node_id];
-        
+
         auto const sf_node_it = _subtree_to_sf_node_mapper.find(subtree_id);
         if (sf_node_it != _subtree_to_sf_node_mapper.end()) {
             return std::optional<NodeId>(sf_node_it->second);

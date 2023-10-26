@@ -7,12 +7,12 @@
 #include <tskit.h>
 
 #include "mocks/TsToSfMappingExtractor.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/CompressedForestIO.hpp"
-#include "tdt/samples/NumSamplesBelow.hpp"
-#include "tdt/samples/SampleSet.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/CompressedForestIO.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/SampleSet.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
@@ -407,7 +407,7 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
 
         size_t idx = 0;
         for (SampleId sample: forest.leaves()) {
-            KASSERT(sample < forest.num_samples(), "Sample id out of range", tdt::assert::light);
+            KASSERT(sample < forest.num_samples(), "Sample id out of range", sfkit::assert::light);
             sample_sets[idx].add(sample);
             idx = (idx + 1ul) % num_sample_sets;
         }

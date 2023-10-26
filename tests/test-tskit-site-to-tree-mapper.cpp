@@ -7,10 +7,10 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/sequence/TSKitSiteToTreeMapper.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/sequence/TSKitSiteToTreeMapper.hpp"
+#include "sfkit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
@@ -32,14 +32,14 @@ TEST_CASE("TSKitSiteToTreeMapper example multi tree no back no recurrent", "[TSK
         0
     );
 
-    TSKitTreeSequence     tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
-    TSKitSiteToTreeMapper site2tree(tdt_tree_sequence);
+    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 1);
     CHECK(site2tree(2) == 2);
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
@@ -61,14 +61,14 @@ TEST_CASE("TSKitSiteToTreeMapper example single tree back recurrent", "[TSKitSit
     );
     REQUIRE(tsk_treeseq_get_num_trees(&tskit_tree_sequence) == 1);
 
-    TSKitTreeSequence     tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
-    TSKitSiteToTreeMapper site2tree(tdt_tree_sequence);
+    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 0);
     CHECK(site2tree(2) == 0);
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
@@ -88,13 +88,13 @@ TEST_CASE("TSKitSiteToTreeMapper example multi tree back recurrent", "[TSKitSite
         0
     );
 
-    TSKitTreeSequence     tdt_tree_sequence(tskit_tree_sequence); // Takes ownership
-    TSKitSiteToTreeMapper site2tree(tdt_tree_sequence);
+    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 1);
     CHECK(site2tree(2) == 2);
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }

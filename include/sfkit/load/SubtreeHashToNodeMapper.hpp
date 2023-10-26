@@ -6,8 +6,8 @@
 #include <tsl/hopscotch_map.h>
 #pragma GCC diagnostic pop
 
-#include "tdt/graph/common.hpp"
-#include "tdt/load/SubtreeHasher.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/load/SubtreeHasher.hpp"
 
 // TODO Rename files to use the same case as the class names
 class SubtreeHash2NodeMapper {
@@ -20,7 +20,7 @@ public:
     }
 
     NodeId insert_node(SubtreeHash const& subtree_id) {
-        KASSERT(!contains(subtree_id), "Subtree ID already exists in the map", tdt::assert::light);
+        KASSERT(!contains(subtree_id), "Subtree ID already exists in the map", sfkit::assert::light);
         _subtree_to_node_map[subtree_id] = _next_node_id;
         return _next_node_id++;
     }
@@ -49,7 +49,7 @@ public:
     }
 
     NodeId map(SubtreeHash const& subtree_id) const {
-        KASSERT(contains(subtree_id), "Subtree ID does not exists in the map", tdt::assert::light);
+        KASSERT(contains(subtree_id), "Subtree ID does not exists in the map", sfkit::assert::light);
         return _subtree_to_node_map[subtree_id];
     }
 

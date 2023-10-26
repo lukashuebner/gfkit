@@ -14,10 +14,10 @@
             "generator": "Ninja",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "TDT_TESTS_ENABLE_SANITIZERS": "OFF",
-                "TDT_BENCHMARK_ENABLE_BACKWARD_CPP": "OFF",
-                "TDT_BENCHMARK_ENABLE_MALLOC_COUNT": "OFF",
-                "TDT_BENCHMARK_ENABLE_SANITIZERS": "OFF"
+                "SFKIT_TESTS_ENABLE_SANITIZERS": "OFF",
+                "SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP": "OFF",
+                "SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT": "OFF",
+                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "OFF"
             }
         },
         {
@@ -45,9 +45,9 @@
             "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "TDT_TESTS_ENABLE_SANITIZERS": "ON",
-                "TDT_BENCHMARK_ENABLE_BACKWARD_CPP": "ON",
-                "TDT_BENCHMARK_ENABLE_SANITIZERS": "ON"
+                "SFKIT_TESTS_ENABLE_SANITIZERS": "ON",
+                "SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP": "ON",
+                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "ON"
             }
         }
     ],

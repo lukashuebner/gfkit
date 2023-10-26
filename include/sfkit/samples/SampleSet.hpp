@@ -7,9 +7,9 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/checking_casts.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/concepts.hpp"
 
 using SampleId = uint32_t;
 
@@ -89,7 +89,7 @@ public:
     }
 
     SampleSet& add(SampleId const sample_id) {
-        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
+        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", sfkit::assert::light);
         _samples[sample_id] = true;
         return *this;
     }
@@ -103,7 +103,7 @@ public:
     }
 
     SampleSet& remove(SampleId const sample_id) {
-        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
+        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", sfkit::assert::light);
         _samples[sample_id] = false;
         return *this;
     }
@@ -122,7 +122,7 @@ public:
     }
 
     [[nodiscard]] SampleId operator[](SampleId const sample_id) const {
-        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", tdt::assert::light);
+        KASSERT(sample_id < _samples.size(), "Sample ID out of bounds.", sfkit::assert::light);
         return _samples[sample_id];
     }
 

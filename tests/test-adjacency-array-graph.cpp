@@ -2,11 +2,11 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
-#include <tdt/graph/AdjacencyArrayGraph.hpp>
-#include <tdt/graph/common.hpp>
-#include <tdt/graph/EdgeListGraph.hpp>
 
-#include "tdt/assertion_levels.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/AdjacencyArrayGraph.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/graph/common.hpp"
 
 using namespace Catch::Matchers;
 

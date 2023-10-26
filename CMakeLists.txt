@@ -6,7 +6,7 @@ include(Sanitizers)
 
 # Project setup
 project(
-    tdt
+    sfkit
     DESCRIPTION "TODO"
     LANGUAGES CXX
 )
@@ -50,37 +50,37 @@ if (EXISTS "${LOC_PATH}")
     )
 endif ()
 
-option(TDT_WARNINGS_ARE_ERRORS OFF)
-option(TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF) # They are also built if this is the main project.
-option(TDT_TESTS_DISCOVER OFF)
-option(TDT_TESTS_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
-option(TDT_BENCHMARK_ENABLE_BACKWARD_CPP "Enable backward-cpp for the benchmarks" OFF)
-option(TDT_BENCHMARK_ENABLE_MALLOC_COUNT "Enable malloc_count for the benchmarks" OFF)
-option(TDT_BENCHMARK_ENABLE_SANITIZERS "Enable ASan and UBSan for the benchmarks" OFF)
+option(SFKIT_WARNINGS_ARE_ERRORS OFF)
+option(SFKIT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS OFF) # They are also built if this is the main project.
+option(SFKIT_TESTS_DISCOVER OFF)
+option(SFKIT_TESTS_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
+option(SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP "Enable backward-cpp for the benchmarks" OFF)
+option(SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT "Enable malloc_count for the benchmarks" OFF)
+option(SFKIT_BENCHMARK_ENABLE_SANITIZERS "Enable ASan and UBSan for the benchmarks" OFF)
 
 # Enable compilation with ccache. Defaults to ON if this is the main project.
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    option(TDT_USE_CCACHE "Globally enable ccache." ON)
+    option(SFKIT_USE_CCACHE "Globally enable ccache." ON)
 else ()
-    option(TDT_USE_CCACHE "Globally enable ccache." OFF)
+    option(SFKIT_USE_CCACHE "Globally enable ccache." OFF)
 endif ()
 
-if (TDT_USE_CCACHE)
+if (SFKIT_USE_CCACHE)
     enable_ccache()
 endif ()
 
 add_subdirectory(extern)
 
-add_library(tdt_base INTERFACE)
+add_library(sfkit_base INTERFACE)
 
-target_include_directories(tdt_base INTERFACE include)
+target_include_directories(sfkit_base INTERFACE include)
 
 # Set the C++ standard to C++20.
-target_compile_features(tdt_base INTERFACE cxx_std_20)
+target_compile_features(sfkit_base INTERFACE cxx_std_20)
 
 list(
     APPEND
-    TDT_WARNING_FLAGS
+    SFKIT_WARNING_FLAGS
     "-Wall"
     "-Wextra"
     "-Wconversion"
@@ -96,7 +96,7 @@ list(
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     list(
         APPEND
-        TDT_WARNING_FLAGS
+        SFKIT_WARNING_FLAGS
         "-Wcast-align"
         "-Wnull-dereference"
         "-Wpedantic"
@@ -108,7 +108,7 @@ endif ()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     list(
         APPEND
-        TDT_WARNING_FLAGS
+        SFKIT_WARNING_FLAGS
         "-Wcast-align"
         "-Wnull-dereference"
         "-Wpedantic"
@@ -120,21 +120,21 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 endif ()
 
 # OFF by default.
-if (TDT_WARNINGS_ARE_ERRORS)
-    list(APPEND TDT_WARNING_FLAGS "-Werror")
+if (SFKIT_WARNINGS_ARE_ERRORS)
+    list(APPEND SFKIT_WARNING_FLAGS "-Werror")
 endif ()
 
 # Target for user-code
-add_library(tdt INTERFACE)
-add_library(tdt::tdt ALIAS tdt)
-target_link_libraries(tdt INTERFACE tdt_base)
+add_library(sfkit INTERFACE)
+add_library(sfkit::sfkit ALIAS sfkit)
+target_link_libraries(sfkit INTERFACE sfkit_base)
 
 # If enabled, use exceptions, otherwise use KASSERT()
-option(TDT_EXCEPTION_MODE "Use exceptions to report recoverable errors." ON)
+option(SFKIT_EXCEPTION_MODE "Use exceptions to report recoverable errors." ON)
 
-if (TDT_EXCEPTION_MODE)
+if (SFKIT_EXCEPTION_MODE)
     set(KASSERT_EXCEPTION_MODE 1)
-    target_compile_definitions(tdt INTERFACE -DKASSERT_EXCEPTION_MODE)
+    target_compile_definitions(sfkit INTERFACE -DKASSERT_EXCEPTION_MODE)
     message(STATUS "Build with exceptions enabled.")
 else ()
     set(KASSERT_EXCEPTION_MODE 0)
@@ -152,58 +152,58 @@ endif ()
 # * Level 60: Heavy assertions = assertions that introduce overhead which renders some library operations infeasible
 #   when invoked with any significant work load.
 #
-# Assertion levels can be set explicitly using the -DTDT_ASSERTION_LEVEL=... flag. If no level is set explicitly, we set
-# it to 10 (exceptions only) in Release mode and 30 (up to normal assertions) in Debug mode.
-set(TDT_ASSERTION_LEVEL
+# Assertion levels can be set explicitly using the -DSFKIT_ASSERTION_LEVEL=... flag. If no level is set explicitly, we
+# set it to 10 (exceptions only) in Release mode and 30 (up to normal assertions) in Debug mode.
+set(SFKIT_ASSERTION_LEVEL
     $<IF:$<CONFIG:Debug>,"normal","none">
     CACHE STRING "Assertion level"
 )
-set_property(CACHE TDT_ASSERTION_LEVEL PROPERTY STRINGS none exceptions light normal heavy)
-message(STATUS "Assertion level: ${TDT_ASSERTION_LEVEL}")
+set_property(CACHE SFKIT_ASSERTION_LEVEL PROPERTY STRINGS none exceptions light normal heavy)
+message(STATUS "Assertion level: ${SFKIT_ASSERTION_LEVEL}")
 
-# If TDT_ASSERTION_LEVEL defaults to the generator expression, ${TDT_ASSERTION_LEVEL} may not be quoted However, if it
-# is explicitly set to some constant string, it must be quoted Thus, all levels are listed twice, once with and without
-# quotes @todo find a better solution for this problem
+# If SFKIT_ASSERTION_LEVEL defaults to the generator expression, ${SFKIT_ASSERTION_LEVEL} may not be quoted However, if
+# it is explicitly set to some constant string, it must be quoted Thus, all levels are listed twice, once with and
+# without quotes @todo find a better solution for this problem
 string(
     CONCAT KASSERT_ASSERTION_LEVEL
-           $<$<STREQUAL:${TDT_ASSERTION_LEVEL},"none">:0>
-           $<$<STREQUAL:"${TDT_ASSERTION_LEVEL}","none">:0>
-           $<$<STREQUAL:${TDT_ASSERTION_LEVEL},"exceptions">:10>
-           $<$<STREQUAL:"${TDT_ASSERTION_LEVEL}","exceptions">:10>
-           $<$<STREQUAL:${TDT_ASSERTION_LEVEL},"light">:20>
-           $<$<STREQUAL:"${TDT_ASSERTION_LEVEL}","light">:20>
-           $<$<STREQUAL:${TDT_ASSERTION_LEVEL},"normal">:30>
-           $<$<STREQUAL:"${TDT_ASSERTION_LEVEL}","normal">:30>
-           $<$<STREQUAL:${TDT_ASSERTION_LEVEL},"heavy">:60>
-           $<$<STREQUAL:"${TDT_ASSERTION_LEVEL}","heavy">:60>
+           $<$<STREQUAL:${SFKIT_ASSERTION_LEVEL},"none">:0>
+           $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","none">:0>
+           $<$<STREQUAL:${SFKIT_ASSERTION_LEVEL},"exceptions">:10>
+           $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","exceptions">:10>
+           $<$<STREQUAL:${SFKIT_ASSERTION_LEVEL},"light">:20>
+           $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","light">:20>
+           $<$<STREQUAL:${SFKIT_ASSERTION_LEVEL},"normal">:30>
+           $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","normal">:30>
+           $<$<STREQUAL:${SFKIT_ASSERTION_LEVEL},"heavy">:60>
+           $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","heavy">:60>
 )
 
 # Add the KaSSERT assertion library
 add_subdirectory("extern/kassert")
-target_include_directories(tdt_base INTERFACE "extern/kassert/include")
-target_link_libraries(tdt_base INTERFACE kassert)
+target_include_directories(sfkit_base INTERFACE "extern/kassert/include")
+target_link_libraries(sfkit_base INTERFACE kassert)
 
 # Add the tskit (succinct tree sequences) library
 add_subdirectory("extern/tskit/c" "extern/tskit")
-target_link_libraries(tdt_base INTERFACE tskit)
+target_link_libraries(sfkit_base INTERFACE tskit)
 
 # Hopscotch Map as HashTable
 add_subdirectory("extern/hopscotch-map")
-target_link_libraries(tdt_base INTERFACE tsl::hopscotch_map)
+target_link_libraries(sfkit_base INTERFACE tsl::hopscotch_map)
 
 # Add xxHash for fast non-cryptographic hashing
 set(BUILD_SHARED_LIBS OFF)
 set(XXHASH_BUILD_ENABLE_INLINE_API ON)
 set(XXHASH_BUILD_XXHSUM OFF)
 add_subdirectory("extern/xxHash/cmake_unofficial" EXCLUDE_FROM_ALL)
-target_link_libraries(tdt_base INTERFACE xxhash)
+target_link_libraries(sfkit_base INTERFACE xxhash)
 
 # Add cereal for serialization
 option(BUILD_DOC "" OFF)
 option(BUILD_SANDBOX "" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "" ON)
 add_subdirectory("extern/cereal")
-target_link_libraries(tdt_base INTERFACE cereal)
+target_link_libraries(sfkit_base INTERFACE cereal)
 
 # Add Catch2 (testing and benchmarking)
 add_subdirectory("extern/Catch2")
@@ -213,19 +213,19 @@ add_subdirectory("extern/backward-cpp")
 
 # Add fmt for std::format for older libstdc++ TODO Remove this at least for the Release mode
 add_subdirectory("extern/fmt")
-target_link_libraries(tdt_base INTERFACE fmt)
+target_link_libraries(sfkit_base INTERFACE fmt)
 
 # Add CLI11 for command line parsing
 add_subdirectory("extern/CLI11")
 
 # malloc_count for analyzing memory usage
-if (TDT_BENCHMARK_ENABLE_MALLOC_COUNT)
+if (SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT)
     add_subdirectory("extern/malloc_count")
 endif ()
 
 # Tests, benchamrks, and examples are only built if this is the main project or if
-# TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS is set (OFF by default)
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR TDT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS)
+# SFKIT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS is set (OFF by default)
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR SFKIT_BUILD_EXAMPLES_BENCHMARKS_AND_TESTS)
     add_subdirectory(examples)
     add_subdirectory(tests)
     add_subdirectory(benchmarks)

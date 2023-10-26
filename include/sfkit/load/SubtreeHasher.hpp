@@ -6,12 +6,12 @@
 #include <kassert/kassert.hpp>
 #include <xxhash.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/utils/xxhash.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/utils/xxhash.hpp"
 
-#define TDT_XXHASH_SUBTREE_IDS
+#define SFKIT_XXHASH_SUBTREE_IDS
 
-#ifdef TDT_XXHASH_SUBTREE_IDS
+#ifdef SFKIT_XXHASH_SUBTREE_IDS
 using SubtreeHash                           = XXH128_hash_t;
 constexpr SubtreeHash SuccinctSubtreeIdZero = {0, 0};
 

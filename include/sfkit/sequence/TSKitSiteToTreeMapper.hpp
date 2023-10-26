@@ -5,10 +5,10 @@
 
 #include <kassert/kassert.hpp>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/common.hpp"
-#include "tdt/sequence/Sequence.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/common.hpp"
+#include "sfkit/sequence/Sequence.hpp"
+#include "sfkit/tskit.hpp"
 
 // As the mutations are sorted by site, we can use a mapper wich does not rely on a search tree but only
 // checks of the next site passes the next breakpoint in the sorted list of breakpoints.
@@ -56,7 +56,7 @@ public:
         KASSERT(
             _current_breakpoint->site_id <= site_id,
             "Are the site ids not requested in ascending order?",
-            tdt::assert::light
+            sfkit::assert::light
         );
 
         while (_next_breakpoint != _breakpoints.end() && _next_breakpoint->site_id <= site_id) {

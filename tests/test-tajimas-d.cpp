@@ -7,12 +7,12 @@
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
 
-#include "tdt/SuccinctForest.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
-#include "tdt/tskit.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;

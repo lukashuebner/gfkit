@@ -11,9 +11,9 @@
     #pragma GCC diagnostic pop
 #endif
 
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/SuccinctForest.hpp"
-#include "tdt/sequence/GenomicSequence.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/sequence/GenomicSequence.hpp"
 
 class CompressedForestIO {
 public:
@@ -35,11 +35,15 @@ public:
             ));
         }
 
-        KASSERT(forest.num_nodes_is_set(), "Number of nodes of the loaded forest are not computed", tdt::assert::light);
+        KASSERT(
+            forest.num_nodes_is_set(),
+            "Number of nodes of the loaded forest are not computed",
+            sfkit::assert::light
+        );
         KASSERT(
             sequence.mutation_indices_are_built(),
             "Mutation indices of the loaded sequence are not built",
-            tdt::assert::light
+            sfkit::assert::light
         );
     }
 

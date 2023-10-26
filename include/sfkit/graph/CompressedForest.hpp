@@ -15,15 +15,15 @@
 #endif
 #include <kassert/kassert.hpp>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/checking_casts.hpp"
-#include "tdt/graph/AdjacencyArrayGraph.hpp"
-#include "tdt/graph/EdgeListGraph.hpp"
-#include "tdt/load/SubtreeHasher.hpp"
-#include "tdt/samples/NumSamplesBelow.hpp"
-#include "tdt/samples/SampleSet.hpp"
-#include "tdt/tskit.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/AdjacencyArrayGraph.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/SampleSet.hpp"
+#include "sfkit/tskit.hpp"
+#include "sfkit/utils/concepts.hpp"
 
 class CompressedForest {
 public:
@@ -55,11 +55,11 @@ public:
         KASSERT(
             num_nodes_is_set(),
             "The number of nodes in the DAG must be set before calling all_samples().",
-            tdt::assert::light
+            sfkit::assert::light
         );
         SampleSet sample_set(num_samples());
         for (NodeId const sample_id: _dag_postorder_edges.leaves()) {
-            KASSERT(sample_id < num_samples(), "Sample ID is out of range.", tdt::assert::light);
+            KASSERT(sample_id < num_samples(), "Sample ID is out of range.", sfkit::assert::light);
             sample_set.add(sample_id);
         }
         return sample_set;

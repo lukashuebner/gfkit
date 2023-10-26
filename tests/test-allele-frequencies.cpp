@@ -6,13 +6,13 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
-#include "tdt/SuccinctForest.hpp"
-#include "tdt/assertion_levels.hpp"
-#include "tdt/graph/CompressedForest.hpp"
-#include "tdt/load/ForestCompressor.hpp"
-#include "tdt/sequence/AlleleFrequencies.hpp"
-#include "tdt/tskit.hpp"
-#include "tdt/utils/literals.hpp"
+#include "sfkit/SuccinctForest.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/sequence/AlleleFrequencies.hpp"
+#include "sfkit/tskit.hpp"
+#include "sfkit/utils/literals.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
@@ -54,7 +54,7 @@ TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
@@ -94,7 +94,7 @@ TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
     freqs_it++;
     CHECK(freqs_it == freqs.end());
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
@@ -144,7 +144,7 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
@@ -236,6 +236,6 @@ TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") 
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  tdt_tree_sequence now.
+    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }

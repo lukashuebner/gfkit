@@ -5,8 +5,8 @@
 #include <kassert/kassert.hpp>
 #include <xxhash.h>
 
-#include "tdt/assertion_levels.hpp"
-#include "tdt/utils/concepts.hpp"
+#include "sfkit/assertion_levels.hpp"
+#include "sfkit/utils/concepts.hpp"
 
 // TODO Test this for more data types (e.g. std::array)
 
