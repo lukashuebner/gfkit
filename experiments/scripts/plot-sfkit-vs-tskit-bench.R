@@ -22,9 +22,9 @@ parser$add_argument(
 args <- parser$parse_args()
 
 # --- For running in RStudio/VSCode/Emacs ---
-# args <- list()
-# args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
-# args$output <- "experiments/plots/sfkit-vs-tskit-bench.pdf"
+args <- list()
+args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
+args$output <- "experiments/plots/sfkit-vs-tskit-bench.pdf"
 
 # --- Helper functions ---
 
@@ -174,8 +174,9 @@ speedup_y_breaks <- seq(0, max(speedup_data$speedup_median * 1.05), 1)
 speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
 # --- Speedup of sfkit over tskit ---
+stats_sections <- c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst", "f2", "f3", "f4")
 speedup_data %>%
-    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst")) %>%
+    filter(section %in% stats_sections) %>%
     select(-dataset) %>%
     ggplot(
         aes(
@@ -207,7 +208,7 @@ style$width <- 225
 ggsave(args$output, width = style$width, height = style$height, units = style$unit)
 
 speedup_data %>%
-    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst")) %>%
+    filter(section %in% stats_sections) %>%
     select(-dataset) %>%
     ggplot(
         aes(
@@ -247,7 +248,7 @@ to_jpeg("experiments/plots/sfkit-vs-tskit-speedup-aggregated.pdf")
 
 # --- Runtime of sfkit over tskit ---
 runtime_data %>%
-    filter(section %in% c("afs", "diversity", "num_segregating_sites", "tajimas_d")) %>%
+    filter(section %in% stats_sections) %>%
     select(-dataset) %>%
     ggplot(
         aes(
