@@ -204,7 +204,6 @@ public:
             _update_state();
         }
 
-        // The num_samples below should not be recomputed every time we copy the iterator
         [[nodiscard]] SampleId num_samples_in_sample_set() const {
             return _freqs._num_samples_below.num_samples_in_sample_set();
         }
@@ -279,7 +278,7 @@ public:
                 auto         mutation_it   = mutations_at_site.begin();
                 AllelicState derived_state = InvalidAllelicState;
                 // TODO Filter those mutations during construction of the compressed forest
-                do { // The first mutations cout be from the ancestral state to the ancestral state
+                do { // The first mutations could be from the ancestral state to the ancestral state
                     derived_state = mutation_it->allelic_state();
                 } while (derived_state == ancestral_state && ++mutation_it != mutations_at_site.end());
 
