@@ -4,6 +4,7 @@
 #include <tskit/core.h>
 
 // TODO Move tdt/ to sfkit/
+// TODO Rename this file and genomic-sequence-storage file
 #include "tdt/assertion_levels.hpp"
 #include "tdt/load/ts-node-2-sf-subtree-mapper.hpp"
 #include "tdt/sequence/genomic-sequence-storage.hpp"
