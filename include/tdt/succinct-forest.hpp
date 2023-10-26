@@ -176,7 +176,6 @@ public:
                 auto const freq_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freq_2_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
-                // TODO Check if the compiler unrolls this
                 for (Idx state = 0; state < freq_1_multiallelic.num_states; state++) {
                     // The number of samples in sample set 2 which are not in
                     double const n_state_1     = freq_1_multiallelic[state];
@@ -245,7 +244,6 @@ public:
                 auto const freqs_2_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_1_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
-                // TODO Check if the compiler unrolls this
                 KASSERT(
                     freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states,
                     "Allele frequency lists have different lengths (different number of states).",
@@ -467,7 +465,6 @@ private:
                 auto const freqs_3_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_3_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
-                // TODO Check if the compiler unrolls this
                 KASSERT(
                     (freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states
                      && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states),
@@ -554,7 +551,6 @@ private:
                 auto const freqs_4_multiallelic = std::get<MultiallelicFrequency>(*allele_freqs_4_it);
 
                 using Idx = typename MultiallelicFrequency::Idx;
-                // TODO Check if the compiler unrolls this
                 KASSERT(
                     freqs_1_multiallelic.num_states == freqs_2_multiallelic.num_states
                         && freqs_2_multiallelic.num_states == freqs_3_multiallelic.num_states
