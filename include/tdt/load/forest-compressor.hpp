@@ -78,7 +78,7 @@ public:
 
                     // Add this node to the DAG if not already present. As the DAG is stored
                     // as a list of edges, we need to add an edge from this node to each of
-                    // it's children.  In the case that two trees in the tree sequence are exactly identical, we want
+                    // its children.  In the case that two trees in the tree sequence are exactly identical, we want
                     // two root nodes in the DAG -- one for each of the two trees.
                     bool const subtree_is_root = _ts_tree.is_root(ts_node_id);
                     auto const sf_node_it      = _subtree_to_sf_node.find(subtree_id);
@@ -110,7 +110,6 @@ public:
             // Process the mutations of this tree
             genomic_sequence_storage_factory.process_mutations(
                 asserting_cast<TreeId>(_ts_tree.tree_id()),
-                // ts_node2sf_subtree
                 TsToSfNodeMapper(_ts_node_to_subtree, _subtree_to_sf_node)
             );
         }
