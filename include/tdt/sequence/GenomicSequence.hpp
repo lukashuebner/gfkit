@@ -12,9 +12,9 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/common.hpp"
-#include "tdt/sequence/mutation.hpp"
-#include "tdt/sequence/sequence.hpp"
-#include "tdt/sequence/tskit-site-to-tree-mapper.hpp"
+#include "tdt/sequence/Mutation.hpp"
+#include "tdt/sequence/Sequence.hpp"
+#include "tdt/sequence/TSKitSiteToTreeMapper.hpp"
 #include "tdt/tskit.hpp"
 
 class GenomicSequence {

@@ -17,11 +17,10 @@
 
 #include "common.hpp"
 #include "tdt/assertion_levels.hpp"
-#include "tdt/samples/sample-set.hpp"
+#include "tdt/samples/SampleSet.hpp"
 
 using EdgeList = std::vector<Edge>;
 
-// TODO write unit tests
 class EdgeListGraph {
 public:
     using iterator         = EdgeList::iterator;
@@ -134,7 +133,6 @@ public:
         ToVertex,
     };
 
-    // TODO make this const
     std::unordered_set<NodeId> nodes() const {
         std::unordered_set<NodeId> nodes;
         nodes.reserve(2 * _leaves.size() + (_roots.size() - 1)); // Lower bound only

@@ -9,8 +9,8 @@
 #include <tskit.h>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/samples/num-samples-below.hpp"
-#include "tdt/samples/sample-set.hpp"
+#include "tdt/samples/NumSamplesBelow.hpp"
+#include "tdt/samples/SampleSet.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;

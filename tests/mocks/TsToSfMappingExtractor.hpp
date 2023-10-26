@@ -6,9 +6,9 @@
 
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/common.hpp"
-#include "tdt/load/subtree-id-2-node-mapper.hpp"
-#include "tdt/load/subtree-id.hpp"
-#include "tdt/load/ts-node-2-sf-subtree-mapper.hpp"
+#include "tdt/load/SubtreeHashToNodeMapper.hpp"
+#include "tdt/load/SubtreeHasher.hpp"
+#include "tdt/load/TsToSfNodeMapper.hpp"
 
 class Ts2SfMappingExtractor {
 public:

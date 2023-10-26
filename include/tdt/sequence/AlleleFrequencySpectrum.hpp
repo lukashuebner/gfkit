@@ -6,10 +6,10 @@
 #include <kassert/kassert.hpp>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/forest-compressor.hpp"
-#include "tdt/sequence/allele-frequencies.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/load/ForestCompressor.hpp"
+#include "tdt/sequence/AlleleFrequencies.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 
 // We store the number of sites without a mutation in afs[0], the number of singletons (sites with one mutation) in
 // afs[1] and so on. For simplicity we also compute afs[num_samples], that is the number of sites with all samples

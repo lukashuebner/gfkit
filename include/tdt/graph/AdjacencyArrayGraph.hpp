@@ -5,15 +5,12 @@
 #include <kassert/kassert.hpp>
 
 #include "common.hpp"
-#include "edge-list-graph.hpp"
+#include "EdgeListGraph.hpp"
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
 
 class AdjacencyArrayGraph {
 public:
-    // using iterator = EdgeListGraph::iterator;
-    // using const_iterator = EdgeListGraph::const_iterator;
-
     // TODO think about moving the roots and leaves
     AdjacencyArrayGraph() = default;
     AdjacencyArrayGraph(EdgeListGraph& edges, bool sorted = false) {

@@ -17,11 +17,11 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
-#include "tdt/graph/adjacency-array-graph.hpp"
-#include "tdt/graph/edge-list-graph.hpp"
-#include "tdt/load/subtree-id.hpp"
-#include "tdt/samples/num-samples-below.hpp"
-#include "tdt/samples/sample-set.hpp"
+#include "tdt/graph/AdjacencyArrayGraph.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
+#include "tdt/load/SubtreeHasher.hpp"
+#include "tdt/samples/NumSamplesBelow.hpp"
+#include "tdt/samples/SampleSet.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/concepts.hpp"
 

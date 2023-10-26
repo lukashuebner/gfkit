@@ -4,12 +4,12 @@
 #include <kassert/kassert.hpp>
 
 #include "mocks/TsToSfMappingExtractor.hpp"
+#include "tdt/SuccinctForest.hpp"
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/adjacency-array-graph.hpp"
+#include "tdt/graph/AdjacencyArrayGraph.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
 #include "tdt/graph/common.hpp"
-#include "tdt/graph/edge-list-graph.hpp"
-#include "tdt/load/forest-compressor.hpp"
-#include "tdt/succinct-forest.hpp"
+#include "tdt/load/ForestCompressor.hpp"
 #include "tdt/utils/concepts.hpp"
 #include "tskit-testlib/testlib.hpp"
 
@@ -56,7 +56,7 @@ TEST_CASE("CompressedForest::is_sample() I", "[CompressedForest]") {
     // ┃ ┃  ┃ ┃ ┃  ┃  ┃  ┃ ┃ ┃  ┃  ┃ ┏┻┓  ┃ ┃ ┃  ┃  ┃  ┃
     // 0 6 10 8 9 11 12 13 4 7 14 19 1 2 18 3 5 15 16 17
 
-    std::string const ts_file = "data/compressed-forest-is-sample.trees";
+    std::string const ts_file = "data/test-timon.trees";
     TSKitTreeSequence tree_sequence(ts_file);
     ForestCompressor  forest_compressor(tree_sequence);
 
@@ -233,7 +233,7 @@ TEST_CASE("CompressedForest TS to SF Node Mapping I", "[CompressedForest]") {
     // 0 6 10 8 9 11 12 13 4 7 14 19 1 2 18 3 5 15 16 17
 
     // TODO Rename this input file
-    std::string const ts_file = "data/compressed-forest-is-sample.trees";
+    std::string const ts_file = "data/test-timon.trees";
     TSKitTreeSequence tree_sequence(ts_file);
     ForestCompressor  forest_compressor(tree_sequence);
 

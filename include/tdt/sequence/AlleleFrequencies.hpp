@@ -3,8 +3,8 @@
 #include <variant>
 #include <vector>
 
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 #include "tdt/utils/always_false_v.hpp"
 
 template <

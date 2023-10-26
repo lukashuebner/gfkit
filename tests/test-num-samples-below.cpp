@@ -8,11 +8,11 @@
 
 #include "mocks/TsToSfMappingExtractor.hpp"
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/compressed-forest-serialization.hpp"
-#include "tdt/samples/num-samples-below.hpp"
-#include "tdt/samples/sample-set.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/load/CompressedForestIO.hpp"
+#include "tdt/samples/NumSamplesBelow.hpp"
+#include "tdt/samples/SampleSet.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;

@@ -6,8 +6,8 @@
 // TODO Move tdt/ to sfkit/
 // TODO Rename this file and genomic-sequence-storage file
 #include "tdt/assertion_levels.hpp"
-#include "tdt/load/ts-node-2-sf-subtree-mapper.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/load/TsToSfNodeMapper.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 #include "tdt/tskit.hpp"
 
 // We interleaf building the genomic sequence storage with building the forest to save memory.
@@ -26,28 +26,6 @@ public:
         _set_ancestral_states(tree_sequence);
     }
 
-    // void request_mappings(TreeId tree_id, TsToSfNodeMapper& ts_node2sf_subtree) {
-    //     auto       mutation_it     = _mutation_it;
-    //     auto const site2tree_state = _site2tree.state();
-    //     while (mutation_it != _mutations_end) {
-    //         tsk_id_t const site_id       = mutation_it->site;
-    //         TreeId const   sites_tree_id = _site2tree(site_id);
-    //         KASSERT(
-    //             sites_tree_id >= tree_id,
-    //             "We seemed to have missed processing a mutation. Are the mutations sorted by tree id?",
-    //             tdt::assert::light
-    //         );
-    //         if (sites_tree_id > tree_id) {
-    //             break;
-    //         } else {
-    //             ts_node2sf_subtree.request(mutation_it->node); // Request the node in tskit space
-    //         }
-    //         ++mutation_it;
-    //     }
-    //     _site2tree.reset_to(site2tree_state);
-    // }
-
-    // TODO Write documentation
     // Call this for all trees in order, make sure the the mutations are sorted by site.
     // return true if done; else returns false
     template <typename TsToSfNodeMapper>

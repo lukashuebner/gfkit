@@ -8,10 +8,10 @@
 #include <tskit.h>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/sequence/tskit-site-to-tree-mapper.hpp"
+#include "tdt/load/ForestCompressor.hpp"
+#include "tdt/sequence/TSKitSiteToTreeMapper.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
-#include "tdt/load/forest-compressor.hpp"
 
 using namespace ::Catch::Matchers;
 

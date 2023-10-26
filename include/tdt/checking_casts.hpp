@@ -14,8 +14,6 @@
 /// @file
 /// @brief Helper functions that make casts safer.
 
-// TODO Change copyright notice
-
 #pragma once
 
 #include <limits>

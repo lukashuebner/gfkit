@@ -11,9 +11,9 @@
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
 #include "tdt/graph/common.hpp"
-#include "tdt/samples/sample-set.hpp"
-#include "tdt/sequence/mutation.hpp"
-#include "tdt/sequence/sequence.hpp"
+#include "tdt/samples/SampleSet.hpp"
+#include "tdt/sequence/Mutation.hpp"
+#include "tdt/sequence/Sequence.hpp"
 
 using TskMutationView = std::span<tsk_mutation_t const>;
 

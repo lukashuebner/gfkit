@@ -11,9 +11,9 @@
     #pragma GCC diagnostic pop
 #endif
 
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/succinct-forest.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/SuccinctForest.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 
 class CompressedForestIO {
 public:

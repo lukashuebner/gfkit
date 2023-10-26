@@ -7,11 +7,11 @@
 #include <kassert/kassert.hpp>
 #include <tskit.h>
 
+#include "tdt/SuccinctForest.hpp"
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/forest-compressor.hpp"
-#include "tdt/succinct-forest.hpp"
-#include "tdt/sequence/allele-frequency-spectrum.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/load/ForestCompressor.hpp"
+#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
 #include "tdt/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 

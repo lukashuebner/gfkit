@@ -7,13 +7,13 @@
 #include <tskit.h>
 
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/forest-compressor.hpp"
-#include "tdt/samples/num-samples-below.hpp"
-#include "tdt/sequence/allele-frequencies.hpp"
-#include "tdt/sequence/allele-frequency-spectrum.hpp"
-#include "tdt/sequence/genomic-sequence-storage-factory.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/load/ForestCompressor.hpp"
+#include "tdt/samples/NumSamplesBelow.hpp"
+#include "tdt/sequence/AlleleFrequencies.hpp"
+#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
+#include "tdt/sequence/GenomicSequenceFactory.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/always_false_v.hpp"
 #include "tdt/utils/tuple_transform.hpp"
@@ -115,7 +115,6 @@ public:
             },
             // Multiallelic visitor
             [&pi, n](auto&& state) {
-                // TODO Does the compiler unroll this?
                 for (auto const n_state: state) {
                     auto const n_not_state = n - n_state;
                     pi += static_cast<double>(n_state * n_not_state);
@@ -411,7 +410,6 @@ private:
 
     // TODO Split up into CompressedForestIO and SuccinctForestIO
     // TODO Better naming to distinguish between CompressedForest and SuccinctForest
-    // friend class CompressedForestIO;
 
     template <typename NumSamplesBelowBaseType = SampleId>
     [[nodiscard]] double

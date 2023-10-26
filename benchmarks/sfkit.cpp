@@ -6,15 +6,15 @@
 #include <CLI/Config.hpp>
 #include <CLI/Formatter.hpp>
 #include <catch2/catch_approx.hpp>
-#include <tdt/load/forest-compressor.hpp>
-#include <tdt/succinct-forest.hpp>
+#include <tdt/SuccinctForest.hpp>
+#include <tdt/load/ForestCompressor.hpp>
 #include <tdt/tskit.hpp>
 
 #include "perf.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/load/compressed-forest-serialization.hpp"
-#include "tdt/sequence/allele-frequency-spectrum.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/load/CompressedForestIO.hpp"
+#include "tdt/sequence/AlleleFrequencySpectrum.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
 #include "timer.hpp"
 
 constexpr double FLOAT_EQ_EPS = 1e-4;

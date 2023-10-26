@@ -5,7 +5,7 @@
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
 #include <tdt/graph/common.hpp>
-#include <tdt/sequence/genomic-sequence-storage.hpp>
+#include <tdt/sequence/GenomicSequence.hpp>
 
 #include "tdt/assertion_levels.hpp"
 

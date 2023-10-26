@@ -12,14 +12,14 @@
 #include <catch2/matchers/catch_matchers_quantifiers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
-#include <tdt/graph/adjacency-array-graph.hpp>
-#include <tdt/graph/common.hpp>
-#include <tdt/graph/edge-list-graph.hpp>
 #include <tskit.h>
 
+#include "tdt/SuccinctForest.hpp"
 #include "tdt/assertion_levels.hpp"
-#include "tdt/load/forest-compressor.hpp"
-#include "tdt/succinct-forest.hpp"
+#include "tdt/graph/AdjacencyArrayGraph.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
+#include "tdt/graph/common.hpp"
+#include "tdt/load/ForestCompressor.hpp"
 #include "tdt/tskit.hpp"
 
 using namespace ::Catch::Matchers;

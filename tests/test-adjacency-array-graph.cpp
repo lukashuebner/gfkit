@@ -2,9 +2,9 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
-#include <tdt/graph/adjacency-array-graph.hpp>
+#include <tdt/graph/AdjacencyArrayGraph.hpp>
 #include <tdt/graph/common.hpp>
-#include <tdt/graph/edge-list-graph.hpp>
+#include <tdt/graph/EdgeListGraph.hpp>
 
 #include "tdt/assertion_levels.hpp"
 

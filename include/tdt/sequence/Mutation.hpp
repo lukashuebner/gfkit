@@ -5,7 +5,7 @@
 #include <tskit/core.h>
 
 #include "tdt/graph/common.hpp"
-#include "tdt/sequence/sequence.hpp"
+#include "tdt/sequence/Sequence.hpp"
 
 using MutationId = uint32_t;
 

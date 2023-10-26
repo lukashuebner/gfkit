@@ -6,12 +6,12 @@
 
 #include <kassert/kassert.hpp>
 
-#include "tdt/graph/edge-list-graph.hpp"
-#include "tdt/samples/sample-set.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
+#include "tdt/samples/SampleSet.hpp"
 // TODO Unify naming of files
 #include "tdt/assertion_levels.hpp"
-#include "tdt/graph/edge-list-graph.hpp"
-#include "tdt/samples/sample-set.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
+#include "tdt/samples/SampleSet.hpp"
 
 namespace stdx = std::experimental;
 

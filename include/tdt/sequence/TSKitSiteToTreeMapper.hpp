@@ -7,7 +7,7 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/graph/common.hpp"
-#include "tdt/sequence/sequence.hpp"
+#include "tdt/sequence/Sequence.hpp"
 #include "tdt/tskit.hpp"
 
 // As the mutations are sorted by site, we can use a mapper wich does not rely on a search tree but only

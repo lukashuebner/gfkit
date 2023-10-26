@@ -7,7 +7,7 @@
 #pragma GCC diagnostic pop
 
 #include "tdt/graph/common.hpp"
-#include "tdt/load/subtree-id.hpp"
+#include "tdt/load/SubtreeHasher.hpp"
 
 // TODO Rename files to use the same case as the class names
 class SubtreeHash2NodeMapper {

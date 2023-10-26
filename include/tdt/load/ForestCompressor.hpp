@@ -13,14 +13,14 @@
 
 #include "tdt/assertion_levels.hpp"
 #include "tdt/checking_casts.hpp"
-#include "tdt/graph/adjacency-array-graph.hpp"
-#include "tdt/graph/compressed-forest.hpp"
-#include "tdt/graph/edge-list-graph.hpp"
-#include "tdt/load/subtree-id-2-node-mapper.hpp"
-#include "tdt/load/subtree-id.hpp"
-#include "tdt/load/ts-node-2-sf-subtree-mapper.hpp"
-#include "tdt/sequence/genomic-sequence-storage-factory.hpp"
-#include "tdt/sequence/genomic-sequence-storage.hpp"
+#include "tdt/graph/AdjacencyArrayGraph.hpp"
+#include "tdt/graph/CompressedForest.hpp"
+#include "tdt/graph/EdgeListGraph.hpp"
+#include "tdt/load/SubtreeHashToNodeMapper.hpp"
+#include "tdt/load/SubtreeHasher.hpp"
+#include "tdt/load/TsToSfNodeMapper.hpp"
+#include "tdt/sequence/GenomicSequence.hpp"
+#include "tdt/sequence/GenomicSequenceFactory.hpp"
 #include "tdt/tskit.hpp"
 #include "tdt/utils/concepts.hpp"
 
@@ -37,13 +37,8 @@ public:
         _ts_node_to_subtree.resize(_ts_tree.max_node_id());
     }
 
-    // TODO Decide on vertex vs node and use it consistently
     template <typename GenomicSequenceFactoryT>
     CompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_storage_factory) {
-        // TODO Add checks for compression efficiency
-        // TODO Add compression of example input files
-        // TODO Write assertions for that no old subtree id is reused
-
         CompressedForest forest;
 
         // Add the samples to the compressed forest here so they have the same ID in all trees.
