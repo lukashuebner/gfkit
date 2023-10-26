@@ -38,7 +38,8 @@ public:
     }
 
     // TODO Decide on vertex vs node and use it consistently
-    CompressedForest compress(GenomicSequenceFactory& genomic_sequence_storage_factory) {
+    template <typename GenomicSequenceFactoryT>
+    CompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_storage_factory) {
         // TODO Add checks for compression efficiency
         // TODO Add compression of example input files
         // TODO Write assertions for that no old subtree id is reused
