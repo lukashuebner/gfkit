@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+REMOTE_FILE="i10login:/workspace/huebner/sfkit/experiments/measurements/sfkit-vs-tskit-bench.csv"
+LOCAL_FILE="experiments/measurements/sfkit-vs-tskit-bench.csv"
+
+scp "$REMOTE_FILE" "$LOCAL_FILE"
