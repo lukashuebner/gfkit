@@ -11,7 +11,7 @@
             "displayName": "Default",
             "description": "Default build options",
             "hidden": true,
-            "generator": "Ninja",
+            "generator": "Unix Makefiles",
             "cacheVariables": {
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "SFKIT_TESTS_ENABLE_SANITIZERS": "OFF",
