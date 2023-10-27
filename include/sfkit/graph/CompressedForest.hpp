@@ -4,15 +4,7 @@
 #include <memory>
 #include <unordered_set>
 
-#if defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wnoexcept"
-#endif
-#include <cereal/types/memory.hpp>
-#include <cereal/types/vector.hpp>
-#if defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic pop
-#endif
+#include <sfkit/include-redirects/cereal.hpp>
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"

@@ -2,15 +2,6 @@
 
 #include <fmt/format.h>
 
-#if defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wnoexcept"
-#endif
-#include <cereal/archives/binary.hpp>
-#if defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic pop
-#endif
-
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/graph/CompressedForest.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"

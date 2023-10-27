@@ -1,4 +1,3 @@
-
 #include <filesystem>
 #include <fstream>
 
@@ -9,9 +8,8 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <kassert/kassert.hpp>
+#include <sfkit/include-redirects/cereal.hpp>
 
-#include "cereal/archives/binary.hpp"
-#include "cereal/cereal.hpp"
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/load/CompressedForestIO.hpp"

@@ -4,15 +4,6 @@
 #include <optional>
 #include <vector>
 
-#include <kassert/kassert.hpp>
-#include <tskit/core.h>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <tsl/hopscotch_map.h>
-#include <tsl/hopscotch_set.h>
-#pragma GCC diagnostic pop
-
 #include "sfkit/graph/common.hpp"
 #include "sfkit/utils/concepts.hpp"
 

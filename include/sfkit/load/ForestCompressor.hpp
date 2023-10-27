@@ -4,12 +4,7 @@
 #include <unordered_set>
 
 #include <kassert/kassert.hpp>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#include <tsl/hopscotch_map.h>
-#pragma GCC diagnostic pop
+#include <sfkit/include-redirects/hopscotch_map.hpp>
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/checking_casts.hpp"
