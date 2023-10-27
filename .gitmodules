@@ -11,9 +11,6 @@
 [submodule "extern/backward-cpp"]
 	path = extern/backward-cpp
 	url = https://github.com/bombela/backward-cpp.git
-[submodule "extern/nanobench"]
-	path = extern/nanobench
-	url = https://github.com/martinus/nanobench.git
 [submodule "extern/cli11"]
 	path = extern/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
