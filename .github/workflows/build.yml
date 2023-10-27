@@ -27,9 +27,9 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --preset ${{env.BUILD_TYPE}} --build --parallel
+      run: cmake --preset ${{env.BUILD_TYPE}} --build -j
 
     - name: Test
       # working-directory: ${{github.workspace}}/build
-      run: ctest --preset ${{env.BUILD_TYPE}} --parallel
+      run: ctest --preset ${{env.BUILD_TYPE}} -j
 
