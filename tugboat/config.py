@@ -28,7 +28,7 @@ class Config:
         PLOTS_DIR, "trees-files-stats-")
 
     # --- executable files ---
-    SFKIT_BIN = "build/release/benchmarks/sfkit"
+    SFKIT_BIN = "build/release/benchmarks/sfkit-bench"
     BENCHMARK_TSKITS_PYTHON_ONLY_FUNCS_PY = fs.path.combine(
         SCRIPTS_DIR, "benchmark-tskits-python-only-funcs.py")
     PLOT_SFKIT_VS_TSKIT_BENCH_R = fs.path.combine(
