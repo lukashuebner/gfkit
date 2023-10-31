@@ -4,8 +4,8 @@
 #include <memory>
 #include <unordered_set>
 
-#include <sfkit/include-redirects/cereal.hpp>
 #include <kassert/kassert.hpp>
+#include <sfkit/include-redirects/cereal.hpp>
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/checking_casts.hpp"
@@ -113,6 +113,7 @@ public:
     }
 
 private:
-    EdgeListGraph       _dag_postorder_edges;
+    EdgeListGraph _dag_postorder_edges;
+    // TODO Remove these (will cause a version bump in the  serialization format)
     std::vector<NodeId> _subtree_sizes;
 };

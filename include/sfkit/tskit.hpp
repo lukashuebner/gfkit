@@ -476,6 +476,117 @@ public:
         return std::span{_postorder_nodes}.subspan(0, num_nodes);
     }
 
+    class EulertourView {
+    public:
+        EulertourView(tsk_tree_t const& tree, TSKitTreeSequence const& tree_sequence)
+            : _tree(tree),
+              _tree_sequence(tree_sequence) {}
+        class iterator {
+        public:
+            using iterator_category = std::forward_iterator_tag;
+            using difference_type   = std::ptrdiff_t;
+            using value_type        = tsk_id_t;
+            using pointer           = value_type*;
+            using reference         = value_type&;
+            struct sentinel {};
+
+            iterator(tsk_tree_t const& tree, TSKitTreeSequence const& tree_sequence)
+                : _tree(tree),
+                  _just_moved_up(false),
+                  _tree_sequence(tree_sequence) {
+                KASSERT(
+                    _tree.virtual_root != TSK_NULL,
+                    "The virtual root of the tree does not exist.",
+                    sfkit::assert::light
+                );
+                KASSERT(
+                    _tree.right_child[_tree.virtual_root] != TSK_NULL,
+                    "The virtual root of the tree has no children.",
+                    sfkit::assert::light
+                );
+                KASSERT(
+                    _tree.left_child[_tree.virtual_root] == _tree.right_child[_tree.virtual_root],
+                    "The virtual root of the tree has more than one child.",
+                    sfkit::assert::light
+                );
+                _current_node = _tree.left_child[_tree.virtual_root];
+            }
+
+            iterator& operator++() {
+                if (_just_moved_up || _tree_sequence.is_sample(_current_node)) {
+                    // The children of this node were already processed OR there are no children because the current
+                    // node is a sample node.
+                    if (_tree.right_sib[_current_node] != TSK_NULL) {
+                        // Move to the next unprocessed sibling of this node.
+                        _current_node  = _tree.right_sib[_current_node];
+                        _just_moved_up = false;
+                    } else {
+                        // There are no more siblings of this node -> move up.
+                        _current_node  = _tree.parent[_current_node];
+                        _just_moved_up = true;
+                    }
+                } else {
+                    // We just moved down or right (to a sibling), the children of this node are not processed yet
+                    //   -> move down
+                    _current_node = _tree.left_child[_current_node];
+                }
+                return *this;
+            }
+
+            iterator operator++(int) {
+                iterator tmp(*this);
+
+                this->operator++();
+                return tmp;
+            }
+
+            bool operator==(iterator const& other) const {
+                return _current_node == other._current_node && &_tree == &other._tree
+                       && _just_moved_up == other._just_moved_up;
+            }
+
+            bool operator!=(iterator const& other) const {
+                return !(*this == other);
+            }
+
+            bool operator==(sentinel) {
+                return _current_node == TSK_NULL;
+            }
+
+            reference operator*() {
+                KASSERT(_current_node != TSK_NULL);
+                return _current_node;
+            }
+
+            pointer operator->() {
+                KASSERT(_current_node != TSK_NULL);
+                return &_current_node;
+            }
+
+        private:
+            tsk_tree_t const&        _tree;
+            tsk_id_t                 _current_node;
+            bool                     _just_moved_up;
+            TSKitTreeSequence const& _tree_sequence;
+        };
+
+        auto begin() const {
+            return iterator{_tree, _tree_sequence};
+        }
+
+        auto end() const {
+            return iterator::sentinel{};
+        }
+
+    private:
+        tsk_tree_t const&        _tree;
+        TSKitTreeSequence const& _tree_sequence;
+    };
+
+    EulertourView eulertour() const {
+        return EulertourView{_tree, _tree_sequence};
+    }
+
     class Children {
     public:
         Children(tsk_tree_t const& tree, tsk_id_t const parent) : _tree(tree), _parent(parent) {}

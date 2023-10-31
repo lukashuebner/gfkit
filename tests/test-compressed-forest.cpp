@@ -15,7 +15,7 @@
 
 using namespace Catch::Matchers;
 
-TEST_CASE("CompressedForest::is_sample() I", "[CompressedForest]") {
+TEST_CASE("CompressedForest::is_sample() Timon", "[CompressedForest]") {
     //                                      38
     //                                ┏━━━━━━┻━━━━━━━┓
     //                               37              ┃
@@ -81,7 +81,7 @@ TEST_CASE("CompressedForest::is_sample() I", "[CompressedForest]") {
     }
 }
 
-TEST_CASE("CompressedForest::is_sample() II", "[CompressedForest]") {
+TEST_CASE("CompressedForest::is_sample() Scar", "[CompressedForest]") {
     //                              38
     //                    ┏━━━━━━━━━━┻━━━━━━━━━━┓
     //                   37                     ┃
@@ -147,7 +147,7 @@ TEST_CASE("CompressedForest::is_sample() II", "[CompressedForest]") {
     }
 }
 
-TEST_CASE("CompressedForest::is_sample() III", "[CompressedForest]") {
+TEST_CASE("CompressedForest::is_sample() Ed", "[CompressedForest]") {
     // Too large to print here
 
     std::string const ts_file = "data/test-ed.trees";
@@ -191,7 +191,7 @@ TEST_CASE("CompressedForest::is_sample() III", "[CompressedForest]") {
     }
 }
 
-TEST_CASE("CompressedForest TS to SF Node Mapping I", "[CompressedForest]") {
+TEST_CASE("CompressedForest TS to SF Node Mapping Timon", "[CompressedForest]") {
     //                                      38
     //                                ┏━━━━━━┻━━━━━━━┓
     //                               37              ┃
@@ -232,7 +232,6 @@ TEST_CASE("CompressedForest TS to SF Node Mapping I", "[CompressedForest]") {
     // ┃ ┃  ┃ ┃ ┃  ┃  ┃  ┃ ┃ ┃  ┃  ┃ ┏┻┓  ┃ ┃ ┃  ┃  ┃  ┃
     // 0 6 10 8 9 11 12 13 4 7 14 19 1 2 18 3 5 15 16 17
 
-    // TODO Rename this input file
     std::string const ts_file = "data/test-timon.trees";
     TSKitTreeSequence tree_sequence(ts_file);
     ForestCompressor  forest_compressor(tree_sequence);
@@ -276,7 +275,7 @@ TEST_CASE("CompressedForest TS to SF Node Mapping I", "[CompressedForest]") {
     }
 }
 
-TEST_CASE("CompressedForest TS to SF Node Mapping II", "[CompressedForest]") {
+TEST_CASE("CompressedForest TS to SF Node Mapping Shenzi", "[CompressedForest]") {
     //                              38
     //                    ┏━━━━━━━━━━┻━━━━━━━━━━┓
     //                   37                     ┃
@@ -357,7 +356,7 @@ TEST_CASE("CompressedForest TS to SF Node Mapping II", "[CompressedForest]") {
     }
 }
 
-TEST_CASE("Subtrees are created only once I", "[CompresedForest]") {
+TEST_CASE("Subtrees are created only once Example I", "[CompresedForest]") {
     /*
     0.25┊     8   ┊         ┊         ┊
         ┊   ┏━┻━┓ ┊         ┊         ┊

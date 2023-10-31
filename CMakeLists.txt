@@ -198,6 +198,10 @@ set(XXHASH_BUILD_XXHSUM OFF)
 add_subdirectory("extern/xxHash/cmake_unofficial" EXCLUDE_FROM_ALL)
 target_link_libraries(sfkit_base INTERFACE xxhash)
 
+# Add the succinct data structures library (SDSL) for bitmaps, balanced-paranthesis trees etc.
+add_subdirectory("extern/sdsl")
+target_link_libraries(sfkit_base INTERFACE sdsl)
+
 # Add cereal for serialization
 option(BUILD_DOC "" OFF)
 option(BUILD_SANDBOX "" OFF)

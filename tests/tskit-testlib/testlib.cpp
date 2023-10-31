@@ -212,7 +212,7 @@ char const* multi_derived_states_individuals = "0      0.2,1.5    -1,-1\n"
 // Simple example with multiple derived states
 /* Simple single tree example. */
 char const* single_tree_multi_derived_states_nodes =
-    /*          6          */
+    /*                              6          */
     "1  0   -1   -1\n"  /*         / \         */
     "1  0   -1   -1\n"  /*        /   \        */
     "1  0   -1   -1\n"  /*       /     \       */
