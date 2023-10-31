@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import click
 from rich.console import Console
+from rich.pretty import pprint
 
 from tugboat.cli.ls import cmd_ls
 from tugboat.cli.build import cmd_build
@@ -22,8 +23,21 @@ deps = _Deps()
 deps.console = Console()
 deps.log = Logger(deps.console)
 deps.config = Config()
-deps.datasets = Datasets.from_csv(deps.config.DATASETS_CSV, deps.config, deps.log)
+deps.datasets = Datasets.from_csv(
+    deps.config.EMPIRICAL_DATASETS_CSV,
+    deps.config.SCALING_DATASETS_CSV,
+    deps.config,
+    deps.log
+)
 deps.sh = sh_factory(deps.log)
+
+def build_collections(empirical: bool, scaling: bool): 
+    collections = list()
+    if empirical:
+        collections.extend(deps.config.EMPIRICAL_COLLECTIONS)
+    if scaling:
+        collections.extend(deps.config.SCALING_COLLECTIONS)
+    return collections
 
 @click.group()
 def cli():
@@ -94,15 +108,19 @@ def download():
     default=deps.config.DEFAULT_WARMUP_ITERATIONS
 )
 @click.option("--iterations", help="Number of iterations to run", default=deps.config.DEFAULT_ITERATIONS)
-def benchmark(redo: bool, warmup_iterations: int, iterations: int):
+@click.option("--empirical/--no-empirical", help="Include the empirical datasets? (1kg, sgdp, unified)", default=True)
+@click.option("--scaling/--no-scaling", help="Include the scaling datasets?", default=True)
+def benchmark(redo: bool, warmup_iterations: int, iterations: int, empirical: bool, scaling: bool):
     """Run all benchmarks"""
-    cmd_benchmark(redo, warmup_iterations, iterations)(deps)
+    cmd_benchmark(redo, warmup_iterations, iterations, build_collections(empirical, scaling))(deps)
 
 # --- compress ---
 @cli.command()
 @click.option("--parallel", help="Number of conversions to run in parallel", default=1)
-def compress(parallel: int):
-    cmd_compress(parallel)(deps)
+@click.option("--empirical/--no-empirical", help="Include the empirical datasets? (1kg, sgdp, unified)", default=True)
+@click.option("--scaling/--no-scaling", help="Include the scaling datasets?", default=True)
+def compress(parallel: int, empirical: bool, scaling: bool):
+    cmd_compress(parallel, build_collections(empirical, scaling))(deps)
 
 # --- program entry point ---
 if __name__ == "__main__":

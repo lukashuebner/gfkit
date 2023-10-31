@@ -1,18 +1,18 @@
 from concurrent.futures import ThreadPoolExecutor
-from rich.console import Console
 from os.path import isfile, exists
 from tugboat.git_rev import git_rev
 from tugboat.machine_id import machine_id
 from tugboat.deps import _Deps
 from returns.context import RequiresContext
-from rich.console import Console
-from tugboat.dataset import Dataset
+from tugboat.dataset import EmpiricalDataset, SimulatedDataset
 from tugboat.log import Logger
 import subprocess as sp
 from typing import Callable
 
 # TODO
-def _compress_and_check_for_error(sfkit_compress: str, dataset: Dataset, sh: Callable[[str, bool], int], log: Logger):
+
+
+def _compress_and_check_for_error(sfkit_compress: str, dataset, sh: Callable[[str, bool], int], log: Logger):
     try:
         sh(
             f"{sfkit_compress} "
@@ -34,24 +34,27 @@ def _compress_and_check_for_error(sfkit_compress: str, dataset: Dataset, sh: Cal
             """
         )
 
-def cmd_compress(parallel: int):
+
+def cmd_compress(parallel: int, collections: list[str]) -> RequiresContext[_Deps, None]:
     """Compress all the datasets (.trees) to the .forest format"""
     def factory(deps: _Deps) -> None:
         sh = deps.sh
         config = deps.config
         console = deps.console
-        datasets = deps.datasets
+        datasets = deps.datasets.by_collection(collections)
         log = deps.log
 
         sfkit_compress = f"{config.SFKIT_BIN} compress"
         with console.status("Converting datasets...") as status:
             with ThreadPoolExecutor(max_workers=parallel) as pool:
-                for dataset in datasets.all():
+                for dataset in datasets:
                     if isfile(dataset.forest_file()):
                         log.warn(f"{dataset.forest_file()} already exists")
                     elif exists(dataset.conversion_bench_file()):
-                        log.warn(f"{dataset.conversion_bench_file()} already exists")
+                        log.warn(
+                            f"{dataset.conversion_bench_file()} already exists")
                     else:
-                        pool.submit(_compress_and_check_for_error, sfkit_compress, dataset, sh, log)
+                        pool.submit(_compress_and_check_for_error,
+                                    sfkit_compress, dataset, sh, log)
 
     return RequiresContext(factory)

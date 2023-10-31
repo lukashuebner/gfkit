@@ -24,13 +24,13 @@ class DatasetStatusTable:
 def cmd_download() -> RequiresContext[_Deps, None]:
     """Download all datasets"""
     def factory(deps: _Deps) -> None:
-        console = deps.console
         datasets = deps.datasets
+        config = deps.config
         log = deps.log
         sh = deps.sh
 
         #with console.status("Downloading and extracting datasets...") as status:
-        for ds in datasets.all():
+        for ds in datasets.by_collection(config.EMPIRICAL_COLLECTIONS):
             if isfile(ds.trees_file()) and getsize(ds.trees_file()) > 0:
                 log.warn(f"{ds.trees_file()} already exists, skipping")
             else:

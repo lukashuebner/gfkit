@@ -9,10 +9,10 @@ from tugboat.machine_id import machine_id
 from tugboat.deps import _Deps
 
 
-def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int) -> RequiresContext[_Deps, None]:
+def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int, collections: list[str]) -> RequiresContext[_Deps, None]:
     """Run the benchmarks on all the datasets"""
     def factory(deps: _Deps) -> None:
-        datasets = deps.datasets
+        datasets = list(deps.datasets.by_collection(collections))
         console = deps.console
         config = deps.config
         log = deps.log
@@ -27,9 +27,9 @@ def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int) -> Requir
         )
         with rich.progress.Progress(*progress_bar_columns, console=console) as progress:
             task = progress.add_task(
-                "Running benchmarks...", total=len(datasets.all()))
+                "Running benchmarks...", total=len(datasets))
 
-            for dataset in datasets.all():
+            for dataset in datasets:
                 if not isfile(dataset.trees_file()):
                     log.warn(
                         f"{dataset.trees_file()} does not exists or is not a file")
@@ -54,19 +54,19 @@ def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int) -> Requir
                              f" --machine={machine_id()}"
                              f" > {dataset.ops_bench_file()}"
                              f" 2> /dev/null"
-                             )
+                    )
                     if ret != 0:
                         remove(dataset.ops_bench_file())
                         ok = False
 
-                    # Run tajimasD benchmark
+                    # Run benchmark of those functions that are implemented in Python only in tskit
                     sh(f"python3 {config.BENCHMARK_TSKITS_PYTHON_ONLY_FUNCS_PY}"
                        f" --trees-file={dataset.trees_file()}"
                        f" --iterations={iterations}"
                        f" --revision={git_rev()}"
                        f" --machine={machine_id()}"
                        f" > {dataset.tajimasD_bench_file()}"
-                       )
+                    )
                     if ret != 0:
                         remove(dataset.tajimasD_bench_file())
                         ok = False

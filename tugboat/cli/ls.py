@@ -1,6 +1,7 @@
 from rich.table import Table
 from returns.context import RequiresContext
 from tugboat.deps import _Deps
+from rich.pretty import pprint
 
 def cmd_ls() -> RequiresContext[_Deps, None]:
     """List all datasets"""
@@ -11,6 +12,7 @@ def cmd_ls() -> RequiresContext[_Deps, None]:
         table.add_column("basename")
         table.add_column("source")
 
+        pprint(deps.datasets.all())
         for ds in deps.datasets.all():
             table.add_row(ds.collection(), ds.chromosome(), ds.basename(), ds.tsz_url())
 

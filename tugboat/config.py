@@ -15,11 +15,16 @@ class Config:
     PLOTS_DIR = "experiments/plots/"
 
     # --- data files ---
-    DATASETS_CSV = DATA_DIR + "/datasets.csv"
+    EMPIRICAL_DATASETS_CSV = DATA_DIR + "/empirical-datasets.csv"
+    SCALING_DATASETS_CSV = DATA_DIR + "/scaling-datasets.csv"
     SFKIT_VS_TSKIT_BENCH_CSV = fs.path.combine(
         MEASUREMENTS_DIR, "sfkit-vs-tskit-bench.csv")
     TREES_FILES_STATS_CSV = fs.path.combine(
         MEASUREMENTS_DIR, "trees-files-stats.csv")
+
+    # --- datasets collections ---
+    EMPIRICAL_COLLECTIONS = ["1kg", "unified", "sgdp"]
+    SCALING_COLLECTIONS = ["scaling"]
 
     # --- plot files ---
     SFKIT_VS_TSKIT_BENCH_PLOT = fs.path.combine(
