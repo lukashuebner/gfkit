@@ -4,22 +4,22 @@ source("experiments/scripts/common.R")
 library(argparse)
 
 # --- Parse command line arguments ---
-parser <- ArgumentParser()
-
+# parser <- ArgumentParser()
+# 
 # by default ArgumentParser will add an help option
-parser$add_argument(
-    "-i", "--input",
-    type = "character",
-    required = TRUE,
-    help = "Input file name (csv)"
-)
-parser$add_argument(
-    "-o", "--output",
-    type = "character",
-    required = TRUE,
-    help = "Output file name (pdf/png/...)"
-)
-args <- parser$parse_args()
+# parser$add_argument(
+#     "-i", "--input",
+#     type = "character",
+#     required = TRUE,
+#     help = "Input file name (csv)"
+# )
+# parser$add_argument(
+#     "-o", "--output",
+#     type = "character",
+#     required = TRUE,
+#     help = "Output file name (pdf/png/...)"
+# )
+# args <- parser$parse_args()
 
 # --- For running in RStudio/VSCode/Emacs ---
 args <- list()
@@ -45,15 +45,15 @@ pretty_print_datasets <- function(filename) {
 collection_labels <- c(
     "1kg" = "1KG",
     "sgdp" = "SGDP",
-    "unified" = "Unified",
-    "anderson" = "Anderson (simulated)"
+    "unified" = "Unified"
+    # "anderson" = "Anderson (simulated)"
 )
 
 collection_colors <- c(
     "1kg" = "#ff7f0e",
     "sgdp" = "#d62728",
-    "unified" = "#1f77b4",
-    "anderson" = "#2ca02c"
+    "unified" = "#1f77b4"
+    # "anderson" = "#2ca02c"
 )
 
 section_colors <- c(

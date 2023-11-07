@@ -22,9 +22,9 @@ parser$add_argument(
 )
 args <- parser$parse_args()
 
-# args <- list()
-# args$input <- "experiments/data/trees-files-stats.csv"
-# args$output_prefix <- "experiments/plots/trees-files-stats"
+args <- list()
+args$input <- "experiments/data/trees-files-stats.csv"
+args$output_prefix <- "experiments/plots/trees-files-stats"
 
 data <- read_csv(
     args$input,
