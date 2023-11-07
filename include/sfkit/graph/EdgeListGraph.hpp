@@ -7,8 +7,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include <sfkit/include-redirects/hopscotch_map.hpp>
 #include <kassert/kassert.hpp>
+#include <sfkit/include-redirects/hopscotch_map.hpp>
 
 #include "common.hpp"
 #include "sfkit/assertion_levels.hpp"
@@ -169,7 +169,7 @@ public:
     }
 
     bool check_postorder() const {
-        // Initialize all leafs as visited and all other nodes as unvisited.
+        // Initialize all leaves as visited and all other nodes as unvisited.
         std::vector<bool> visited(num_nodes(), false);
         for (auto leaf: _leaves) {
             visited[leaf] = true;
@@ -193,7 +193,7 @@ public:
             }
         }
 
-        // Check that all nodes were visited -- this does not check if the leafs are visited, as we set them to true
+        // Check that all nodes were visited -- this does not check if the leaves are visited, as we set them to true
         // explicitly above.
         for (auto const& v: visited) {
             if (!v) {

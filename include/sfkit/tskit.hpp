@@ -513,7 +513,7 @@ public:
             }
 
             iterator& operator++() {
-                if (_just_moved_up || _tree_sequence.is_sample(_current_node)) {
+                if (_just_moved_up || is_sample()) {
                     // The children of this node were already processed OR there are no children because the current
                     // node is a sample node.
                     if (_tree.right_sib[_current_node] != TSK_NULL) {
@@ -540,25 +540,42 @@ public:
                 return tmp;
             }
 
-            bool operator==(iterator const& other) const {
+            [[nodiscard]] bool operator==(iterator const& other) const {
                 return _current_node == other._current_node && &_tree == &other._tree
                        && _just_moved_up == other._just_moved_up;
             }
 
-            bool operator!=(iterator const& other) const {
+            [[nodiscard]] bool operator!=(iterator const& other) const {
                 return !(*this == other);
             }
 
-            bool operator==(sentinel) {
+            [[nodiscard]] bool operator==(sentinel) {
                 return _current_node == TSK_NULL;
             }
 
-            reference operator*() {
+            [[nodiscard]] reference operator*() {
                 KASSERT(_current_node != TSK_NULL);
                 return _current_node;
             }
 
-            pointer operator->() {
+            [[nodiscard]] reference node_id() {
+                return operator*();
+            }
+
+            [[nodiscard]] bool first_visit() {
+                return !_just_moved_up;
+            }
+
+            [[nodiscard]] bool second_visit() {
+                return _just_moved_up;
+            }
+
+            [[nodiscard]] bool is_sample() {
+                KASSERT(_current_node != TSK_NULL);
+                return _tree_sequence.is_sample(_current_node);
+            }
+
+            [[nodiscard]] pointer operator->() {
                 KASSERT(_current_node != TSK_NULL);
                 return &_current_node;
             }

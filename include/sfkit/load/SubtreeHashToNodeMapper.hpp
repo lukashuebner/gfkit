@@ -5,10 +5,9 @@
 #include "sfkit/graph/common.hpp"
 #include "sfkit/load/SubtreeHasher.hpp"
 
-// TODO Rename files to use the same case as the class names
-class SubtreeHash2NodeMapper {
+class SubtreeHashToNodeMapper {
 public:
-    SubtreeHash2NodeMapper() {
+    SubtreeHashToNodeMapper() {
         // TODO Retest this with the new hash map
         // Even if I know the exact size of the map, reserving the memory /degrades/ performance.
         // Hypothesis: Even more cache-misses in the beginning, when the map isn't fully filled yet.

@@ -12,7 +12,7 @@
 
 class Ts2SfMappingExtractor {
 public:
-    using SingleTreeMapper = TsToSfNodeMapper<std::vector<SubtreeHash>, SubtreeHash2NodeMapper>;
+    using SingleTreeMapper = TsToSfNodeMapper<std::vector<SubtreeHash>, SubtreeHashToNodeMapper>;
 
     Ts2SfMappingExtractor(TreeId num_trees, NodeId num_nodes) : _num_nodes(num_nodes) {
         _mappings.resize(num_trees);

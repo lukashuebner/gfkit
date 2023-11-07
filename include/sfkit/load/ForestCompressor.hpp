@@ -128,7 +128,7 @@ private:
     tsk_size_t               _num_samples;
     TSKitTree                _ts_tree;
     std::vector<SubtreeHash> _ts_node_to_subtree;
-    SubtreeHash2NodeMapper   _subtree_to_sf_node;
+    SubtreeHashToNodeMapper   _subtree_to_sf_node;
     SubtreeHasher            _subtree_hash_factory;
 
     // The sample ids are consecutive: 0 ... num_samples - 1

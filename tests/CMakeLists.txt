@@ -48,3 +48,5 @@ register_test(test-sample-set FILES test-sample-set.cpp)
 register_test(test-num-samples-below FILES test-num-samples-below.cpp)
 
 register_test(test-tskit-wrapper FILES test-tskit-wrapper.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
+
+register_test(test-bp-forest-compression FILES test-bp-forest-compression.cpp tskit-testlib/testlib.cpp LIBRARIES tskit)
