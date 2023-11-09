@@ -376,6 +376,20 @@ public:
         return std::tuple(NumSamplesBelowAccessor(num_samples_below, 0), NumSamplesBelowAccessor(num_samples_below, 1));
     }
 
+    // TODO Use template magic to avoid code duplication
+    template <typename BaseType = SampleId>
+    static auto build(BPCompressedForest const& forest, SampleSet const& samples_0, SampleSet const& samples_1) {
+        using SetOfSampleSets          = typename BPNumSamplesBelow<2, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 2;
+
+        auto num_samples_below = std::make_shared<BPNumSamplesBelow<num_sample_sets>>(
+            forest,
+            SetOfSampleSets{std::cref(samples_0), std::cref(samples_1)}
+        );
+
+        return std::tuple(NumSamplesBelowAccessor(num_samples_below, 0), NumSamplesBelowAccessor(num_samples_below, 1));
+    }
+
     template <typename BaseType = SampleId>
     static auto build(
         EdgeListGraph const& dag,
@@ -389,6 +403,30 @@ public:
 
         auto num_samples_below = std::make_shared<NumSamplesBelow<num_sample_sets, BaseType>>(
             dag,
+            SetOfSampleSets{std::cref(samples_0), std::cref(samples_1), std::cref(samples_2), std::cref(samples_3)}
+        );
+
+        return std::tuple(
+            NumSamplesBelowAccessor(num_samples_below, 0),
+            NumSamplesBelowAccessor(num_samples_below, 1),
+            NumSamplesBelowAccessor(num_samples_below, 2),
+            NumSamplesBelowAccessor(num_samples_below, 3)
+        );
+    }
+
+    template <typename BaseType = SampleId>
+    static auto build(
+        BPCompressedForest const& forest,
+        SampleSet const&          samples_0,
+        SampleSet const&          samples_1,
+        SampleSet const&          samples_2,
+        SampleSet const&          samples_3
+    ) {
+        using SetOfSampleSets          = typename BPNumSamplesBelow<4, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 4;
+
+        auto num_samples_below = std::make_shared<BPNumSamplesBelow<num_sample_sets, BaseType>>(
+            forest,
             SetOfSampleSets{std::cref(samples_0), std::cref(samples_1), std::cref(samples_2), std::cref(samples_3)}
         );
 
