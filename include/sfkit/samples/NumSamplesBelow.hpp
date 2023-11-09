@@ -6,9 +6,8 @@
 
 #include <kassert/kassert.hpp>
 
-#include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/BPCompressedForest.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 
@@ -160,6 +159,148 @@ private:
     }
 };
 
+// TODO Split up this and other files.
+// TODO Move from header-only to .hpp + .cpp
+template <size_t N = 1, typename BaseType = SampleId>
+class BPNumSamplesBelow {
+public:
+    using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
+
+    BPNumSamplesBelow(BPCompressedForest const& forest, SetOfSampleSets const& samples) : _forest(forest) {
+        // Check inputs
+        KASSERT(_forest.num_nodes() >= _forest.num_leaves(), "DAG has less nodes than leaves.", sfkit::assert::light);
+        for (auto sample_set: samples) {
+            KASSERT(
+                _forest.num_leaves() <= sample_set.get().overall_num_samples(),
+                "Number of leaves in the DAG is greater than he number of overall samples representable in the subtree "
+                "size object. (NOT the number of samples actually in the SampleSet)",
+                sfkit::assert::light
+            );
+            KASSERT(
+                sample_set.get().popcount() <= sample_set.get().overall_num_samples(),
+                "Number of samples in sample set is greater than he number of overall samples representable in the "
+                "subtree size object. (NOT the number of samples actually in the SampleSet)",
+                sfkit::assert::light
+            );
+            // Will make redundant comprisons, but will only execute in DEBUG mode anyway
+            for (auto other_sample_set: samples) {
+                KASSERT(
+                    sample_set.get().overall_num_samples() == other_sample_set.get().overall_num_samples(),
+                    "Sample sets have different number of overall representable samples. (NOT the number of samples "
+                    "actually "
+                    "in the SampleSet)",
+                    sfkit::assert::light
+                );
+            }
+        }
+
+        // Initialize _num_sample_in_sample_set
+        auto num_samples_in_sample_set_it = _num_samples_in_sample_set.begin();
+        auto samples_it                   = samples.begin();
+        while (samples_it != samples.end()) {
+            *num_samples_in_sample_set_it = samples_it->get().popcount();
+            num_samples_in_sample_set_it++;
+            samples_it++;
+        }
+
+        // Compute the subtree sizes
+        _compute(samples);
+    }
+
+    [[nodiscard]] SampleId num_samples_below(NodeId node_id, SampleSetId sample_set_id) const {
+        KASSERT(node_id < _subtree_sizes.size(), "Subtree ID out of bounds.", sfkit::assert::light);
+        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", sfkit::assert::light);
+
+        return _subtree_sizes[node_id][sample_set_id];
+    }
+
+    [[nodiscard]] SampleId operator()(NodeId node_id, SampleSetId sample_set_id) const {
+        return this->num_samples_below(node_id, sample_set_id);
+    }
+
+    [[nodiscard]] SampleId num_nodes_in_dag() const {
+        return asserting_cast<SampleId>(_forest.num_nodes());
+    }
+
+    [[nodiscard]] SampleId num_samples_in_dag() const {
+        return asserting_cast<SampleId>(_forest.num_leaves());
+    }
+
+    [[nodiscard]] SampleId num_samples_in_sample_set(SampleSetId sample_set_id) const {
+        KASSERT(sample_set_id >= 0 && sample_set_id <= N, "Sample set ID invalid.", sfkit::assert::light);
+        return _num_samples_in_sample_set[sample_set_id];
+    }
+
+private:
+    using simd_t = stdx::fixed_size_simd<BaseType, N>;
+    BPCompressedForest const& _forest;
+    std::array<SampleId, N>   _num_samples_in_sample_set;
+    std::vector<simd_t>       _subtree_sizes;
+
+    void _compute(SetOfSampleSets const& samples) {
+        KASSERT(_subtree_sizes.size() == 0ul, "Subtree sizes already computed.", sfkit::assert::light);
+        _subtree_sizes.resize(_forest.num_nodes(), 0);
+
+        KASSERT(samples.size() == N);
+        for (size_t sample_set_idx = 0; sample_set_idx < N; sample_set_idx++) {
+            for (SampleId sample: samples[sample_set_idx].get()) {
+                _subtree_sizes[sample][sample_set_idx] = 1;
+            }
+        }
+
+        auto const& bp     = _forest.balanced_parenthesis();
+        auto const& is_ref = _forest.is_reference();
+        KASSERT(
+            bp.size() == is_ref.size(),
+            "balanced_parenthesis and is_reference are of different size",
+            sfkit::assert::light
+        );
+
+        KASSERT(samples.size() == N);
+        for (size_t sample_set_idx = 0; sample_set_idx < N; sample_set_idx++) {
+            for (SampleId sample: samples[sample_set_idx].get()) {
+                _subtree_sizes[sample][sample_set_idx] = 1;
+            }
+        }
+
+        std::vector<simd_t> sample_counts;
+        for (size_t idx = 0; idx < bp.size(); idx++) {
+            if (is_ref[idx]) { // reference
+                // Reference always occur as tuples of (open, close) in BP and (true, true) in is_ref
+                KASSERT(idx + 1 < bp.size());
+                KASSERT(bp[idx] == bp::PARENS_OPEN);
+                ++idx;
+                KASSERT(is_ref[idx]);
+                KASSERT(bp[idx] == bp::PARENS_CLOSE);
+
+                size_t const node_id = asserting_cast<size_t>(_forest.node_id_ref(idx - 1));
+                sample_counts.push_back(_subtree_sizes[node_id]);
+            } else { // description of subtree
+                if (bp[idx] == bp::PARENS_CLOSE) {
+                    KASSERT(idx >= 1ul); // The first bit in the sequence can never be a closing parenthesis.
+                    if (bp[idx - 1] == bp::PARENS_OPEN) { // sample
+                        size_t const node_id = asserting_cast<size_t>(_forest.node_id(idx - 1));
+                        sample_counts.push_back(_subtree_sizes[node_id]);
+                    } else { // inner node
+                        KASSERT(sample_counts.size() >= 2ul);
+                        auto const left = sample_counts.back();
+                        sample_counts.pop_back();
+
+                        auto const right = sample_counts.back();
+                        sample_counts.pop_back();
+
+                        auto const us = left + right;
+                        sample_counts.push_back(us);
+
+                        auto const node_id      = _forest.node_id(asserting_cast<size_t>(idx));
+                        _subtree_sizes[node_id] = us;
+                    }
+                }
+            }
+        }
+    }
+};
+
 template <typename NumSamplesBelow>
 class NumSamplesBelowAccessor {
 public:
@@ -206,6 +347,18 @@ public:
 
         auto const num_samples_below =
             std::make_shared<NumSamplesBelow<num_sample_sets, BaseType>>(dag, SetOfSampleSets{std::cref(samples)});
+
+        return NumSamplesBelowAccessor(num_samples_below, 0);
+    }
+
+    template <typename BaseType = SampleId>
+    static NumSamplesBelowAccessor<BPNumSamplesBelow<1, BaseType>>
+    build(BPCompressedForest const& forest, SampleSet const& samples) {
+        using SetOfSampleSets          = typename BPNumSamplesBelow<1, BaseType>::SetOfSampleSets;
+        constexpr auto num_sample_sets = 1;
+
+        auto const num_samples_below =
+            std::make_shared<BPNumSamplesBelow<num_sample_sets, BaseType>>(forest, SetOfSampleSets{std::cref(samples)});
 
         return NumSamplesBelowAccessor(num_samples_below, 0);
     }

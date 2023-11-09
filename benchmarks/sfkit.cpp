@@ -116,7 +116,6 @@ void benchmark(
     timer.start();
 
     EdgeListGraph const& dag = forest.postorder_edges();
-    // auto                 num_samples_below = forest.compute_num_samples_below(forest.all_samples());
     using SetOfSampleSets  = NumSamplesBelow<1>::SetOfSampleSets;
     auto all_samples       = forest.all_samples();
     auto num_samples_below = NumSamplesBelow<1>(dag, SetOfSampleSets{std::cref(all_samples)});
