@@ -16,7 +16,6 @@
 #include "sfkit/graph/balanced_parenthesis.hpp"
 #include "sfkit/load/SubtreeHashToNodeMapper.hpp"
 #include "sfkit/load/SubtreeHasher.hpp"
-#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/tskit.hpp"
 #include "sfkit/utils/concepts.hpp"
@@ -100,8 +99,8 @@ public:
         if (_is_leaf[bp_idx]) {
             auto const nth_leaf = _is_leaf_rank(bp_idx) >> 1;
             KASSERT(nth_leaf < num_leaves());
-            std::cout << "bp_idx: " << bp_idx << " nth_leaf: " << nth_leaf
-                      << " _leaves[nth_leaf]: " << _leaves[nth_leaf] << std::endl;
+            // std::cout << "bp_idx: " << bp_idx << " nth_leaf: " << nth_leaf
+            //           << " _leaves[nth_leaf]: " << _leaves[nth_leaf] << std::endl;
             return _leaves[nth_leaf];
         } else {
             auto const rank_in_bp              = _balanced_parenthesis_rank(bp_idx);
@@ -111,9 +110,9 @@ public:
                 "Inconsistent state of rank support vectors.",
                 sfkit::assert::light
             );
-            std::cout << "bp_idx: " << bp_idx << " rank_in_bp: " << rank_in_bp
-                      << " num_leaf_bits_in_prefix: " << num_leaf_bits_in_prefix << " num_leaves(): " << num_leaves()
-                      << " node_id: " << rank_in_bp - num_leaf_bits_in_prefix + num_leaves() << std::endl;
+            // std::cout << "bp_idx: " << bp_idx << " rank_in_bp: " << rank_in_bp
+            //           << " num_leaf_bits_in_prefix: " << num_leaf_bits_in_prefix << " num_leaves(): " << num_leaves()
+            //           << " node_id: " << rank_in_bp - num_leaf_bits_in_prefix + num_leaves() << std::endl;
             return asserting_cast<NodeId>(rank_in_bp - num_leaf_bits_in_prefix + num_leaves());
         }
     }

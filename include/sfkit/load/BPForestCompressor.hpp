@@ -259,9 +259,6 @@ private:
         // TODO This should not be independent of the node_id calculation in BPCompressedForest
         if (!is_leaf) { // Leaves are already registered
             _subtree_to_sf_node.insert_node(subtree_id);
-            std::cout << "inserted " << (is_leaf ? "leaf " : "inner ") << subtree_id << " at " << reference.start
-                      << " with length " << reference.length << " and id " << _subtree_to_sf_node.num_nodes() - 1
-                      << std::endl;
         }
         KASSERT(_balanced_parenthesis.index() == _is_reference.index());
         KASSERT(_balanced_parenthesis.index() == _is_leaf.index());
