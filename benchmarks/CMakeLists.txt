@@ -2,10 +2,10 @@
 # compatible with either of those three.
 
 if (SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP)
-    add_executable(sfkit-bench sfkit.cpp ${BACKWARD_ENABLE})
+    add_executable(sfkit-bench sfkit-bench.cpp ${BACKWARD_ENABLE})
     add_backward(sfkit-bench)
 else ()
-    add_executable(sfkit-bench sfkit.cpp)
+    add_executable(sfkit-bench sfkit-bench.cpp)
 endif ()
 
 if (SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT)
