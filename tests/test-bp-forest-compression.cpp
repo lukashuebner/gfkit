@@ -363,6 +363,7 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
         }
     }
 
+    // TODO
     // { // Two sample sets at once
     //     SampleSet sample_set_0(bp_forest.num_samples());
     //     SampleSet sample_set_1(bp_forest.num_samples());

@@ -264,8 +264,8 @@ private:
 
         // TODO Abstract this away into a NodeIdCounter class which we also use during forest compression
         std::vector<simd_t> sample_counts;
-        SampleId            leaf_idx      = 0;
         NodeId              inner_node_id = _forest.num_samples();
+        SampleId            leaf_rank     = 0;
         size_t              ref_rank      = 0;
 
         for (size_t idx = 0; idx < bp.size(); idx++) {
@@ -277,8 +277,7 @@ private:
                 KASSERT(is_ref[idx]);
                 KASSERT(bp[idx] == bp::PARENS_CLOSE);
 
-                //size_t const node_id = asserting_cast<size_t>(_forest.node_id_ref(idx - 1));
-                auto const node_id = _forest.node_id_ref_by_rank(ref_rank);
+                NodeId const node_id = _forest.node_id_ref_by_rank(ref_rank);
                 sample_counts.push_back(_subtree_sizes[node_id]);
                 ++ref_rank;
             } else { // description of subtree
@@ -287,13 +286,11 @@ private:
                     if (bp[idx - 1] == bp::PARENS_OPEN) { // sample
                         KASSERT(_forest.is_leaf(idx));
                         KASSERT(_forest.is_leaf(idx - 1));
-                        KASSERT(leaf_idx < _forest.num_samples());
-                        auto const leaf_id = _forest.leaf_idx_to_id(leaf_idx);
+                        KASSERT(leaf_rank < _forest.num_samples());
+                        SampleId const leaf_id = _forest.leaf_idx_to_id(leaf_rank);
                         KASSERT(leaf_id == _forest.node_id(idx - 1));
-                        // TODO Remove
-                        // size_t const node_id = asserting_cast<size_t>(_forest.node_id(idx - 1));
                         sample_counts.push_back(_subtree_sizes[leaf_id]);
-                        ++leaf_idx;
+                        ++leaf_rank;
                     } else { // inner node
                         KASSERT(sample_counts.size() >= 2ul);
                         auto const left = sample_counts.back();
