@@ -32,7 +32,7 @@ public:
         sdsl::bit_vector const&                  is_reference,
         sdsl::bit_vector const&                  is_leaf,
         sdsl::bit_vector const&                  balanced_parenthesis,
-        sdsl::int_vector<> const&                references,
+        sdsl::int_vector<NodeId_bitwidth> const& references,
         sdsl::int_vector<NodeId_bitwidth> const& leaves,
         NodeId const                             num_nodes,
         NodeId const                             num_leaves,
@@ -95,34 +95,52 @@ public:
     //     return _dag_postorder_edges.leaves();
     // }
 
+    bool is_leaf(size_t const bp_idx) const {
+        return _is_leaf[bp_idx];
+    }
+
+    SampleId leaf_idx_to_id(SampleId const leaf_id) const {
+        KASSERT(leaf_id < num_leaves());
+        return _leaves[asserting_cast<size_t>(leaf_id)];
+    }
+
     NodeId node_id(size_t const bp_idx) const {
         if (_is_leaf[bp_idx]) {
-            auto const nth_leaf = _is_leaf_rank(bp_idx) >> 1;
+            SampleId const nth_leaf = asserting_cast<SampleId>(_is_leaf_rank(bp_idx) >> 1);
             KASSERT(nth_leaf < num_leaves());
             // std::cout << "bp_idx: " << bp_idx << " nth_leaf: " << nth_leaf
             //           << " _leaves[nth_leaf]: " << _leaves[nth_leaf] << std::endl;
-            return _leaves[nth_leaf];
+            return leaf_idx_to_id(nth_leaf);
         } else {
             auto const rank_in_bp              = _balanced_parenthesis_rank(bp_idx);
             auto const num_leaf_bits_in_prefix = _is_leaf_rank(bp_idx) >> 1;
+            auto const num_ref_bits_in_prefix  = _is_reference_rank(bp_idx) >> 1;
             KASSERT(
-                rank_in_bp >= num_leaf_bits_in_prefix >> 1,
+                rank_in_bp >= num_leaf_bits_in_prefix + num_ref_bits_in_prefix,
                 "Inconsistent state of rank support vectors.",
                 sfkit::assert::light
             );
             // std::cout << "bp_idx: " << bp_idx << " rank_in_bp: " << rank_in_bp
             //           << " num_leaf_bits_in_prefix: " << num_leaf_bits_in_prefix << " num_leaves(): " << num_leaves()
             //           << " node_id: " << rank_in_bp - num_leaf_bits_in_prefix + num_leaves() << std::endl;
-            return asserting_cast<NodeId>(rank_in_bp - num_leaf_bits_in_prefix + num_leaves());
+            auto const node_id =
+                asserting_cast<NodeId>(rank_in_bp - num_leaf_bits_in_prefix - num_ref_bits_in_prefix + num_leaves());
+            KASSERT(node_id < num_nodes());
+            return node_id;
         }
     }
 
     NodeId node_id_ref(size_t const bp_idx) const {
         KASSERT((_is_reference_rank(bp_idx) & 1ul) == 0ul);
-        // TODO document, why we're not dividing by 2
-        auto const ref_rank         = _is_reference_rank(bp_idx);
-        auto const idx_of_reference = _references[ref_rank];
-        return node_id(idx_of_reference);
+        // TODO document, why we're dividing by 2 and multiplying by 3 -> Abstract away to ReferenceStorage
+        // TODO Count references to get rid of the rank
+        // TODO Do we need the other information about the references? -> different vectors (easier indexing)?
+        auto const ref_rank = _is_reference_rank(bp_idx) >> 1;
+        return node_id_ref_by_rank(ref_rank);
+    }
+
+    NodeId node_id_ref_by_rank(size_t const ref_rank) const {
+        return _references[ref_rank];
     }
 
     // This function is accessible mainly for unit-testing. It is not part of the public API.
@@ -155,7 +173,7 @@ private:
     sdsl::bit_vector        _balanced_parenthesis;
     // TODO Document why we're ranking the 0 pattern
     sdsl::rank_support_v5<0>          _balanced_parenthesis_rank;
-    sdsl::int_vector<>                _references;
+    sdsl::int_vector<NodeId_bitwidth> _references;
     sdsl::int_vector<NodeId_bitwidth> _leaves;
     NodeId                            _num_nodes;
     SampleId                          _num_leaves;

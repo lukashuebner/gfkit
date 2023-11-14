@@ -10,6 +10,7 @@
 #include "perf.hpp"
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/load/BPForestCompressor.hpp"
 #include "sfkit/load/CompressedForestIO.hpp"
 #include "sfkit/load/ForestCompressor.hpp"
 #include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
@@ -17,6 +18,7 @@
 #include "sfkit/tskit.hpp"
 #include "timer.hpp"
 
+// TODO Rename this file to sfkit-bench.cpp
 constexpr double FLOAT_EQ_EPS = 1e-4;
 
 void compress(std::string const& trees_file, std::string const& forest_file, ResultsPrinter& results_printer) {
@@ -116,13 +118,27 @@ void benchmark(
     timer.start();
 
     EdgeListGraph const& dag = forest.postorder_edges();
-    using SetOfSampleSets  = NumSamplesBelow<1>::SetOfSampleSets;
-    auto all_samples       = forest.all_samples();
-    auto num_samples_below = NumSamplesBelow<1>(dag, SetOfSampleSets{std::cref(all_samples)});
+    using SetOfSampleSets    = NumSamplesBelow<1>::SetOfSampleSets;
+    auto all_samples         = forest.all_samples();
+    auto num_samples_below   = NumSamplesBelow<1>(dag, SetOfSampleSets{std::cref(all_samples)});
     do_not_optimize(num_samples_below);
 
     log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
     log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
+
+    // --- Benchmark computing subtree sizes using the BP-based data structure---
+    using SetOfSampleSets = NumSamplesBelow<1>::SetOfSampleSets;
+    BPForestCompressor     bp_forest_compressor(tree_sequence);
+    GenomicSequenceFactory bp_sequence_factory(tree_sequence);
+    BPCompressedForest     bp_forest            = bp_forest_compressor.compress(bp_sequence_factory);
+
+    memory_usage.start();
+    timer.start();
+    auto                   bp_num_samples_below = NumSamplesBelowFactory::build(bp_forest, all_samples);
+    do_not_optimize(bp_num_samples_below);
+
+    log_time(warmup, "compute_subtree_sizes", "sfkit-bp", timer.stop());
+    log_mem(warmup, "compute_subtree_sizes", "sfkit-bp", memory_usage.stop());
 
     // --- Construct the SequenceForest object on which we then call the high-level operations. ---
     // TODO The SequenceForest does not need to hold the tree_sequence at all times; it's only used during

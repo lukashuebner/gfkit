@@ -32,6 +32,7 @@ public:
         }
         _ts_node_to_subtree.resize(_ts_tree.max_node_id());
         _register_samples(tree_sequence);
+        KASSERT(_subtree_to_sf_node.num_nodes() == tree_sequence.num_samples());
     }
 
     template <typename GenomicSequenceFactoryT>
@@ -78,15 +79,18 @@ public:
 
                     auto const reference_it = _subtrees.find(subtree_id);
                     if (reference_it != _subtrees.end()) {
-                        // The subtree has already been added to the BP, reference it.
                         // The referenced node (== subtree) has already been added to the BP, reference it.
                         _rollback_subtree();
                         _refer_to(reference_it);
                     } else {
+                        // This is no subtree not encoded before, close and store if for future reference.
                         _close_and_commit_subtree(subtree_id);
-                        _ts_node_to_subtree[asserting_cast<size_t>(ts_node_id)] =
-                            subtree_id; // TODO Move this somewhere else?
                     }
+
+                    // Multiple inner nodes in the tskit tree sequence might describe the same subtree. We recognize
+                    // this and refer back to the already encoded node. We thus have to store the mapping ts node ->
+                    // subtree (and thus ts node) if we encode a new subtree AND if we refer to an existing subtree.
+                    _ts_node_to_subtree[asserting_cast<size_t>(ts_node_id)] = subtree_id;
                 }
                 ++node_it;
             }
@@ -126,6 +130,7 @@ private:
     struct Reference {
         size_t start;
         size_t length;
+        NodeId node_id;
     };
 
     struct SubtreeStart {
@@ -182,7 +187,7 @@ private:
     using IsReference           = DynamicSDSLContainer<sdsl::bit_vector>;
     using IsLeaf                = DynamicSDSLContainer<sdsl::bit_vector>;
     using IsBalancedParenthesis = DynamicSDSLContainer<sdsl::bit_vector>;
-    using References            = DynamicSDSLContainer<sdsl::int_vector<> >;
+    using References            = DynamicSDSLContainer<sdsl::int_vector<NodeId_bitwidth> >;
     using Leaves                = DynamicSDSLContainer<sdsl::int_vector<NodeId_bitwidth> >;
     using SubtreeStarts         = std::vector<SubtreeStart>;
     using Subtrees              = tsl::hopscotch_map<SubtreeHash, Reference>;
@@ -248,20 +253,23 @@ private:
         _balanced_parenthesis.push_back(bp::PARENS_CLOSE);
         _is_leaf.push_back(is_leaf);
 
-        // Add the reference to the subtree that begins at the open parenthesis.
-        // TODO Use emplace
-        Reference reference;
-        reference.start  = _subtree_starts.back().bp_start;
-        reference.length = _balanced_parenthesis.index() - reference.start;
-        _subtree_starts.pop_back();
-        _subtrees[subtree_id] = reference;
-
         // TODO This should not be independent of the node_id calculation in BPCompressedForest
-        if (!is_leaf) { // Leaves are already registered
-            _subtree_to_sf_node.insert_node(subtree_id);
+        NodeId node_id = 0;
+        if (is_leaf) { // Leaves are already registered
+            node_id = _subtree_to_sf_node[subtree_id];
+        } else { // Inner nodes need to be registered and get assigned an ID
+            node_id = _subtree_to_sf_node.insert_node(subtree_id);
         }
         KASSERT(_balanced_parenthesis.index() == _is_reference.index());
         KASSERT(_balanced_parenthesis.index() == _is_leaf.index());
+
+        // Add the reference to the subtree that begins at the open parenthesis.
+        // TODO Use emplace
+        Reference reference;
+        reference.start       = _subtree_starts.back().bp_start;
+        reference.length      = _balanced_parenthesis.index() - reference.start;
+        reference.node_id     = node_id;
+        _subtrees[subtree_id] = reference;
     }
 
     void _rollback_subtree() {
@@ -283,18 +291,24 @@ private:
         KASSERT(_balanced_parenthesis.index() == _is_leaf.index());
         _is_reference.push_back(true);
         _is_reference.push_back(true);
-        _is_leaf.push_back(false);
-        _is_leaf.push_back(false);
         _balanced_parenthesis.push_back(bp::PARENS_OPEN);
         _balanced_parenthesis.push_back(bp::PARENS_CLOSE);
+
+        // TODO
+        // bool const ref_to_leaf = reference_it->second.length == 2;
+        // _is_leaf.push_back(ref_to_leaf);
+        // _is_leaf.push_back(ref_to_leaf);
+        _is_leaf.push_back(false);
+        _is_leaf.push_back(false);
 
         KASSERT(
             reference_it != _subtrees.end(),
             "Trying to refer to subtree which has not been stored yet.",
-            sfkit::assert::normal
+            sfkit::assert::light
         );
-        _references.push_back(reference_it->second.start);
-        _references.push_back(reference_it->second.length);
+        // _references.push_back(reference_it->second.start);
+        // _references.push_back(reference_it->second.length);
+        _references.push_back(reference_it->second.node_id);
         // TODO Re-use the tree topology with different leaf names.
         KASSERT(_balanced_parenthesis.index() == _is_reference.index());
         KASSERT(_balanced_parenthesis.index() == _is_leaf.index());
