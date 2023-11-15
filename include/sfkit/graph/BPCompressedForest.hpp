@@ -1,9 +1,11 @@
 #pragma once
 
-// #include <sparsehash/dense_hash_map>
+#include <cstddef>
 #include <memory>
 #include <unordered_set>
 
+#include <fmt/core.h>
+#include <fmt/format.h>
 #include <kassert/kassert.hpp>
 #include <sfkit/include-redirects/cereal.hpp>
 #include <sfkit/include-redirects/sdsl.hpp>
@@ -24,6 +26,9 @@ class BPCompressedForest {
 public:
     static constexpr bool PARENS_OPEN  = bp::PARENS_OPEN;
     static constexpr bool PARENS_CLOSE = bp::PARENS_CLOSE;
+
+    // TODO Cereal has a proper way to construct a class which has no default constructor
+    BPCompressedForest() = default;
 
     // TODO We don't move these vectors as we want to compress them. -> Add compression
     // TODO add const where possible
@@ -79,22 +84,6 @@ public:
         return _num_nodes;
     }
 
-    // [[nodiscard]] EdgeId num_edges() const {
-    //     return _dag_postorder_edges.num_edges();
-    // }
-
-    // [[nodiscard]] std::vector<NodeId> const& roots() const {
-    //     return _dag_postorder_edges.roots();
-    // }
-
-    // [[nodiscard]] NodeId num_roots() const {
-    //     return _dag_postorder_edges.num_roots();
-    // }
-
-    // [[nodiscard]] std::vector<NodeId> const& leaves() const {
-    //     return _dag_postorder_edges.leaves();
-    // }
-
     bool is_leaf(size_t const bp_idx) const {
         return _is_leaf[bp_idx];
     }
@@ -104,12 +93,11 @@ public:
         return _leaves[asserting_cast<size_t>(leaf_id)];
     }
 
+    // TODO Add documentation, especially about runtime
     NodeId node_id(size_t const bp_idx) const {
         if (_is_leaf[bp_idx]) {
             SampleId const nth_leaf = asserting_cast<SampleId>(_is_leaf_rank(bp_idx) >> 1);
             KASSERT(nth_leaf < num_leaves());
-            // std::cout << "bp_idx: " << bp_idx << " nth_leaf: " << nth_leaf
-            //           << " _leaves[nth_leaf]: " << _leaves[nth_leaf] << std::endl;
             return leaf_idx_to_id(nth_leaf);
         } else {
             auto const rank_in_bp              = _balanced_parenthesis_rank(bp_idx);
@@ -120,9 +108,6 @@ public:
                 "Inconsistent state of rank support vectors.",
                 sfkit::assert::light
             );
-            // std::cout << "bp_idx: " << bp_idx << " rank_in_bp: " << rank_in_bp
-            //           << " num_leaf_bits_in_prefix: " << num_leaf_bits_in_prefix << " num_leaves(): " << num_leaves()
-            //           << " node_id: " << rank_in_bp - num_leaf_bits_in_prefix + num_leaves() << std::endl;
             auto const node_id =
                 asserting_cast<NodeId>(rank_in_bp - num_leaf_bits_in_prefix - num_ref_bits_in_prefix + num_leaves());
             KASSERT(node_id < num_nodes());
@@ -142,7 +127,6 @@ public:
     NodeId node_id_ref_by_rank(size_t const ref_rank) const {
         return _references[ref_rank];
     }
-
     // This function is accessible mainly for unit-testing. It is not part of the public API.
     auto const& is_reference() const {
         return _is_reference;
@@ -164,7 +148,51 @@ public:
         return _is_leaf;
     }
 
+    // TODO move this to free functions?
+    void save(std::ostream& os) const {
+        _is_reference.serialize(os);
+        //_is_reference_rank.serialize(os);
+        _is_leaf.serialize(os);
+        //_is_leaf_rank.serialize(os);
+        _balanced_parenthesis.serialize(os);
+        //_balanced_parenthesis_rank.serialize(os);
+        _references.serialize(os);
+        _leaves.serialize(os);
+
+        os.write(reinterpret_cast<char const*>(&_num_nodes), sizeof(_num_nodes));
+        os.write(reinterpret_cast<char const*>(&_num_leaves), sizeof(_num_leaves));
+        os.write(reinterpret_cast<char const*>(&_num_trees), sizeof(_num_trees));
+    }
+
+    void load(std::istream& is) {
+        _is_reference.load((is));
+        // _is_reference_rank.load((is));
+        _is_leaf.load((is));
+        // _is_leaf_rank.load((is));
+        _balanced_parenthesis.load(is);
+        // _balanced_parenthesis_rank.load(is);
+        _references.load((is));
+        _leaves.load((is));
+
+        is.read(reinterpret_cast<char*>(&_num_nodes), sizeof(_num_nodes));
+        is.read(reinterpret_cast<char*>(&_num_leaves), sizeof(_num_leaves));
+        is.read(reinterpret_cast<char*>(&_num_trees), sizeof(_num_trees));
+
+        // TODO Can't these be serialized and deserialized?
+        sdsl::util::init_support(_is_reference_rank, &_is_reference);
+        sdsl::util::init_support(_is_leaf_rank, &_is_leaf);
+        sdsl::util::init_support(_balanced_parenthesis_rank, &_balanced_parenthesis);
+    }
+
+    [[nodiscard]] bool operator==(BPCompressedForest const& other) {
+        return _is_reference == other._is_reference && _is_leaf == other._is_leaf
+               && _balanced_parenthesis == other._balanced_parenthesis && _references == other._references
+               && _leaves == other._leaves && _num_nodes == other._num_nodes && _num_leaves == other._num_leaves
+               && _num_trees == other._num_trees;
+    }
+
 private:
+    // TODO Which of these vectors are actually needed?
     // TODO Use compressed bit-vectors
     sdsl::bit_vector        _is_reference;
     sdsl::rank_support_v5<> _is_reference_rank;

@@ -6,23 +6,36 @@
 #include "sfkit/graph/CompressedForest.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 
-class CompressedForestIO {
-public:
-    using Version = uint64_t;
+namespace sfkit::io::internal {
+using Version = uint64_t;
+using Magic   = uint64_t;
 
+static constexpr Version DAG_ARCHIVE_VERSION = 2;
+static constexpr Magic   DAG_ARCHIVE_MAGIC   = 1307950585415129820;
+
+static constexpr Version BP_ARCHIVE_VERSION = 1;
+static constexpr Magic   BP_ARCHIVE_MAGIC   = 7612607674453629763;
+
+class DAGCompressedForestIO {
+public:
     static void load(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
         std::ifstream              is(filename, std::ios::binary | std::ios::in);
         cereal::BinaryInputArchive archive(is);
 
-        Version archive_version;
-        archive(archive_version, forest, sequence);
+        Magic   magic;
+        Version version;
+        archive(magic, version, forest, sequence);
 
-        if (archive_version != CURRENT_VERSION) {
+        if (magic != DAG_ARCHIVE_MAGIC) {
+            throw std::runtime_error("Archive is invalid (mismatch of magic number)");
+        }
+
+        if (version != DAG_ARCHIVE_VERSION) {
             throw std::runtime_error(fmt::format(
                 "Archive {} has version {} but current version is {}",
                 filename,
-                archive_version,
-                CURRENT_VERSION
+                version,
+                DAG_ARCHIVE_VERSION
             ));
         }
 
@@ -39,24 +52,79 @@ public:
     }
 
     static void save(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
-        std::ofstream               os(filename, std::ios::binary | std::ios::out);
-        cereal::BinaryOutputArchive archive(os);
+        std::ofstream os(filename, std::ios::binary | std::ios::out);
 
-        // Build mutation indices and compute the nodes of the (edge list) DAG
-        // The mutation indices are build during the serialization of the sequence
-        // The number of nodes of the DAG are computed during the deserialization of the forest
-        archive(CURRENT_VERSION, forest, sequence);
+        cereal::BinaryOutputArchive archive(os);
+        archive(DAG_ARCHIVE_MAGIC, DAG_ARCHIVE_VERSION, forest, sequence);
+
+        os.close();
+    }
+};
+
+class BPCompressedForestIO {
+public:
+    static void save(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+        std::ofstream os(filename, std::ios::binary | std::ios::out);
+
+        // TODO Document decicion not to use cereal here
+        os.write(reinterpret_cast<char const*>(&BP_ARCHIVE_MAGIC), sizeof(BP_ARCHIVE_MAGIC));
+        os.write(reinterpret_cast<char const*>(&BP_ARCHIVE_VERSION), sizeof(BP_ARCHIVE_VERSION));
+
+        forest.save(os);
+        sequence.save(os);
     }
 
-    // static SequenceForest load(std::string const& filename, SequenceForest& sequence_forest) {
-    //     SequenceForest sequence_forest();
-    //     load(filename, sequence_forest._forest, sequence_forest._sequence);
-    // }
+    static void load(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+        std::ifstream is(filename, std::ios::binary | std::ios::in);
 
-    // static void save(std::string& filename, SequenceForest& sequence_forest) {
-    //     save(filename, sequence_forest._forest, sequence_forest._sequence);
-    // }
+        Magic   magic;
+        Version version;
 
-private:
-    static constexpr Version CURRENT_VERSION = 2;
+        is.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+        is.read(reinterpret_cast<char*>(&version), sizeof(version));
+
+        if (magic != BP_ARCHIVE_MAGIC) {
+            throw std::runtime_error("Archive is invalid (mismatch of magic number)");
+        }
+
+        if (version != BP_ARCHIVE_VERSION) {
+            throw std::runtime_error(fmt::format(
+                "Archive {} has version {} but current version is {}",
+                filename,
+                version,
+                BP_ARCHIVE_VERSION
+            ));
+        }
+
+        forest.load(is);
+        sequence.load(is);
+
+        KASSERT(
+            sequence.mutation_indices_are_built(),
+            "Mutation indices of the loaded sequence are not built",
+            sfkit::assert::light
+        );
+    }
 };
+} // namespace sfkit::io::internal
+
+namespace sfkit::io {
+class CompressedForestIO {
+public:
+    static void load(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+        internal::BPCompressedForestIO::load(filename, forest, sequence);
+    }
+
+    static void save(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+        internal::BPCompressedForestIO::save(filename, forest, sequence);
+    }
+
+    static void load(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+        internal::DAGCompressedForestIO::load(filename, forest, sequence);
+    }
+
+    static void save(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+        internal::DAGCompressedForestIO::save(filename, forest, sequence);
+    }
+};
+} // namespace sfkit::io

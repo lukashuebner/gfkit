@@ -12,6 +12,7 @@
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/load/BPForestCompressor.hpp"
 #include "sfkit/load/CompressedForestIO.hpp"
 #include "sfkit/load/ForestCompressor.hpp"
 #include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
@@ -21,7 +22,8 @@
 using namespace ::Catch::Matchers;
 using Catch::Approx;
 
-std::string const ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.forest";
+std::string const DAG_ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.forest";
+std::string const BP_ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.bpforest";
 
 TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serialization]") {
     std::vector<std::string> const ts_files = {
@@ -42,13 +44,13 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     // Serialize and deserialize the compressed forest and genome sequence storage
-    CompressedForestIO::save(ARCHIVE_FILE_NAME, forest, sequence);
+    sfkit::io::CompressedForestIO::save(DAG_ARCHIVE_FILE_NAME, forest, sequence);
 
     CompressedForest forest_deserialized;
     GenomicSequence  sequence_deserialized;
-    CompressedForestIO::load(ARCHIVE_FILE_NAME, forest_deserialized, sequence_deserialized);
+    sfkit::io::CompressedForestIO::load(DAG_ARCHIVE_FILE_NAME, forest_deserialized, sequence_deserialized);
 
-    std::filesystem::remove(ARCHIVE_FILE_NAME);
+    std::filesystem::remove(DAG_ARCHIVE_FILE_NAME);
 
     // CompressedForest
     CHECK(forest_deserialized.num_nodes() == forest.num_nodes());
@@ -146,9 +148,112 @@ void convert(std::string const& trees_file, std::string const& forest_file) {
     CompressedForest       forest   = forest_compressor.compress(sequence_store_factory);
     GenomicSequence        sequence = sequence_store_factory.move_storage();
 
-    CompressedForestIO::save(forest_file, forest, sequence);
+    sfkit::io::CompressedForestIO::save(forest_file, forest, sequence);
 }
 
+// TODO Add end-to-end comparisons on all test datasets (e.g. diversity, divergence, AFS, etc.)
+TEST_CASE("BPCompressedForest/GenomicSequenceStorage Serialization", "[Serialization]") {
+    std::vector<std::string> const ts_files = {
+        "data/test-sarafina.trees",
+        "data/test-scar.trees",
+        "data/test-shenzi.trees",
+        "data/test-banzai.trees",
+        "data/test-ed.trees",
+        "data/test-simba.trees",
+    };
+    auto const& ts_file = GENERATE_REF(from_range(ts_files));
+
+    TSKitTreeSequence tree_sequence(ts_file);
+
+    BPForestCompressor     forest_compressor(tree_sequence);
+    GenomicSequenceFactory sequence_factory(tree_sequence);
+    BPCompressedForest     forest   = forest_compressor.compress(sequence_factory);
+    GenomicSequence        sequence = sequence_factory.move_storage();
+
+    // Serialize and deserialize the compressed forest and genome sequence storage
+    sfkit::io::CompressedForestIO::save(BP_ARCHIVE_FILE_NAME, forest, sequence);
+
+    BPCompressedForest forest_deserialized;
+    GenomicSequence    sequence_deserialized;
+    sfkit::io::CompressedForestIO::load(BP_ARCHIVE_FILE_NAME, forest_deserialized, sequence_deserialized);
+
+    std::filesystem::remove(BP_ARCHIVE_FILE_NAME);
+
+    // CompressedForest
+    CHECK(forest_deserialized.num_nodes() == forest.num_nodes());
+    CHECK(forest_deserialized.num_samples() == forest.num_samples());
+    CHECK(forest_deserialized.num_trees() == forest.num_trees());
+    // CHECK(forest_deserialized.num_edges() == forest.num_edges());
+    // CHECK(forest_deserialized.num_roots() == forest.num_roots());
+    // CHECK(forest_deserialized.roots() == forest.roots());
+
+    auto const all_samples                    = forest.all_samples();
+    auto const num_samples_below_deserialized = NumSamplesBelowFactory::build(forest_deserialized, all_samples);
+    auto const num_samples_below              = NumSamplesBelowFactory::build(forest, all_samples);
+    for (NodeId node_id = 0; node_id < forest.num_nodes(); ++node_id) {
+        // CHECK(forest_deserialized.is_sample(node_id) == forest.is_sample(node_id));
+        CHECK(num_samples_below_deserialized(node_id) == num_samples_below(node_id));
+    }
+
+    CHECK(forest_deserialized.operator==(forest));
+
+    // TODO Abstract away and re-use
+    // GenomicSequenceStore
+    CHECK(sequence_deserialized.num_sites() == sequence.num_sites());
+    CHECK(sequence_deserialized.num_mutations() == sequence.num_mutations());
+
+    for (SiteId site_id = 0; site_id < sequence.num_sites(); ++site_id) {
+        CHECK(sequence_deserialized.ancestral_state(site_id) == sequence.ancestral_state(site_id));
+        CHECK(sequence_deserialized[site_id] == sequence[site_id]);
+        CHECK_THAT(sequence_deserialized.mutations_at_site(site_id), RangeEquals(sequence.mutations_at_site(site_id)));
+    }
+
+    for (size_t mutation_id = 0; mutation_id < sequence.num_mutations(); ++mutation_id) {
+        CHECK(sequence_deserialized.mutation_by_id(mutation_id) == sequence.mutation_by_id(mutation_id));
+    }
+
+    CHECK(sequence_deserialized.mutations_are_sorted_by_site() == sequence.mutations_are_sorted_by_site());
+
+    // High-level operations
+    // TODO
+    // SuccinctForest sf(std::move(tree_sequence), std::move(forest), std::move(sequence));
+
+    // tree_sequence = TSKitTreeSequence(ts_file);
+    // SuccinctForest sf_deserialized(
+    //     std::move(tree_sequence),
+    //     std::move(forest_deserialized),
+    //     std::move(sequence_deserialized)
+    // );
+
+    // auto const afs              = sf.allele_frequency_spectrum(sf.all_samples());
+    // auto const afs_deserialized = sf_deserialized.allele_frequency_spectrum(sf_deserialized.all_samples());
+
+    // CHECK(afs.num_samples() == afs_deserialized.num_samples());
+    // CHECK_THAT(afs, RangeEquals(afs_deserialized));
+
+    // // The original and the deserialized forest should have the same sample ids.
+    // SampleSet sample_set_1(sf.num_samples());
+    // SampleSet sample_set_2(sf.num_samples());
+    // bool      flip = false;
+    // for (SampleId sample: sf.all_samples()) {
+    //     if (flip) {
+    //         sample_set_1.add(sample);
+    //     } else {
+    //         sample_set_2.add(sample);
+    //     }
+    //     flip = !flip;
+    // }
+    // CHECK(sf.diversity() == Approx(sf_deserialized.diversity()).epsilon(1e-4));
+    // CHECK(sf.num_segregating_sites() == sf_deserialized.num_segregating_sites());
+    // CHECK(
+    //     sf.divergence(sample_set_1, sample_set_2)
+    //     == Approx(sf_deserialized.divergence(sample_set_1, sample_set_2)).epsilon(1e-4)
+    // );
+    // CHECK(sf.tajimas_d() == Approx(sf_deserialized.tajimas_d()).epsilon(1e-4));
+    // CHECK(sf.fst(sample_set_1, sample_set_2) == Approx(sf_deserialized.fst(sample_set_1, sample_set_2)).epsilon(1e-4));
+}
+
+// TODO Move this to end-to-end tests
 TEST_CASE("Statistics on .forest files", "[Serialization]") {
     struct Dataset {
         std::string forest_file;
@@ -175,7 +280,7 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     CompressedForest  forest;
     GenomicSequence   sequence;
     TSKitTreeSequence tree_sequence(trees_file);
-    CompressedForestIO::load(forest_file, forest, sequence);
+    sfkit::io::CompressedForestIO::load(forest_file, forest, sequence);
     CHECK(forest.num_nodes() > 0);
     CHECK(forest.num_nodes_is_set());
 

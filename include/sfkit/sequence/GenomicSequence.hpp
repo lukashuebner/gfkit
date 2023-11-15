@@ -12,6 +12,7 @@
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/common.hpp"
+#include "sfkit/load/vector_serialization.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
 #include "sfkit/sequence/TSKitSiteToTreeMapper.hpp"
@@ -170,6 +171,21 @@ public:
     void serialize(Archive& archive) {
         build_mutation_indices();
         archive(_sites, _mutation_indices, _mutation_indices_valid, _mutations);
+    }
+
+    void save(std::ostream& os) {
+        build_mutation_indices();
+        sfkit::io::internal::serialize(os, _sites);
+        sfkit::io::internal::serialize(os, _mutation_indices);
+        sfkit::io::internal::serialize(os, _mutations);
+        os.write(reinterpret_cast<char const*>(&_mutation_indices_valid), sizeof(_mutation_indices_valid));
+    }
+
+    void load(std::istream& is) {
+        sfkit::io::internal::deserialize(is, _sites);
+        sfkit::io::internal::deserialize(is, _mutation_indices);
+        sfkit::io::internal::deserialize(is, _mutations);
+        is.read(reinterpret_cast<char*>(&_mutation_indices_valid), sizeof(_mutation_indices_valid));
     }
 
 private:
