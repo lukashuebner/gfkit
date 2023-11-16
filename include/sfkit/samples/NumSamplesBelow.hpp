@@ -48,7 +48,7 @@ public:
                 "subtree size object. (NOT the number of samples actually in the SampleSet)",
                 sfkit::assert::light
             );
-            // Will make redundant comprisons, but will only execute in DEBUG mode anyway
+            // Will make redundant comparisons, but will only execute in DEBUG mode anyway
             for (auto other_sample_set: samples) {
                 KASSERT(
                     sample_set.get().overall_num_samples() == other_sample_set.get().overall_num_samples(),
@@ -182,7 +182,7 @@ public:
                 "subtree size object. (NOT the number of samples actually in the SampleSet)",
                 sfkit::assert::light
             );
-            // Will make redundant comprisons, but will only execute in DEBUG mode anyway
+            // Will make redundant comparisons, but will only execute in DEBUG mode anyway
             for (auto other_sample_set: samples) {
                 KASSERT(
                     sample_set.get().overall_num_samples() == other_sample_set.get().overall_num_samples(),
