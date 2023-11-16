@@ -202,6 +202,10 @@ target_link_libraries(sfkit_base INTERFACE xxhash)
 add_subdirectory("extern/sdsl")
 target_link_libraries(sfkit_base INTERFACE sdsl)
 
+# Add plf_stack for a fast stack implementation.
+add_subdirectory("extern/plf_stack")
+target_link_libraries(sfkit_base INTERFACE plf_stack)
+
 # Add cereal for serialization
 option(BUILD_DOC "" OFF)
 option(BUILD_SANDBOX "" OFF)
