@@ -18,10 +18,14 @@
 #include "sfkit/tskit.hpp"
 #include "timer.hpp"
 
-// TODO Rename this file to sfkit-bench.cpp
 constexpr double FLOAT_EQ_EPS = 1e-4;
 
-void compress(std::string const& trees_file, std::string const& forest_file, ResultsPrinter& results_printer) {
+void compress(
+    std::string const& trees_file,
+    std::string const& forest_file,
+    std::string const& bp_forest_file,
+    ResultsPrinter&    results_printer
+) {
     constexpr uint16_t iteration = 0;
     constexpr bool     warmup    = false;
 
@@ -59,10 +63,33 @@ void compress(std::string const& trees_file, std::string const& forest_file, Res
     memory_usage.start();
     timer.start();
 
-    CompressedForestIO::save(forest_file, forest, sequence);
+    sfkit::io::CompressedForestIO::save(forest_file, forest, sequence);
 
     log_time("save_forest_file", "sfkit", timer.stop());
     log_mem("save_forest_file", "sfkit", memory_usage.stop());
+
+    // Compress the .trees to .bpforest file
+
+    memory_usage.start();
+    timer.start();
+
+    using SetOfSampleSets = NumSamplesBelow<1>::SetOfSampleSets;
+    BPForestCompressor     bp_forest_compressor(tree_sequence);
+    GenomicSequenceFactory bp_sequence_factory(tree_sequence);
+    BPCompressedForest     bp_forest   = bp_forest_compressor.compress(bp_sequence_factory);
+    GenomicSequence        bp_sequence = bp_sequence_factory.move_storage();
+
+    log_time("compress_forest_and_sequence", "bp-sfkit", timer.stop());
+    log_mem("compress_forest_and_sequence", "bp-sfkit", memory_usage.stop());
+
+    // Save the BP-compressed forest and sequence to a .bpforest file
+    memory_usage.start();
+    timer.start();
+
+    sfkit::io::CompressedForestIO::save(bp_forest_file, bp_forest, bp_sequence);
+
+    log_time("save_forest_file", "bp-sfkit", timer.stop());
+    log_mem("save_forest_file", "bp-sfkit", memory_usage.stop());
 }
 
 void benchmark(
@@ -70,6 +97,7 @@ void benchmark(
     uint8_t const      iteration,
     std::string const& trees_file,
     std::string const& forest_file,
+    std::string const& bp_forest_file,
     ResultsPrinter&    results_printer
 ) {
     auto log_time = [&results_printer, iteration, &trees_file](
@@ -99,7 +127,7 @@ void benchmark(
         log_time(warmup, "load_trees_file", "tskit", timer.stop());
     }
 
-    // --- Benchmark building the DAG from the tree sequence ---
+    // --- Benchmark loading the DAG-based tree sequence ---
     memory_usage.start();
     timer.start();
 
@@ -108,34 +136,46 @@ void benchmark(
     GenomicSequence        sequence;
 
     // TODO Write IO functionality for the SequenceForest class
-    CompressedForestIO::load(forest_file, forest, sequence);
+    sfkit::io::CompressedForestIO::load(forest_file, forest, sequence);
 
     log_time(warmup, "load_forest_file", "sfkit", timer.stop());
     log_mem(warmup, "load_forest_file", "sfkit", memory_usage.stop());
 
-    // --- Benchmark computing subtree sizes ---
+    // --- Benchmark loading the DAG-based tree sequence ---
     memory_usage.start();
     timer.start();
 
-    EdgeListGraph const& dag = forest.postorder_edges();
-    using SetOfSampleSets    = NumSamplesBelow<1>::SetOfSampleSets;
-    auto all_samples         = forest.all_samples();
-    auto num_samples_below   = NumSamplesBelow<1>(dag, SetOfSampleSets{std::cref(all_samples)});
-    do_not_optimize(num_samples_below);
+    BPCompressedForest     bp_forest;
+    GenomicSequenceFactory bp_sequence_factory(tree_sequence);
+    GenomicSequence        bp_sequence;
 
-    log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
-    log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
+    sfkit::io::CompressedForestIO::load(bp_forest_file, bp_forest, bp_sequence);
+
+    log_time(warmup, "load_forest_file", "bp-sfkit", timer.stop());
+    log_mem(warmup, "load_forest_file", "bp-sfkit", memory_usage.stop());
+
+    // --- Benchmark computing subtree sizes ---
+    // memory_usage.start();
+    // timer.start();
+
+    // EdgeListGraph const& dag = forest.postorder_edges();
+    // using SetOfSampleSets    = NumSamplesBelow<1>::SetOfSampleSets;
+    auto all_samples = forest.all_samples();
+    // auto num_samples_below   = NumSamplesBelow<1>(dag, SetOfSampleSets{std::cref(all_samples)});
+    // do_not_optimize(num_samples_below);
+
+    // log_time(warmup, "compute_subtree_sizes", "sfkit", timer.stop());
+    // log_mem(warmup, "compute_subtree_sizes", "sfkit", memory_usage.stop());
 
     // --- Benchmark computing subtree sizes using the BP-based data structure---
-    using SetOfSampleSets = NumSamplesBelow<1>::SetOfSampleSets;
-    BPForestCompressor     bp_forest_compressor(tree_sequence);
-    GenomicSequenceFactory bp_sequence_factory(tree_sequence);
-    BPCompressedForest     bp_forest            = bp_forest_compressor.compress(bp_sequence_factory);
-
     memory_usage.start();
     timer.start();
-    auto                   bp_num_samples_below = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    do_not_optimize(bp_num_samples_below);
+
+    for (int i = 0; i < 100; i++) {
+        auto bp_num_samples_below = NumSamplesBelowFactory::build(bp_forest, all_samples);
+        do_not_optimize(bp_num_samples_below);
+    }
+    return;
 
     log_time(warmup, "compute_subtree_sizes", "sfkit-bp", timer.stop());
     log_mem(warmup, "compute_subtree_sizes", "sfkit-bp", memory_usage.stop());
@@ -482,16 +522,20 @@ int main(int argc, char** argv) {
     compress_sub->add_option("-i,--forest-file", forest_file, "Input file for the compressed forest")
         ->check(CLI::NonexistentPath);
 
+    std::string bp_forest_file = "";
+    compress_sub->add_option("-b,--bp-forest-file", bp_forest_file, "Input file for the BP-compressed forest")
+        ->check(CLI::NonexistentPath);
+
     compress_sub->add_option("-r,--revision", revision, "Revision of this software (unique id, e.g. git commit hash)")
         ->default_val("undefined");
 
     compress_sub->add_option("-m,--machine", machine_id, "Identifier of this computer (e.g. hostname)")
         ->default_val("undefined");
 
-    compress_sub->callback([&trees_file, &forest_file, &setup_results_printer]() {
+    compress_sub->callback([&trees_file, &forest_file, &bp_forest_file, &setup_results_printer]() {
         auto results_printer = setup_results_printer();
         std::cerr << "Compressing tree sequence " << trees_file << " -> " << forest_file << std::endl;
-        compress(trees_file, forest_file, results_printer);
+        compress(trees_file, forest_file, bp_forest_file, results_printer);
     });
 
     // Benchmark subcommand
@@ -505,6 +549,10 @@ int main(int argc, char** argv) {
 
     // std::string forest_file = "";
     benchmark_sub->add_option("-i,--forest-file", forest_file, "Input file for the compressed forest")
+        ->check(CLI::ExistingFile);
+
+    // std::string bp_forest_file = "";
+    benchmark_sub->add_option("-b,--bp-forest-file", bp_forest_file, "Input file for the BP-compressed forest")
         ->check(CLI::ExistingFile);
 
     // std::string revision = "";
@@ -531,7 +579,8 @@ int main(int argc, char** argv) {
         ->default_val(1);
 
     benchmark_sub->callback(
-        [&trees_file, &forest_file, &num_iterations, &num_warmup_iterations, &setup_results_printer]() {
+        [&trees_file, &forest_file, &bp_forest_file, &num_iterations, &num_warmup_iterations, &setup_results_printer](
+        ) {
             auto results_printer = setup_results_printer();
 
             for (uint8_t _iteration = 0; _iteration < num_iterations + num_warmup_iterations; ++_iteration) {
@@ -545,7 +594,7 @@ int main(int argc, char** argv) {
                     std::cerr << "[Benchmark] Running iteration " << static_cast<int>(iteration) << " on file "
                               << trees_file << std::endl;
                 }
-                benchmark(warmup, iteration, trees_file, forest_file, results_printer);
+                benchmark(warmup, iteration, trees_file, forest_file, bp_forest_file, results_printer);
             }
         }
     );
