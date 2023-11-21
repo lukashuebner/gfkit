@@ -85,7 +85,7 @@ public:
     }
 
     [[nodiscard]] NodeId num_backrefs() const {
-        return _is_reference_rank.rank(_is_reference_rank.size() - 1);
+        return asserting_cast<NodeId>(_is_reference_rank.rank(_is_reference_rank.size() - 1));
     }
 
     bool is_leaf(size_t const bp_idx) const {

@@ -260,6 +260,8 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
     //     })
     // );
 
+    // TODO Pack is_reference and is_leaf into a single bitvector?
+    // Alternative: Don't store small subtrees as reference
     CHECK_THAT(
         bp_forest.is_leaf(),
         RangeEquals(std::vector<bool>{
@@ -331,8 +333,11 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
     CHECK(bp_forest.num_samples() == ref_forest.num_samples());
     CHECK(bp_forest.num_leaves() == ref_forest.num_leaves());
     CHECK(bp_forest.num_trees() == ref_forest.num_trees());
-    CHECK(bp_forest.num_nodes() == ref_forest.num_nodes());
-    CHECK(bp_forest.num_unique_subtrees() == ref_forest.num_unique_subtrees());
+
+    // For completely identical subtrees, the DAG-based compression stores one unique root node for each tree, the
+    // BP-based compression uses references which don't count as unique nodes.
+    CHECK(bp_forest.num_nodes() <= ref_forest.num_nodes());
+    CHECK(bp_forest.num_unique_subtrees() <= ref_forest.num_unique_subtrees());
 
     { // Single sample set
         SampleSet  all_samples{bp_forest.all_samples()};
