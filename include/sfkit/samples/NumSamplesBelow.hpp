@@ -5,13 +5,16 @@
 #include <vector>
 
 #include <kassert/kassert.hpp>
+#include <plf_stack.h>
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/BPCompressedForest.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/samples/SampleSet.hpp"
+#include "sfkit/utils/BufferedSDSLBitVectorView.hpp"
 
 namespace stdx = std::experimental;
+using sfkit::utils::BufferedSDSLBitVectorView;
 
 template <typename T>
 concept NumSamplesBelowAccessorC = requires(T t) {
@@ -263,52 +266,76 @@ private:
         }
 
         // TODO Abstract this away into a NodeIdCounter class which we also use during forest compression
-        std::vector<simd_t> sample_counts;
-        NodeId              inner_node_id = _forest.num_samples();
-        SampleId            leaf_rank     = 0;
-        size_t              ref_rank      = 0;
+        plf::stack<simd_t> sample_counts;
+        sample_counts.reserve(_forest.num_samples());
 
-        for (size_t idx = 0; idx < bp.size(); idx++) {
-            if (is_ref[idx]) { // reference
+        NodeId   inner_node_id = _forest.num_samples();
+        SampleId leaf_rank     = 0;
+        size_t   ref_rank      = 0;
+
+        // TODO It the buffered iterator is not faster, remove it again
+        // auto bp_size = bp.size(); // Doing this in the for-loop used a substantial amount of runtime.
+        KASSERT(bp.size() == is_ref.size(), "balanced_parenthesis and is_reference are of different size");
+        // TODO Write a faster iterator for the BP sequence (extracting 64bit, shifting over them...)
+        auto bp_view     = BufferedSDSLBitVectorView(bp);
+        auto bp_it       = bp_view.begin();
+        auto bp_end      = bp_view.end();
+        auto is_ref_view = BufferedSDSLBitVectorView(is_ref);
+        auto is_ref_it   = is_ref_view.begin();
+        auto is_ref_end  = is_ref_view.end();
+        // auto is_leaf_view = BufferedSDSLBitVectorView(_forest.is_leaf());
+        // auto is_leaf_it = is_leaf_view.begin();
+        // auto is_leaf_end = is_leaf_view.end();
+        // TODO Idea: use less bits to represent is_ref, is_leaf, bp and interleave the arrays for more efficient memory
+        // access.
+
+        bool last_bp = bp::PARENS_CLOSE;
+        // bool last_is_leaf = false;
+        while (bp_it != bp_end) {
+            // TODO Add operator!= for sentinel
+            KASSERT(!(bp_it == bp_end) && !(is_ref_it == is_ref_end));
+            if (*is_ref_it) { // reference
                 // Reference always occur as tuples of (open, close) in BP and (true, true) in is_ref
-                KASSERT(idx + 1 < bp.size());
-                KASSERT(bp[idx] == bp::PARENS_OPEN);
-                ++idx;
-                KASSERT(is_ref[idx]);
-                KASSERT(bp[idx] == bp::PARENS_CLOSE);
+                KASSERT(*bp_it == bp::PARENS_OPEN);
+                ++bp_it;
+                ++is_ref_it;
+                // TODO Change back
+                KASSERT(!(bp_it == bp_end) && !(is_ref_it == is_ref_end));
+                // KASSERT(bp_it != bp_end && is_ref_it != is_ref_end);
+                KASSERT(*is_ref_it);
+                KASSERT(*bp_it == bp::PARENS_CLOSE);
 
                 NodeId const node_id = _forest.node_id_ref_by_rank(ref_rank);
-                sample_counts.push_back(_subtree_sizes[node_id]);
+                sample_counts.push(_subtree_sizes[node_id]);
                 ++ref_rank;
             } else { // description of subtree
-                if (bp[idx] == bp::PARENS_CLOSE) {
-                    KASSERT(idx >= 1ul); // The first bit in the sequence can never be a closing parenthesis.
-                    if (bp[idx - 1] == bp::PARENS_OPEN) { // sample
-                        KASSERT(_forest.is_leaf(idx));
-                        KASSERT(_forest.is_leaf(idx - 1));
+                if (*bp_it == bp::PARENS_CLOSE) {
+                    // KASSERT(idx >= 1ul); // The first bit in the sequence can never be a closing parenthesis.
+                    if (last_bp == bp::PARENS_OPEN) { // sample
+                        // KASSERT(*is_leaf_it);
+                        // KASSERT(last_is_leaf);
                         KASSERT(leaf_rank < _forest.num_samples());
                         SampleId const leaf_id = _forest.leaf_idx_to_id(leaf_rank);
-                        KASSERT(leaf_id == _forest.node_id(idx - 1));
-                        sample_counts.push_back(_subtree_sizes[leaf_id]);
+                        // KASSERT(leaf_id == _forest.node_id(idx - 1));
+                        sample_counts.push(_subtree_sizes[leaf_id]);
                         ++leaf_rank;
                     } else { // inner node
                         KASSERT(sample_counts.size() >= 2ul);
-                        auto const left = sample_counts.back();
-                        sample_counts.pop_back();
-
-                        auto const right = sample_counts.back();
-                        sample_counts.pop_back();
-
-                        auto const us = left + right;
-                        sample_counts.push_back(us);
-
+                        auto const other = sample_counts.top();
+                        sample_counts.pop();
+                        sample_counts.top() += other;
                         KASSERT(inner_node_id < _forest.num_nodes());
-                        KASSERT(_forest.node_id(asserting_cast<size_t>(idx)) == inner_node_id);
-                        _subtree_sizes[inner_node_id] = us;
+                        // KASSERT(_forest.node_id(asserting_cast<size_t>(idx)) == inner_node_id);
+                        _subtree_sizes[inner_node_id] = sample_counts.top();
                         ++inner_node_id;
                     }
                 }
             }
+            last_bp = *bp_it;
+            // last_is_leaf = *is_leaf_it;
+            ++bp_it;
+            ++is_ref_it;
+            // is_leaf_it++;
         }
     }
 };
