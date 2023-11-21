@@ -331,9 +331,8 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
     CHECK(bp_forest.num_samples() == ref_forest.num_samples());
     CHECK(bp_forest.num_leaves() == ref_forest.num_leaves());
     CHECK(bp_forest.num_trees() == ref_forest.num_trees());
-    // TODO Why do these differ?
-    // CHECK(bp_forest.num_nodes() == ref_forest.num_nodes());
-    // CHECK(bp_forest.num_unique_subtrees() == ref_forest.num_unique_subtrees());
+    CHECK(bp_forest.num_nodes() == ref_forest.num_nodes());
+    CHECK(bp_forest.num_unique_subtrees() == ref_forest.num_unique_subtrees());
 
     { // Single sample set
         SampleSet  all_samples{bp_forest.all_samples()};
