@@ -1,12 +1,14 @@
+#include "tskit/trees.h"
+#include <debug/vector>
+#include <string>
+
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/generators/catch_generators.hpp>
-#include <catch2/generators/catch_generators_range.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_range_equals.hpp>
-#include <kassert/kassert.hpp>
-#include <tskit.h>
+#include <stddef.h>
 
-#include "sfkit/assertion_levels.hpp"
+#include "catch2/catch_assertion_info.hpp"
+#include "sfkit/graph/common.hpp"
 #include "sfkit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 

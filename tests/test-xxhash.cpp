@@ -1,8 +1,11 @@
 #include <cstddef>
+#include <debug/vector>
 
 #include <catch2/catch_test_macros.hpp>
+#include <stdint.h>
 #include <xxhash.h>
 
+#include "kassert/kassert.hpp"
 #include "sfkit/utils/xxhash.hpp"
 
 TEST_CASE("XXH128_hash_t comparison", "[xxhash]") {

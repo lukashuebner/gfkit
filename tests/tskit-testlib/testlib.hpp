@@ -27,6 +27,9 @@
 #ifndef __TESTLIB_H__
     #define __TESTLIB_H__
 
+    #include "tskit/core.h"
+    #include "tskit/tables.h"
+
     #include <stdio.h>
     #include <stdlib.h>
     #include <tskit/trees.h>

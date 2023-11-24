@@ -24,9 +24,12 @@
 
 #include "testlib.hpp"
 
+#include "tskit/trees.h"
 #include <cstring>
 
 #include <kassert/kassert.hpp>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "sfkit/checking_casts.hpp"
 

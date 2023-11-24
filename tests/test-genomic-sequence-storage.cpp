@@ -1,13 +1,15 @@
 
+#include <initializer_list>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers.hpp>
-#include <catch2/matchers/catch_matchers_range_equals.hpp>
-#include <kassert/kassert.hpp>
+#include <stddef.h>
 
-#include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/common.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/sequence/Mutation.hpp"
+#include "sfkit/sequence/Sequence.hpp"
 
 using namespace Catch::Matchers;
 
