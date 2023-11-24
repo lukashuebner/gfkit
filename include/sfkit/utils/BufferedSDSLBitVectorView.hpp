@@ -56,8 +56,12 @@ public:
         //     return !(*this == other);
         // }
 
-        [[nodiscard]] bool operator==(sentinel const) {
+        [[nodiscard]] bool operator==(sentinel const) const {
             return _is_end;
+        }
+
+        [[nodiscard]] bool operator!=(sentinel const) const {
+            return !_is_end;
         }
 
         [[nodiscard]] reference operator*() {
