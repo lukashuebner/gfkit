@@ -23,7 +23,7 @@ using namespace ::Catch::Matchers;
 using Catch::Approx;
 
 std::string const DAG_ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.forest";
-std::string const BP_ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.bpforest";
+std::string const BP_ARCHIVE_FILE_NAME  = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.bpforest";
 
 TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serialization]") {
     std::vector<std::string> const ts_files = {
@@ -250,7 +250,8 @@ TEST_CASE("BPCompressedForest/GenomicSequenceStorage Serialization", "[Serializa
     //     == Approx(sf_deserialized.divergence(sample_set_1, sample_set_2)).epsilon(1e-4)
     // );
     // CHECK(sf.tajimas_d() == Approx(sf_deserialized.tajimas_d()).epsilon(1e-4));
-    // CHECK(sf.fst(sample_set_1, sample_set_2) == Approx(sf_deserialized.fst(sample_set_1, sample_set_2)).epsilon(1e-4));
+    // CHECK(sf.fst(sample_set_1, sample_set_2) == Approx(sf_deserialized.fst(sample_set_1,
+    // sample_set_2)).epsilon(1e-4));
 }
 
 // TODO Move this to end-to-end tests
