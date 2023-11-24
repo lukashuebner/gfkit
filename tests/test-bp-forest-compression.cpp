@@ -44,13 +44,15 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
     );
 
     TSKitTreeSequence     tree_sequence(tskit_tree_sequence); // Takes ownership
-    Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            bp_forest = BPForestCompressor(tree_sequence).compress(ts_2_sf_node);
-    CHECK(ts_2_sf_node.finalize_called());
-    CHECK(ts_2_sf_node.process_mutations_callcnt() == 1);
+    Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
+    auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
+    REQUIRE(bp_ts_2_sf_node.finalize_called());
+    REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == 1);
 
-    Ts2SfMappingExtractor ts_2_sf_node_2(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ts_2_sf_node);
+    Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
+    auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
+    REQUIRE(ref_ts_2_sf_node.finalize_called());
+    REQUIRE(ref_ts_2_sf_node.process_mutations_callcnt() == bp_ts_2_sf_node.process_mutations_callcnt());
 
     CHECK(bp_forest.num_trees() == 1);
     CHECK(bp_forest.num_samples() == 4);
@@ -68,14 +70,22 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
     CHECK_THAT(bp_forest.leaves(), RangeEquals(std::vector<NodeId>{0, 1, 2, 3}));
     CHECK(bp_forest.references().size() == 0);
 
-    SampleSet const all_samples       = bp_forest.all_samples();
-    auto            num_samples_below = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    auto num_samples_below_reference  = NumSamplesBelowFactory::build(non_bp_forest.postorder_edges(), all_samples);
-    // TODO (also below)
-    //! This depends on the node_ids being the same in both compression, which they generally aren't. See the zazu test
-    //! for code which does not assume this.
-    for (NodeId node_id = 0; node_id < bp_forest.num_nodes(); ++node_id) {
-        CHECK(num_samples_below(node_id) == num_samples_below_reference(node_id));
+    SampleSet const all_samples           = bp_forest.all_samples();
+    auto const      bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
+    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(non_bp_forest.postorder_edges(), all_samples);
+
+    TSKitTree tree{tree_sequence};
+    TreeId    tree_id = 0;
+    for (tree.first(); tree.is_valid(); tree.next()) {
+        KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
+        for (tsk_id_t ts_node_id: tree.postorder()) {
+            if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
+                NodeId const ref_node_id = ref_ts_2_sf_node(tree_id, ts_node_id);
+                NodeId const bp_node_id  = bp_ts_2_sf_node(tree_id, ts_node_id);
+                CHECK(bp_num_samples_below(bp_node_id) == ref_num_samples_below(ref_node_id));
+            }
+        }
+        ++tree_id;
     }
 
     // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
@@ -117,13 +127,15 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
     constexpr NodeId   num_references      = 5;
 
     TSKitTreeSequence     tree_sequence(tskit_tree_sequence); // Takes ownership
-    Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            bp_forest = BPForestCompressor(tree_sequence).compress(ts_2_sf_node);
-    CHECK(ts_2_sf_node.finalize_called());
-    CHECK(ts_2_sf_node.process_mutations_callcnt() == num_trees);
+    Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
+    auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
+    REQUIRE(bp_ts_2_sf_node.finalize_called());
+    REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == num_trees);
 
-    Ts2SfMappingExtractor ts_2_sf_node_2(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ts_2_sf_node);
+    Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
+    auto const            ref_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
+    REQUIRE(bp_ts_2_sf_node.finalize_called());
+    REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == ref_ts_2_sf_node.process_mutations_callcnt());
 
     CHECK(bp_forest.num_trees() == num_trees);
     CHECK(bp_forest.num_samples() == num_samples);
@@ -177,14 +189,22 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
     // Each reference consists of two elements: <start, length>.
     CHECK(bp_forest.references().size() == num_references);
 
-    SampleSet const all_samples       = bp_forest.all_samples();
-    auto const      num_samples_below = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    auto const      num_samples_below_reference =
-        NumSamplesBelowFactory::build(non_bp_forest.postorder_edges(), all_samples);
-    //! This depends on the node_ids being the same in both compression, which they generally aren't. See the zazu test
-    //! for code which does not assume this.
-    for (NodeId node_id = 0; node_id < bp_forest.num_nodes(); ++node_id) {
-        CHECK(num_samples_below(node_id) == num_samples_below_reference(node_id));
+    SampleSet const all_samples           = bp_forest.all_samples();
+    auto const      bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
+    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest.postorder_edges(), all_samples);
+
+    TSKitTree tree{tree_sequence};
+    TreeId    tree_id = 0;
+    for (tree.first(); tree.is_valid(); tree.next()) {
+        KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
+        for (tsk_id_t ts_node_id: tree.postorder()) {
+            if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
+                NodeId const ref_node_id = ref_ts_2_sf_node(tree_id, ts_node_id);
+                NodeId const bp_node_id  = bp_ts_2_sf_node(tree_id, ts_node_id);
+                CHECK(bp_num_samples_below(bp_node_id) == ref_num_samples_below(ref_node_id));
+            }
+        }
+        ++tree_id;
     }
 }
 
@@ -212,13 +232,13 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
     TSKitTreeSequence     tree_sequence("data/test-zazu.trees");
     Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
     auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
-    CHECK(bp_ts_2_sf_node.finalize_called());
-    CHECK(bp_ts_2_sf_node.process_mutations_callcnt() == num_trees);
+    REQUIRE(bp_ts_2_sf_node.finalize_called());
+    REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == num_trees);
 
     Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
     auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
-    CHECK(ref_ts_2_sf_node.finalize_called());
-    CHECK(ref_ts_2_sf_node.process_mutations_callcnt() == bp_ts_2_sf_node.process_mutations_callcnt());
+    REQUIRE(ref_ts_2_sf_node.finalize_called());
+    REQUIRE(ref_ts_2_sf_node.process_mutations_callcnt() == bp_ts_2_sf_node.process_mutations_callcnt());
 
     CHECK(bp_forest.num_trees() == num_trees);
     CHECK(bp_forest.num_samples() == num_samples);
@@ -293,11 +313,6 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
             if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
                 NodeId const ref_node_id = ref_ts_2_sf_node(tree_id, ts_node_id);
                 NodeId const bp_node_id  = bp_ts_2_sf_node(tree_id, ts_node_id);
-                if (bp_num_samples_below(bp_node_id) != ref_num_samples_below(ref_node_id)) {
-                    std::cout << "Tree: " << tree_id << " Node: " << ts_node_id << std::endl;
-                    std::cout << "BP: " << bp_num_samples_below(bp_node_id)
-                              << " REF: " << ref_num_samples_below(ref_node_id) << std::endl;
-                }
                 CHECK(bp_num_samples_below(bp_node_id) == ref_num_samples_below(ref_node_id));
             }
         }
@@ -344,7 +359,6 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
         auto const bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
         auto const ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest.postorder_edges(), all_samples);
 
-        // TODO Abstract to function
         TSKitTree tree(tree_sequence);
         TreeId    tree_id = 0;
         for (tree.first(); tree.is_valid(); tree.next()) {
@@ -353,13 +367,6 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
                 if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
                     NodeId const ref_node_id = ref_ts_2_sf_node(tree_id, ts_node_id);
                     NodeId const bp_node_id  = bp_ts_2_sf_node(tree_id, ts_node_id);
-                    if (bp_num_samples_below(bp_node_id) != ref_num_samples_below(ref_node_id)) {
-                        // TODO Remove this output
-                        std::cout << "Tree: " << tree_id << " Node: " << ts_node_id << std::endl;
-                        std::cout << "BP: " << bp_num_samples_below(bp_node_id)
-                                  << " REF: " << ref_num_samples_below(ref_node_id) << std::endl
-                                  << "----------" << std::endl;
-                    }
                     CHECK(bp_num_samples_below(bp_node_id) == ref_num_samples_below(ref_node_id));
                 }
             }
