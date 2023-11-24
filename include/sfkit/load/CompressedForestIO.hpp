@@ -10,7 +10,7 @@ namespace sfkit::io::internal {
 using Version = uint64_t;
 using Magic   = uint64_t;
 
-static constexpr Version DAG_ARCHIVE_VERSION = 2;
+static constexpr Version DAG_ARCHIVE_VERSION = 3;
 static constexpr Magic   DAG_ARCHIVE_MAGIC   = 1307950585415129820;
 
 static constexpr Version BP_ARCHIVE_VERSION = 1;

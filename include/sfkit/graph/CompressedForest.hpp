@@ -109,11 +109,9 @@ public:
     template <class Archive>
     void serialize(Archive& ar) {
         // The number of nodes in the DAG are computed during serialization of the EdgeListGraph object.
-        ar(_dag_postorder_edges, _subtree_sizes);
+        ar(_dag_postorder_edges);
     }
 
 private:
     EdgeListGraph _dag_postorder_edges;
-    // TODO Remove these (will cause a version bump in the  serialization format)
-    std::vector<NodeId> _subtree_sizes;
 };
