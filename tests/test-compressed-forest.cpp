@@ -9,7 +9,7 @@
 #include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/utils/concepts.hpp"
 #include "tskit-testlib/testlib.hpp"
 

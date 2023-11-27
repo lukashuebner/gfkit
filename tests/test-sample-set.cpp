@@ -9,7 +9,6 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "tskit-testlib/testlib.hpp"
 

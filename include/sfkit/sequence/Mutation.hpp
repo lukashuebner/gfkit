@@ -4,7 +4,7 @@
 
 #include <tskit/core.h>
 
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/sequence/Sequence.hpp"
 
 namespace sfkit::sequence {

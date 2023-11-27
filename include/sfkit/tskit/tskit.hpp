@@ -9,7 +9,7 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"

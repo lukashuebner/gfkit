@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "catch2/catch_assertion_info.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 

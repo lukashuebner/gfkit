@@ -15,6 +15,7 @@
 #include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/io/CompressedForestIO.hpp"
+#include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/stats/AlleleFrequencySpectrum.hpp"
 #include "sfkit/tskit/tskit.hpp"

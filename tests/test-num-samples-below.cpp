@@ -10,7 +10,7 @@
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/io/CompressedForestIO.hpp"
-#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "tskit-testlib/testlib.hpp"

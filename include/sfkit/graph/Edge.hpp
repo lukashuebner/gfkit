@@ -3,7 +3,7 @@
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/utils/xxhash.hpp"
 
 namespace sfkit::graph {

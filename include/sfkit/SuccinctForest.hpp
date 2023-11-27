@@ -9,7 +9,7 @@
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/dag/DAGForestCompressor.hpp"
-#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/sequence/AlleleFrequencies.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/sequence/GenomicSequenceFactory.hpp"
@@ -50,7 +50,7 @@ public:
     auto allele_frequencies(SampleSet const& samples) {
         // return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, samples);
         auto num_samples_below = NumSamplesBelowAccessor(
-            std::make_shared<NumSamplesBelow<1>>(
+            std::make_shared<DAGNumSamplesBelow<1>>(
                 _forest.postorder_edges(),
                 std::array<std::reference_wrapper<SampleSet const>, 1>{std::cref(samples)}
             ),
@@ -111,7 +111,7 @@ public:
 
     template <
         typename AlleleFrequenciesT =
-            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<NumSamplesBelow<1>>>>
+            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>>
     [[nodiscard]] double diversity(SampleId num_samples, AlleleFrequenciesT allele_frequencies) {
         auto const n  = num_samples;
         double     pi = 0.0;
@@ -152,7 +152,7 @@ public:
 
     template <
         typename AlleleFrequenciesT =
-            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<NumSamplesBelow<1>>>>
+            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>>
     [[nodiscard]] double divergence(
         SampleId           num_samples_1,
         AlleleFrequenciesT allele_frequencies_1,

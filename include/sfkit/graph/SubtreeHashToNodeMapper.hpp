@@ -3,7 +3,7 @@
 #include <sfkit/include-redirects/hopscotch_map.hpp>
 
 #include "sfkit/graph/SubtreeHasher.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 
 namespace sfkit::graph {
 class SubtreeHashToNodeMapper {

@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 
 using namespace Catch::Matchers;
 

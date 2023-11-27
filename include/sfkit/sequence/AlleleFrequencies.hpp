@@ -5,6 +5,8 @@
 
 // TODO Generalize to be able to use DAG and BP based forests
 #include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/samples/NumSamplesBelowAccessor.hpp"
+#include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/utils/always_false_v.hpp"
 
@@ -12,13 +14,13 @@ namespace sfkit::sequence {
 
 using namespace sfkit::samples;
 using sfkit::dag::DAGCompressedForest;
-using sfkit::samples::NumSamplesBelow;
+using sfkit::samples::DAGNumSamplesBelow;
 using sfkit::samples::NumSamplesBelowAccessor;
 using sfkit::utils::always_false_v;
 
 template <
     typename AllelicStatePerfectHasher                = PerfectDNAHasher,
-    NumSamplesBelowAccessorC NumSamplesBelowAccessorT = NumSamplesBelowAccessor<NumSamplesBelow<1>>>
+    NumSamplesBelowAccessorC NumSamplesBelowAccessorT = NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>
 class AlleleFrequencies {
 public:
     class BiallelicFrequency {

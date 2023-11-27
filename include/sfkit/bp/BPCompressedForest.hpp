@@ -16,7 +16,7 @@
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
 #include "sfkit/graph/SubtreeHasher.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/tskit/tskit.hpp"
 #include "sfkit/utils/checking_casts.hpp"

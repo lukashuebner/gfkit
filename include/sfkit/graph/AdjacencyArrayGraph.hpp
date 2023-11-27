@@ -6,7 +6,7 @@
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
 namespace sfkit::graph {

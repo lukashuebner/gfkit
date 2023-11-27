@@ -8,14 +8,17 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/types.hpp"
-#include "sfkit/samples/types.hpp"
+#include "sfkit/graph/primitives.hpp"
+#include "sfkit/samples/primitives.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
 namespace sfkit::samples {
+
 using sfkit::utils::asserting_cast;
 using sfkit::utils::IterableInput;
+
+using SampleSetId = uint8_t;
 
 class SampleSet {
 public:

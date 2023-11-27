@@ -6,7 +6,7 @@
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/sequence/Sequence.hpp"
 #include "sfkit/tskit/tskit.hpp"
 

@@ -7,7 +7,7 @@
 #include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
 #include "sfkit/graph/SubtreeHasher.hpp"
 #include "sfkit/graph/TsToSfNodeMapper.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
 using namespace sfkit::graph;

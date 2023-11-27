@@ -4,7 +4,7 @@
 #include <optional>
 #include <vector>
 
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/utils/concepts.hpp"
 
 namespace sfkit::graph {

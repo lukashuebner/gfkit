@@ -4,4 +4,4 @@
 
 namespace sfkit::samples {
 using SampleId = uint32_t;
-}
+} // namespace sfkit::samples

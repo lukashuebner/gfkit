@@ -11,7 +11,7 @@
 #include <tskit/tables.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/io/vector_serialization.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"

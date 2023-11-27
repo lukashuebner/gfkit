@@ -6,7 +6,7 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <stddef.h>
 
-#include "sfkit/graph/types.hpp"
+#include "sfkit/graph/primitives.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
