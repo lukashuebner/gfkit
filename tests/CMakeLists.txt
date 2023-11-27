@@ -11,7 +11,7 @@ register_test(test-load-from-tree-sequence FILES test-load-from-tree-sequence.cp
 
 register_test(test-xxhash FILES test-xxhash.cpp)
 
-register_test(test-genomic-sequence-storage FILES test-genomic-sequence-storage.cpp LIBRARIES tskit)
+register_test(test-genomic-sequence FILES test-genomic-sequence.cpp LIBRARIES tskit)
 
 register_test(
     test-allele-frequency-spectrum

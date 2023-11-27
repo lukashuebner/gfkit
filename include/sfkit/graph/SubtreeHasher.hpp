@@ -7,12 +7,13 @@
 #include <xxhash.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/xxhash.hpp"
 
-#define SFKIT_XXHASH_SUBTREE_IDS
+namespace sfkit::graph {
 
-#ifdef SFKIT_XXHASH_SUBTREE_IDS
+using sfkit::utils::xxhash128;
+
 using SubtreeHash                           = XXH128_hash_t;
 constexpr SubtreeHash SuccinctSubtreeIdZero = {0, 0};
 
@@ -54,14 +55,13 @@ private:
     XXH64_hash_t const _seed;
     XXH128_hash_t      _data;
 };
+} // namespace sfkit::graph
 
 // SubtreeHash already is a hash; this function thus is the identity.
 // Note however, that the value will get truncated.
 template <>
-struct std::hash<SubtreeHash> {
-    size_t operator()(SubtreeHash const& subtree_id) const noexcept {
+struct std::hash<sfkit::graph::SubtreeHash> {
+    size_t operator()(sfkit::graph::SubtreeHash const& subtree_id) const noexcept {
         return *(reinterpret_cast<size_t const*>(&subtree_id));
     }
 };
-
-#endif

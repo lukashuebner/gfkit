@@ -4,11 +4,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include "sfkit/checking_casts.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
-#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
+#include "sfkit/graph/TsToSfNodeMapper.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/utils/checking_casts.hpp"
+
+using namespace sfkit::graph;
+using sfkit::utils::asserting_cast;
+using sfkit::utils::IterableInput;
 
 class Ts2SfMappingExtractor {
 public:

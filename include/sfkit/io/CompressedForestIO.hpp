@@ -3,10 +3,14 @@
 #include <fmt/format.h>
 
 #include "sfkit/SuccinctForest.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 
 namespace sfkit::io::internal {
+
+using sfkit::bp::BPCompressedForest;
+using sfkit::dag::DAGCompressedForest;
+
 using Version = uint64_t;
 using Magic   = uint64_t;
 
@@ -18,7 +22,7 @@ static constexpr Magic   BP_ARCHIVE_MAGIC   = 7612607674453629763;
 
 class DAGCompressedForestIO {
 public:
-    static void load(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+    static void load(std::string const& filename, DAGCompressedForest& forest, GenomicSequence& sequence) {
         std::ifstream              is(filename, std::ios::binary | std::ios::in);
         cereal::BinaryInputArchive archive(is);
 
@@ -51,7 +55,7 @@ public:
         );
     }
 
-    static void save(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+    static void save(std::string const& filename, DAGCompressedForest& forest, GenomicSequence& sequence) {
         std::ofstream os(filename, std::ios::binary | std::ios::out);
 
         cereal::BinaryOutputArchive archive(os);
@@ -66,7 +70,6 @@ public:
     static void save(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
         std::ofstream os(filename, std::ios::binary | std::ios::out);
 
-        // TODO Document decicion not to use cereal here
         os.write(reinterpret_cast<char const*>(&BP_ARCHIVE_MAGIC), sizeof(BP_ARCHIVE_MAGIC));
         os.write(reinterpret_cast<char const*>(&BP_ARCHIVE_VERSION), sizeof(BP_ARCHIVE_VERSION));
 
@@ -111,19 +114,19 @@ public:
 namespace sfkit::io {
 class CompressedForestIO {
 public:
-    static void load(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+    static void load(std::string const& filename, bp::BPCompressedForest& forest, GenomicSequence& sequence) {
         internal::BPCompressedForestIO::load(filename, forest, sequence);
     }
 
-    static void save(std::string const& filename, BPCompressedForest& forest, GenomicSequence& sequence) {
+    static void save(std::string const& filename, bp::BPCompressedForest& forest, GenomicSequence& sequence) {
         internal::BPCompressedForestIO::save(filename, forest, sequence);
     }
 
-    static void load(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+    static void load(std::string const& filename, dag::DAGCompressedForest& forest, GenomicSequence& sequence) {
         internal::DAGCompressedForestIO::load(filename, forest, sequence);
     }
 
-    static void save(std::string const& filename, CompressedForest& forest, GenomicSequence& sequence) {
+    static void save(std::string const& filename, dag::DAGCompressedForest& forest, GenomicSequence& sequence) {
         internal::DAGCompressedForestIO::save(filename, forest, sequence);
     }
 };

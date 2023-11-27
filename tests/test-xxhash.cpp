@@ -8,6 +8,8 @@
 #include "kassert/kassert.hpp"
 #include "sfkit/utils/xxhash.hpp"
 
+using namespace sfkit::utils;
+
 TEST_CASE("XXH128_hash_t comparison", "[xxhash]") {
     XXH128_hash_t const hash1 = {0, 0};
     XXH128_hash_t const hash2 = {0, 0};

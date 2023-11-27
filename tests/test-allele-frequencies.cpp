@@ -8,14 +8,16 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/sequence/AlleleFrequencies.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "sfkit/utils/literals.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
+using namespace sfkit;
+using sfkit::utils::operator""_uc;
 
 // This test case is taken from the tskit test suite (the only test case for the AFS in there that checks values).
 TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {

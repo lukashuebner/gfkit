@@ -4,8 +4,13 @@
 
 #include <tskit/core.h>
 
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/sequence/Sequence.hpp"
+
+namespace sfkit::sequence {
+
+using sfkit::graph::NodeId;
+using sfkit::graph::TreeId;
 
 using MutationId = uint32_t;
 
@@ -61,3 +66,4 @@ private:
 };
 
 using MutationView = std::span<Mutation const>;
+} // namespace sfkit::sequence

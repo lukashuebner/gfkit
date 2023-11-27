@@ -10,10 +10,10 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
@@ -55,11 +55,11 @@ TEST_CASE("Segregating Sites tskit example", "[SegregatingSites]") {
     REQUIRE(reference_num_seg_sites == Approx(3.0).epsilon(1e-6));
 
     // Test our wrapper around tskit
-    TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership
+    sfkit::tskit::TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership
     CHECK(tree_sequence.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest forest(std::move(tree_sequence));
+    sfkit::SuccinctForest forest(std::move(tree_sequence));
 
     CHECK(forest.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 

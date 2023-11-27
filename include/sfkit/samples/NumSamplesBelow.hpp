@@ -8,12 +8,17 @@
 #include <plf_stack.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/BPCompressedForest.hpp"
+#include "sfkit/bp/BPCompressedForest.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/utils/BufferedSDSLBitVectorView.hpp"
 
+namespace sfkit::samples {
+
 namespace stdx = std::experimental;
+using sfkit::bp::BPCompressedForest;
+using sfkit::graph::EdgeListGraph;
+using sfkit::graph::NodeId;
 using sfkit::utils::BufferedSDSLBitVectorView;
 
 template <typename T>
@@ -266,8 +271,14 @@ private:
         }
 
         // TODO Abstract this away into a NodeIdCounter class which we also use during forest compression
-        plf::stack<simd_t> sample_counts;
-        sample_counts.reserve(_forest.num_samples());
+        // plf::stack<simd_t> sample_counts;
+        // sample_counts.reserve(_forest.num_samples());
+        std::vector<simd_t>  sample_counts;
+        plf::stack<SampleId> num_children;
+        sample_counts.resize(_forest.num_samples() + 1); // TODO Think about the maximum size
+        size_t times_sample_counts_was_empty = 0;
+        // We're wasting the first entry here as a sentinel to simplify the logic below.
+        auto sample_counts_top = sample_counts.begin();
 
         NodeId   inner_node_id = _forest.num_samples();
         SampleId leaf_rank     = 0;
@@ -289,27 +300,39 @@ private:
         // TODO Idea: use less bits to represent is_ref, is_leaf, bp and interleave the arrays for more efficient memory
         // access.
 
-        bool last_bp = bp::PARENS_CLOSE;
+        bool   last_bp = bp::PARENS_CLOSE;
+        size_t level   = 0; // Distance from root
         // bool last_is_leaf = false;
+        num_children.emplace(0);
         while (bp_it != bp_end) {
-            // TODO Add operator!= for sentinel
-            KASSERT(!(bp_it == bp_end) && !(is_ref_it == is_ref_end));
+            KASSERT(num_children.size() == level + 1);
+            KASSERT(bp_it != bp_end && is_ref_it != is_ref_end);
             if (*is_ref_it) { // reference
                 // Reference always occur as tuples of (open, close) in BP and (true, true) in is_ref
                 KASSERT(*bp_it == bp::PARENS_OPEN);
                 ++bp_it;
                 ++is_ref_it;
-                // TODO Change back
-                KASSERT(!(bp_it == bp_end) && !(is_ref_it == is_ref_end));
-                // KASSERT(bp_it != bp_end && is_ref_it != is_ref_end);
+                KASSERT(bp_it != bp_end && is_ref_it != is_ref_end);
                 KASSERT(*is_ref_it);
                 KASSERT(*bp_it == bp::PARENS_CLOSE);
 
                 NodeId const node_id = _forest.node_id_ref_by_rank(ref_rank);
-                sample_counts.push(_subtree_sizes[node_id]);
+                // sample_counts.push(_subtree_sizes[node_id]);
+                if (level > 0) [[likely]] { // We're not referring to a whole tree
+                    ++sample_counts_top;
+                    *sample_counts_top = _subtree_sizes[node_id];
+                    num_children.top()++;
+                } else {
+                    times_sample_counts_was_empty++;
+                }
                 ++ref_rank;
             } else { // description of subtree
-                if (*bp_it == bp::PARENS_CLOSE) {
+                if (*bp_it == bp::PARENS_OPEN) {
+                    ++level;
+                    num_children.top()++;
+                    num_children.emplace(0);
+                } else { // &bp_it == bp::PARENS_CLOSE
+                    --level;
                     // KASSERT(idx >= 1ul); // The first bit in the sequence can never be a closing parenthesis.
                     if (last_bp == bp::PARENS_OPEN) { // sample
                         // KASSERT(*is_leaf_it);
@@ -317,18 +340,32 @@ private:
                         KASSERT(leaf_rank < _forest.num_samples());
                         SampleId const leaf_id = _forest.leaf_idx_to_id(leaf_rank);
                         // KASSERT(leaf_id == _forest.node_id(idx - 1));
-                        sample_counts.push(_subtree_sizes[leaf_id]);
+                        // sample_counts.push(_subtree_sizes[leaf_id]);
+                        ++sample_counts_top;
+                        *sample_counts_top = _subtree_sizes[leaf_id];
                         ++leaf_rank;
                     } else { // inner node
                         KASSERT(sample_counts.size() >= 2ul);
-                        auto const other = sample_counts.top();
-                        sample_counts.pop();
-                        sample_counts.top() += other;
+                        // auto const other = sample_counts.top();
+                        for ([[maybe_unused]] SampleId child = 0; child < num_children.top() - 1; ++child) {
+                            auto const other = *sample_counts_top;
+                            // sample_counts.pop();
+                            --sample_counts_top;
+                            *sample_counts_top += other;
+                        }
                         KASSERT(inner_node_id < _forest.num_nodes());
                         // KASSERT(_forest.node_id(asserting_cast<size_t>(idx)) == inner_node_id);
-                        _subtree_sizes[inner_node_id] = sample_counts.top();
+                        //_subtree_sizes[inner_node_id] = sample_counts.top();
+                        _subtree_sizes[inner_node_id] = *sample_counts_top;
+                        if (level == 0) [[unlikely]] {
+                            --sample_counts_top;
+                        }
+                        if (sample_counts_top == sample_counts.begin()) {
+                            ++times_sample_counts_was_empty;
+                        }
                         ++inner_node_id;
                     }
+                    num_children.pop();
                 }
             }
             last_bp = *bp_it;
@@ -337,6 +374,12 @@ private:
             ++is_ref_it;
             // is_leaf_it++;
         }
+        std::cout << "times_sample_counts_was_empty: " << times_sample_counts_was_empty << std::endl;
+        std::cout << "sample_counts_top - sample_counts.begin(): " << sample_counts_top - sample_counts.begin()
+                  << std::endl;
+        KASSERT(times_sample_counts_was_empty == _forest.num_trees());
+        KASSERT(sample_counts_top - sample_counts.begin() == 0);
+        KASSERT(num_children.size() == 1ul);
     }
 };
 
@@ -477,3 +520,4 @@ public:
         );
     }
 };
+} // namespace sfkit::samples

@@ -8,9 +8,11 @@
 #include <stddef.h>
 
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 
 using namespace Catch::Matchers;
+
+using namespace sfkit::graph;
 
 TEST_CASE("EdgeListGraph Basics", "[EdgeListGraph]") {
     EdgeListGraph graph;

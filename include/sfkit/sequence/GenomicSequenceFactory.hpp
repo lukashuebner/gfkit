@@ -4,10 +4,11 @@
 #include <tskit/core.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/graph/TsToSfNodeMapper.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
 
+namespace sfkit::sequence {
 // We interleaf building the genomic sequence storage with building the forest to save memory.
 // To build the genomic sequence storage, we need the mapping of ts nodes to sf subtree ids for all trees.
 // If we were to build the forest first, we would need to store this mapping for all trees, which takes up hundreds
@@ -16,7 +17,7 @@
 class GenomicSequenceFactory {
 public:
     // Rename storage to store?
-    GenomicSequenceFactory(TSKitTreeSequence const& tree_sequence)
+    GenomicSequenceFactory(tskit::TSKitTreeSequence const& tree_sequence)
         : _sequence(tree_sequence.num_sites(), tree_sequence.num_mutations()),
           _site2tree(tree_sequence),
           _mutation_it(tree_sequence.mutations().begin()),
@@ -89,15 +90,15 @@ public:
     }
 
 private:
-    GenomicSequence           _sequence;
-    TskMutationView           _tsk_mutations;
-    TSKitSiteToTreeMapper     _site2tree;
-    TskMutationView::iterator _mutation_it;
-    TskMutationView::iterator _mutations_end;
-    bool                      _finalized = false;
-    bool                      _moved     = false;
+    GenomicSequence                  _sequence;
+    tskit::TskMutationView           _tsk_mutations;
+    TSKitSiteToTreeMapper            _site2tree;
+    tskit::TskMutationView::iterator _mutation_it;
+    tskit::TskMutationView::iterator _mutations_end;
+    bool                             _finalized = false;
+    bool                             _moved     = false;
 
-    void _set_ancestral_states(TSKitTreeSequence const& tree_sequence) {
+    void _set_ancestral_states(tskit::TSKitTreeSequence const& tree_sequence) {
         // Store ancestral states
         for (auto&& site: tree_sequence.sites()) {
             KASSERT(site.ancestral_state_length == 1u, "Ancestral state length is not 1", sfkit::assert::light);
@@ -110,3 +111,4 @@ private:
         );
     }
 };
+} // namespace sfkit::sequence

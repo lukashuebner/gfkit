@@ -6,10 +6,17 @@
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/sequence/AlleleFrequencies.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
+
+namespace sfkit::stats {
+
+using sfkit::samples::SampleId;
+using sfkit::sequence::AlleleFrequencies;
+using sfkit::sequence::SiteId;
+using sfkit::utils::asserting_cast;
 
 // We store the number of sites without a mutation in afs[0], the number of singletons (sites with one mutation) in
 // afs[1] and so on. For simplicity we also compute afs[num_samples], that is the number of sites with all samples
@@ -99,3 +106,4 @@ public:
 private:
     std::vector<value_type> _afs;
 };
+} // namespace sfkit::stats

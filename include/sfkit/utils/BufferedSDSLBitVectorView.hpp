@@ -4,9 +4,8 @@
 #include <sdsl/bit_vectors.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 
-// TODO Use namespaces for all of sfkit
 namespace sfkit::utils {
 class BufferedSDSLBitVectorView {
 public:
@@ -47,15 +46,6 @@ public:
             return tmp;
         }
 
-        // [[nodiscard]] bool operator==(iterator const& other) const {
-        //     return _bit_vector_idx == other._bit_vector_idx
-        //            && _remaining_bits_in_buffer == other._remaining_bits_in_buffer && _buffer == other._buffer;
-        // }
-
-        // [[nodiscard]] bool operator!=(iterator const& other) const {
-        //     return !(*this == other);
-        // }
-
         [[nodiscard]] bool operator==(sentinel const) const {
             return _is_end;
         }
@@ -89,7 +79,6 @@ public:
         bool                        _is_end                   = false;
 
         void _refill_buffer() {
-            // TODO What happens if there aren't enough bits left in the bit_vector?
             KASSERT(_bit_vector_idx <= _bit_vector_size, "Bit vector index is out of bounds", sfkit::assert::light);
             auto const bits_read =
                 asserting_cast<decltype(BUFFER_SIZE)>(std::min<size_t>(BUFFER_SIZE, _bit_vector_size - _bit_vector_idx)

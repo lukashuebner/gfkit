@@ -31,7 +31,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/checking_casts.hpp"
+
+using sfkit::utils::asserting_cast;
 
 char* _tmp_file_name;
 FILE* _devnull;

@@ -8,10 +8,14 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/samples/types.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-using SampleId = uint32_t;
+namespace sfkit::samples {
+using sfkit::utils::asserting_cast;
+using sfkit::utils::IterableInput;
 
 class SampleSet {
 public:
@@ -156,3 +160,4 @@ public:
 private:
     std::vector<bool> _samples;
 };
+} // namespace sfkit::samples

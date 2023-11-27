@@ -11,12 +11,14 @@
 #include <tskit/tables.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/vector_serialization.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/io/vector_serialization.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
 #include "sfkit/sequence/TSKitSiteToTreeMapper.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+
+namespace sfkit::sequence {
 
 class GenomicSequence {
 public:
@@ -175,16 +177,16 @@ public:
 
     void save(std::ostream& os) {
         build_mutation_indices();
-        sfkit::io::internal::serialize(os, _sites);
-        sfkit::io::internal::serialize(os, _mutation_indices);
-        sfkit::io::internal::serialize(os, _mutations);
+        sfkit::io::utils::serialize(os, _sites);
+        sfkit::io::utils::serialize(os, _mutation_indices);
+        sfkit::io::utils::serialize(os, _mutations);
         os.write(reinterpret_cast<char const*>(&_mutation_indices_valid), sizeof(_mutation_indices_valid));
     }
 
     void load(std::istream& is) {
-        sfkit::io::internal::deserialize(is, _sites);
-        sfkit::io::internal::deserialize(is, _mutation_indices);
-        sfkit::io::internal::deserialize(is, _mutations);
+        sfkit::io::utils::deserialize(is, _sites);
+        sfkit::io::utils::deserialize(is, _mutation_indices);
+        sfkit::io::utils::deserialize(is, _mutations);
         is.read(reinterpret_cast<char*>(&_mutation_indices_valid), sizeof(_mutation_indices_valid));
     }
 
@@ -194,8 +196,9 @@ private:
     std::vector<Mutation>     _mutations;
     bool                      _mutation_indices_valid = false;
 };
+} // namespace sfkit::sequence
 
-inline std::ostream& operator<<(std::ostream& os, MutationView const& mutations) {
+inline std::ostream& operator<<(std::ostream& os, sfkit::sequence::MutationView const& mutations) {
     os << "{ ";
     for (auto const& mutation: mutations) {
         os << "Mutation<site:" << mutation.site_id() << ", derived:" << mutation.allelic_state() << "> ";
@@ -204,7 +207,7 @@ inline std::ostream& operator<<(std::ostream& os, MutationView const& mutations)
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, Mutation const& mutation) {
+inline std::ostream& operator<<(std::ostream& os, sfkit::sequence::Mutation const& mutation) {
     os << "Mutation<site:" << mutation.site_id() << ", derived:" << mutation.allelic_state() << ">";
     return os;
 }

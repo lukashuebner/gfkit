@@ -11,16 +11,33 @@
 #include <sfkit/include-redirects/cereal.hpp>
 
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/bp/BPForestCompressor.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/load/BPForestCompressor.hpp"
-#include "sfkit/load/CompressedForestIO.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
+#include "sfkit/io/CompressedForestIO.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit/tskit.hpp"
 
 using namespace ::Catch::Matchers;
 using Catch::Approx;
+
+using sfkit::SuccinctForest;
+using sfkit::bp::BPCompressedForest;
+using sfkit::bp::BPForestCompressor;
+using sfkit::dag::DAGCompressedForest;
+using sfkit::dag::DAGForestCompressor;
+using sfkit::graph::NodeId;
+using sfkit::samples::NumSamplesBelowFactory;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet;
+using sfkit::sequence::AlleleFrequencies;
+using sfkit::sequence::GenomicSequence;
+using sfkit::sequence::GenomicSequenceFactory;
+using sfkit::sequence::PerfectDNAHasher;
+using sfkit::sequence::SiteId;
+using sfkit::stats::AlleleFrequencySpectrum;
+using sfkit::tskit::TSKitTreeSequence;
 
 std::string const DAG_ARCHIVE_FILE_NAME = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.forest";
 std::string const BP_ARCHIVE_FILE_NAME  = "tmp-test-f5f515340fa29c848db5ed746253f571c6c791bb.bpforest";
@@ -38,16 +55,16 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    ForestCompressor       forest_compressor(tree_sequence);
+    DAGForestCompressor    forest_compressor(tree_sequence);
     GenomicSequenceFactory sequence_factory(tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     // Serialize and deserialize the compressed forest and genome sequence storage
     sfkit::io::CompressedForestIO::save(DAG_ARCHIVE_FILE_NAME, forest, sequence);
 
-    CompressedForest forest_deserialized;
-    GenomicSequence  sequence_deserialized;
+    DAGCompressedForest forest_deserialized;
+    GenomicSequence     sequence_deserialized;
     sfkit::io::CompressedForestIO::load(DAG_ARCHIVE_FILE_NAME, forest_deserialized, sequence_deserialized);
 
     std::filesystem::remove(DAG_ARCHIVE_FILE_NAME);
@@ -143,9 +160,9 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
 
 void convert(std::string const& trees_file, std::string const& forest_file) {
     TSKitTreeSequence      tree_sequence(trees_file);
-    ForestCompressor       forest_compressor(tree_sequence);
+    DAGForestCompressor    forest_compressor(tree_sequence);
     GenomicSequenceFactory sequence_store_factory(tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_store_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_store_factory);
     GenomicSequence        sequence = sequence_store_factory.move_storage();
 
     sfkit::io::CompressedForestIO::save(forest_file, forest, sequence);
@@ -278,9 +295,9 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
 
     convert(trees_file, forest_file);
 
-    CompressedForest  forest;
-    GenomicSequence   sequence;
-    TSKitTreeSequence tree_sequence(trees_file);
+    DAGCompressedForest forest;
+    GenomicSequence     sequence;
+    TSKitTreeSequence   tree_sequence(trees_file);
     sfkit::io::CompressedForestIO::load(forest_file, forest, sequence);
     CHECK(forest.num_nodes() > 0);
     CHECK(forest.num_nodes_is_set());

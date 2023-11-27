@@ -4,10 +4,16 @@
 
 #include <kassert/kassert.hpp>
 
-#include "EdgeListGraph.hpp"
-#include "common.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/utils/checking_casts.hpp"
+
+namespace sfkit::graph {
+
+using sfkit::samples::SampleId; // TODO Remove this dependency
+using sfkit::utils::asserting_cast;
+using namespace sfkit::graph;
 
 class AdjacencyArrayGraph {
 public:
@@ -42,15 +48,12 @@ public:
             std::sort(vertex.begin(), vertex.end());
         });
 
-// TODO Check that there are no duplicate edges
 #if KASSERT_ENABLED(SFKIT_ASSERTION_LEVEL_NORMAL)
         std::for_each(_adjacency_array.begin(), _adjacency_array.end(), [](auto& vertex) {
             auto last = std::unique(vertex.begin(), vertex.end());
             vertex.erase(last, vertex.end());
         });
 #endif
-
-        // TODO Precompute the traversal order for cache efficient traversals
     }
 
     NodeId num_nodes() const {
@@ -92,3 +95,5 @@ private:
     std::vector<NodeId>              _postorder;
     std::vector<NodeId>              _levelorder;
 };
+
+} // namespace sfkit::graph

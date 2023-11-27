@@ -7,14 +7,23 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/CompressedForestIO.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/io/CompressedForestIO.hpp"
+#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
+using namespace sfkit;
+
+using dag::DAGCompressedForest;
+using dag::DAGForestCompressor;
+using sequence::AlleleFrequencies;
+using sequence::GenomicSequenceFactory;
+using sequence::PerfectDNAHasher;
+using sequence::PerfectNumericHasher;
+using stats::AlleleFrequencySpectrum;
 
 // This test case is taken from the tskit test suite (the only test case for the AFS in there that checks values).
 TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectrum]") {
@@ -65,19 +74,19 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
     CHECK(ref_result[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    tskit::TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    auto                     wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
-    ForestCompressor       forest_compressor(sfkit_tree_sequence);
-    GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
-    CompressedForest       forest = forest_compressor.compress(sequence_factory);
+    dag::DAGForestCompressor         forest_compressor(sfkit_tree_sequence);
+    sequence::GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
+    dag::DAGCompressedForest         forest = forest_compressor.compress(sequence_factory);
 
     auto sequence = sequence_factory.move_storage();
 
-    SampleSet const                               all_samples = forest.all_samples();
-    AlleleFrequencies<PerfectNumericHasher> const allele_frequencies(forest, sequence, all_samples);
-    AlleleFrequencySpectrum<PerfectNumericHasher> afs(allele_frequencies);
+    SampleSet const                                      all_samples = forest.all_samples();
+    AlleleFrequencies<PerfectNumericHasher> const        allele_frequencies(forest, sequence, all_samples);
+    stats::AlleleFrequencySpectrum<PerfectNumericHasher> afs(allele_frequencies);
 
     CHECK(afs.num_samples() == 4);
 
@@ -138,9 +147,9 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
     auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
-    ForestCompressor       forest_compressor(sfkit_tree_sequence);
+    DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
     GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
-    CompressedForest       forest = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest = forest_compressor.compress(sequence_factory);
 
     auto sequence = sequence_factory.move_storage();
 
@@ -211,9 +220,9 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
     auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
-    ForestCompressor       forest_compressor(sfkit_tree_sequence);
+    DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
     GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
@@ -287,9 +296,9 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
-    ForestCompressor       forest_compressor(sfkit_tree_sequence);
+    DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
     GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
@@ -363,9 +372,9 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     // TODO Write a utility function to construct the compressed tree + sequence store and use it in all the tests.
-    ForestCompressor       forest_compressor(sfkit_tree_sequence);
+    DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
     GenomicSequenceFactory sequence_factory(sfkit_tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
@@ -401,9 +410,9 @@ TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
     TSKitTreeSequence tree_sequence(ts_file);
     auto              tskit_afs = tree_sequence.allele_frequency_spectrum();
 
-    ForestCompressor       forest_compressor(tree_sequence);
+    DAGForestCompressor    forest_compressor(tree_sequence);
     GenomicSequenceFactory sequence_factory(tree_sequence);
-    CompressedForest       forest   = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
     AlleleFrequencies<PerfectDNAHasher>       allele_frequencies(forest, sequence, forest.all_samples());

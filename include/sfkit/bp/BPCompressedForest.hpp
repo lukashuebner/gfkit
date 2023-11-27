@@ -10,17 +10,22 @@
 #include <sfkit/include-redirects/cereal.hpp>
 #include <sfkit/include-redirects/sdsl.hpp>
 
-// TODO include-what-you-use
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/bp/Parens.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/balanced_parenthesis.hpp"
-#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/samples/SampleSet.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
+
+namespace sfkit::bp {
+using namespace sfkit::graph;
+using sfkit::samples::SampleId;  // TODO Remove this dependency
+using sfkit::samples::SampleSet; // TODO Remove this dependency
 
 class BPCompressedForest {
 public:
@@ -211,3 +216,5 @@ private:
     SampleId                          _num_leaves;
     TreeId                            _num_trees;
 };
+
+} // namespace sfkit::bp

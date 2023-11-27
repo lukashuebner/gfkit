@@ -8,12 +8,15 @@
 #include <stddef.h>
 
 #include "catch2/catch_assertion_info.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
 using namespace ::Catch::Matchers;
+
+using namespace sfkit::graph;
+using namespace sfkit::tskit;
 
 TEST_CASE("TSKitTree::eulertour() Example I", "[TSKitTree]") {
     //     8   ┊         ┊         ┊

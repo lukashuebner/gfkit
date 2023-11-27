@@ -8,14 +8,24 @@
 
 #include "mocks/TsToSfMappingExtractor.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/CompressedForestIO.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/io/CompressedForestIO.hpp"
 #include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
+
+using sfkit::dag::DAGCompressedForest;
+using sfkit::dag::DAGForestCompressor;
+using sfkit::graph::NodeId;
+using sfkit::samples::NumSamplesBelowFactory;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet;
+using sfkit::sequence::GenomicSequenceFactory;
+using sfkit::sequence::SiteId;
+using sfkit::tskit::TSKitTreeSequence;
 
 TEST_CASE("NumSamplesBelow", "[NumSamplesBelow]") {
     EdgeListGraph dag;
@@ -365,9 +375,9 @@ TEST_CASE("NumSamplesBelow Simultaneous Computation of Multiple Sample Sets Simu
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    ForestCompressor       forest_compressor(tree_sequence);
+    DAGForestCompressor    forest_compressor(tree_sequence);
     GenomicSequenceFactory sequence_factory(tree_sequence);
-    CompressedForest       forest = forest_compressor.compress(sequence_factory);
+    DAGCompressedForest    forest = forest_compressor.compress(sequence_factory);
 
     { // Two sample sets at once
         SampleSet sample_set_0(forest.num_samples());

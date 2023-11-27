@@ -4,9 +4,10 @@
 #include <optional>
 #include <vector>
 
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/utils/concepts.hpp"
 
+namespace sfkit::graph {
 template <typename TsNodeToSubtreeMapper, typename SubtreeToSfNodeMapper>
 class TsToSfNodeMapper {
 public:
@@ -35,3 +36,4 @@ private:
     TsNodeToSubtreeMapper const& _ts_node_to_subtree_mapper;
     SubtreeToSfNodeMapper const& _subtree_to_sf_node_mapper;
 };
+} // namespace sfkit::graph

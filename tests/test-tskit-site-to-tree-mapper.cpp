@@ -8,12 +8,18 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/sequence/TSKitSiteToTreeMapper.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
+
+using sfkit::graph::NodeId;
+using sfkit::samples::SampleId;
+using sfkit::sequence::SiteId;
+using sfkit::sequence::TSKitSiteToTreeMapper;
+using sfkit::tskit::TSKitTreeSequence;
 
 // This test case is taken from the tskit test suite (the only test case for the AFS in there that checks values).
 TEST_CASE("TSKitSiteToTreeMapper example multi tree no back no recurrent", "[TSKitSiteToTreeMapper]") {

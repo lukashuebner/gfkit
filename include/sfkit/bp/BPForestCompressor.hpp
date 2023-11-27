@@ -8,20 +8,25 @@
 #include <sfkit/include-redirects/sdsl.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
-#include "sfkit/graph/AdjacencyArrayGraph.hpp"
-#include "sfkit/graph/BPCompressedForest.hpp"
+#include "sfkit/bp/BPCompressedForest.hpp"
+// TODO Remove?
+//#include "sfkit/graph/AdjacencyArrayGraph.hpp"
+#include "sfkit/bp/Parens.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/balanced_parenthesis.hpp"
-#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
-#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
+#include "sfkit/graph/TsToSfNodeMapper.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/sequence/GenomicSequenceFactory.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-// TODO Separate this class into the construction and the storage
+namespace sfkit::bp {
+
+using sfkit::tskit::TSKitTree;
+using sfkit::tskit::TSKitTreeSequence;
+
 class BPForestCompressor {
 public:
     BPForestCompressor(TSKitTreeSequence& tree_sequence)
@@ -36,7 +41,7 @@ public:
     }
 
     template <typename GenomicSequenceFactoryT>
-    BPCompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_storage_factory) {
+    BPCompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_factory) {
         _num_samples = 0;
 
         // TODO Rewrite this, once we have the tree_sequence iterator
@@ -88,13 +93,13 @@ public:
             }
 
             // Process the mutations of this tree
-            genomic_sequence_storage_factory.process_mutations(
+            genomic_sequence_factory.process_mutations(
                 asserting_cast<TreeId>(_ts_tree.tree_id()),
                 TsToSfNodeMapper(_ts_node_to_subtree, _subtree_to_sf_node)
             );
         }
 
-        genomic_sequence_storage_factory.finalize();
+        genomic_sequence_factory.finalize();
 
         _is_reference.shrink_to_fit();
         _is_leaf.shrink_to_fit();
@@ -307,3 +312,4 @@ private:
         }
     }
 };
+} // namespace sfkit::bp

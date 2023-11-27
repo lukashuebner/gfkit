@@ -2,9 +2,10 @@
 
 #include <sfkit/include-redirects/hopscotch_map.hpp>
 
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
+#include "sfkit/graph/types.hpp"
 
+namespace sfkit::graph {
 class SubtreeHashToNodeMapper {
 public:
     SubtreeHashToNodeMapper() {
@@ -61,3 +62,4 @@ private:
     mutable MapType _subtree_to_node_map;
     NodeId          _next_node_id = 0;
 };
+} // namespace sfkit::graph

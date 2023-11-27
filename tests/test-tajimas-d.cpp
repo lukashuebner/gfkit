@@ -9,10 +9,10 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
@@ -39,6 +39,6 @@ TEST_CASE("Tajima's D tskit example", "[Tajima's D]") {
     auto const& tskit_tajimas_d = testcase.tskit_tajimas_d;
     std::cout << "Testing " << ts_file << " with expected value " << tskit_tajimas_d << std::endl;
 
-    SuccinctForest sequence_forest(ts_file);
+    sfkit::SuccinctForest sequence_forest(ts_file);
     CHECK(Approx(sequence_forest.tajimas_d()).epsilon(1e-6) == tskit_tajimas_d);
 }

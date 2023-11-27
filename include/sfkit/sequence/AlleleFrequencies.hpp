@@ -3,9 +3,18 @@
 #include <variant>
 #include <vector>
 
-#include "sfkit/graph/CompressedForest.hpp"
+// TODO Generalize to be able to use DAG and BP based forests
+#include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/utils/always_false_v.hpp"
+
+namespace sfkit::sequence {
+
+using namespace sfkit::samples;
+using sfkit::dag::DAGCompressedForest;
+using sfkit::samples::NumSamplesBelow;
+using sfkit::samples::NumSamplesBelowAccessor;
+using sfkit::utils::always_false_v;
 
 template <
     typename AllelicStatePerfectHasher                = PerfectDNAHasher,
@@ -118,14 +127,14 @@ public:
     using AlleleFrequency = std::variant<BiallelicFrequency, MultiallelicFrequency>;
 
     AlleleFrequencies(
-        CompressedForest& compressed_forest, GenomicSequence const& sequence_store, SampleSet const& sample_set
+        DAGCompressedForest& compressed_forest, GenomicSequence const& sequence_store, SampleSet const& sample_set
     )
         : _forest(compressed_forest),
           _sequence(sequence_store),
           _num_samples_below(NumSamplesBelowFactory::build(compressed_forest.postorder_edges(), sample_set)) {}
 
     AlleleFrequencies(
-        CompressedForest&               compressed_forest,
+        DAGCompressedForest&            compressed_forest,
         GenomicSequence const&          sequence_store,
         NumSamplesBelowAccessorT const& num_samples_below
     )
@@ -149,7 +158,7 @@ public:
         return typename allele_frequency_iterator::sentinel{};
     }
 
-    [[nodiscard]] CompressedForest& forest() {
+    [[nodiscard]] DAGCompressedForest& forest() {
         return _forest;
     }
 
@@ -349,7 +358,8 @@ public:
     };
 
 private:
-    CompressedForest&        _forest;
+    DAGCompressedForest&     _forest;
     GenomicSequence const&   _sequence;
     NumSamplesBelowAccessorT _num_samples_below;
 };
+} // namespace sfkit::sequence

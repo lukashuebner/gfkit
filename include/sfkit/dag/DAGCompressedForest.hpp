@@ -8,16 +8,25 @@
 #include <sfkit/include-redirects/cereal.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
 #include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-class CompressedForest {
+namespace sfkit::dag {
+
+using sfkit::graph::EdgeId;
+using sfkit::graph::EdgeListGraph;
+using sfkit::graph::NodeId;
+using sfkit::graph::TreeId;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet; // TODO Remove this dependency
+
+class DAGCompressedForest {
 public:
     EdgeListGraph const& postorder_edges() const {
         return _dag_postorder_edges;
@@ -115,3 +124,4 @@ public:
 private:
     EdgeListGraph _dag_postorder_edges;
 };
+} // namespace sfkit::dag

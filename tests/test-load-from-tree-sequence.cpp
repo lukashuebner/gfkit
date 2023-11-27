@@ -16,20 +16,29 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/graph/types.hpp"
+#include "sfkit/tskit/tskit.hpp"
 
 using namespace ::Catch::Matchers;
 
-std::string const ts_file_mufas  = "data/test-mufasa.trees";
+using sfkit::SuccinctForest;
+using sfkit::graph::EdgeListGraph;
+using sfkit::graph::NodeId;
+using sfkit::samples::SampleId;
+using sfkit::sequence::SiteId;
+using sfkit::tskit::TSKitTree;
+using sfkit::tskit::TSKitTreeSequence;
+using sfkit::utils::asserting_cast;
+
+std::string const ts_file_mufasa = "data/test-mufasa.trees";
 std::string const ts_file_nala   = "data/test-nala.trees";
 std::string const ts_file_rafiki = "data/test-rafiki.trees";
 std::string const ts_file_sarabi = "data/test-sarabi.trees";
 
-std::vector<std::string> ts_files{ts_file_mufas, ts_file_nala, ts_file_rafiki, ts_file_sarabi};
+std::vector<std::string> ts_files{ts_file_mufasa, ts_file_nala, ts_file_rafiki, ts_file_sarabi};
 
 TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));

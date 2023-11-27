@@ -6,12 +6,17 @@
 #include <catch2/matchers/catch_matchers.hpp>
 #include <stddef.h>
 
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
 
 using namespace Catch::Matchers;
+
+using sfkit::graph::NodeId;
+using sfkit::graph::TreeId;
+using sfkit::samples::SampleId;
+using namespace sfkit::sequence;
 
 TEST_CASE("Mutation", "[GenomicSequenceStorage]") {
     SiteId const       site_id       = GENERATE(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);

@@ -3,11 +3,14 @@
 #include <iostream>
 #include <vector>
 
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 
 // TODO rename this folder to io/ and introduce subfolder
 
-namespace sfkit::io::internal {
+namespace sfkit::io::utils {
+
+using sfkit::utils::asserting_cast;
+
 template <typename POD>
 std::ostream& serialize(std::ostream& os, std::vector<POD> const& v) {
     // this only works on built in data types (PODs)
@@ -35,4 +38,4 @@ std::istream& deserialize(std::istream& is, std::vector<POD>& v) {
     is.read(reinterpret_cast<char*>(v.data()), asserting_cast<std::streamsize>(v.size() * sizeof(POD)));
     return is;
 }
-} // namespace sfkit::io::internal
+} // namespace sfkit::io::utils

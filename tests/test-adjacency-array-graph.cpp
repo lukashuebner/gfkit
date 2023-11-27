@@ -6,9 +6,11 @@
 
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 
 using namespace Catch::Matchers;
+
+using namespace sfkit::graph;
 
 TEST_CASE("AdjacencyArrayGraph Basics", "[AdjacencyArrayGraph]") {
     EdgeListGraph edge_list;

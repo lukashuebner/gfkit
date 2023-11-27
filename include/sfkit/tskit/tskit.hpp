@@ -9,11 +9,22 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
+#include "sfkit/utils/checking_casts.hpp"
+
+namespace sfkit::tskit {
+
+using sfkit::graph::EdgeId;
+using sfkit::graph::NodeId;
+using sfkit::graph::TreeId;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet;
+using sfkit::sequence::MutationId;
+using sfkit::sequence::SiteId;
+using sfkit::utils::asserting_cast;
 
 using TskMutationView = std::span<tsk_mutation_t const>;
 
@@ -702,3 +713,4 @@ private:
     int                   _state = -1;
     std::vector<tsk_id_t> _postorder_nodes;
 };
+} // namespace sfkit::tskit

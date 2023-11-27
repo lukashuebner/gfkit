@@ -39,6 +39,7 @@
 /// @return \c true if value can be safely casted into type To, that is, value is in To's range.
 /// @return \c false otherwise.
 ///
+namespace sfkit::utils {
 template <class To, class From>
 constexpr bool in_range(From value) noexcept {
     static_assert(std::is_integral_v<From>, "From has to be an integral type.");
@@ -138,3 +139,4 @@ constexpr To throwing_cast(From value) {
 }
 
 /// @}
+} // namespace sfkit::utils

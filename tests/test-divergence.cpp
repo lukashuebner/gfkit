@@ -9,14 +9,21 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/CompressedForestIO.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/io/CompressedForestIO.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
 using namespace ::Catch::Matchers;
+
+using sfkit::SuccinctForest;
+using sfkit::graph::NodeId;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet;
+using sfkit::sequence::SiteId;
+using sfkit::tskit::TSKitTreeSequence;
 
 // This test case is taken from the tskit test suite (the only test case for the AFS in there that checks values).
 TEST_CASE("Divergence tskit example", "[Divergence]") {

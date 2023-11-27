@@ -9,15 +9,24 @@
 #include "mocks/TsToSfMappingExtractor.hpp"
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/bp/BPForestCompressor.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/BPForestCompressor.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/utils/concepts.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace Catch::Matchers;
+
+using sfkit::bp::BPCompressedForest;
+using sfkit::bp::BPForestCompressor;
+using sfkit::dag::DAGCompressedForest;
+using sfkit::dag::DAGForestCompressor;
+using sfkit::samples::NumSamplesBelowFactory;
+using sfkit::samples::SampleSet;
+using sfkit::tskit::TSKitTree;
+using sfkit::tskit::TSKitTreeSequence;
 
 TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
     /*          6          */
@@ -50,7 +59,7 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
     REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == 1);
 
     Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
+    auto const            non_bp_forest = DAGForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
     REQUIRE(ref_ts_2_sf_node.finalize_called());
     REQUIRE(ref_ts_2_sf_node.process_mutations_callcnt() == bp_ts_2_sf_node.process_mutations_callcnt());
 
@@ -133,7 +142,7 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
     REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == num_trees);
 
     Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            ref_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
+    auto const            ref_forest = DAGForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
     REQUIRE(bp_ts_2_sf_node.finalize_called());
     REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == ref_ts_2_sf_node.process_mutations_callcnt());
 
@@ -236,7 +245,7 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
     REQUIRE(bp_ts_2_sf_node.process_mutations_callcnt() == num_trees);
 
     Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    auto const            non_bp_forest = ForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
+    auto const            non_bp_forest = DAGForestCompressor(tree_sequence).compress(ref_ts_2_sf_node);
     REQUIRE(ref_ts_2_sf_node.finalize_called());
     REQUIRE(ref_ts_2_sf_node.process_mutations_callcnt() == bp_ts_2_sf_node.process_mutations_callcnt());
 
@@ -335,10 +344,10 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
 
     TSKitTreeSequence tree_sequence(ts_file);
 
-    ForestCompressor ref_forest_compressor(tree_sequence);
+    DAGForestCompressor ref_forest_compressor(tree_sequence);
     // GenomicSequenceFactory ref_sequence_factory(tree_sequence);
     Ts2SfMappingExtractor ref_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      ref_forest = ref_forest_compressor.compress(ref_ts_2_sf_node);
+    DAGCompressedForest   ref_forest = ref_forest_compressor.compress(ref_ts_2_sf_node);
 
     BPForestCompressor bp_forest_compressor(tree_sequence);
     //    GenomicSequenceFactory bp_sequence_factory(tree_sequence);

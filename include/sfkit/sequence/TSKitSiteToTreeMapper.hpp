@@ -6,9 +6,13 @@
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/common.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/sequence/Sequence.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+
+namespace sfkit::sequence {
+
+using sfkit::graph::TreeId;
 
 // As the mutations are sorted by site, we can use a mapper wich does not rely on a search tree but only
 // checks of the next site passes the next breakpoint in the sorted list of breakpoints.
@@ -31,7 +35,7 @@ public:
         breakpoint_iterator next_breakpoint;
     };
 
-    TSKitSiteToTreeMapper(TSKitTreeSequence const& tree_sequence) {
+    TSKitSiteToTreeMapper(tskit::TSKitTreeSequence const& tree_sequence) {
         tsk_id_t const num_sites       = asserting_cast<tsk_id_t>(tree_sequence.num_sites());
         size_t const   num_breakpoints = tree_sequence.breakpoints().size();
 
@@ -85,3 +89,4 @@ private:
     mutable breakpoint_iterator _current_breakpoint;
     mutable breakpoint_iterator _next_breakpoint;
 };
+} // namespace sfkit::sequence

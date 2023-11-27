@@ -3,6 +3,7 @@
 #include <tuple>
 #include <type_traits>
 
+namespace sfkit::utils {
 template <typename Fn, typename Argument, std::size_t... Ns>
 auto tuple_transform_impl(Fn&& fn, Argument&& argument, std::index_sequence<Ns...>) {
     if constexpr (sizeof...(Ns) == 0) {
@@ -25,3 +26,4 @@ template <typename Fn, typename... Ts>
 auto tuple_transform(Fn&& fn, std::tuple<Ts...> const& tuple) {
     return tuple_transform_impl(std::forward<Fn>(fn), tuple, std::make_index_sequence<sizeof...(Ts)>());
 }
+} // namespace sfkit::utils

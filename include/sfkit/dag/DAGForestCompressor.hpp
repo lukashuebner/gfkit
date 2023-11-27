@@ -7,22 +7,26 @@
 #include <sfkit/include-redirects/hopscotch_map.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/load/SubtreeHashToNodeMapper.hpp"
-#include "sfkit/load/SubtreeHasher.hpp"
-#include "sfkit/load/TsToSfNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
+#include "sfkit/graph/SubtreeHasher.hpp"
+#include "sfkit/graph/TsToSfNodeMapper.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 #include "sfkit/sequence/GenomicSequenceFactory.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/tskit/tskit.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-// TODO Separate this class into the construction and the storage
-class ForestCompressor {
+namespace sfkit::dag {
+
+using sfkit::utils::asserting_cast;
+using namespace sfkit::graph;
+
+class DAGForestCompressor {
 public:
-    ForestCompressor(TSKitTreeSequence& tree_sequence)
+    DAGForestCompressor(tskit::TSKitTreeSequence& tree_sequence)
         : _tree_sequence(tree_sequence),
           _num_samples(tree_sequence.num_samples()),
           _ts_tree(tree_sequence) {
@@ -33,8 +37,8 @@ public:
     }
 
     template <typename GenomicSequenceFactoryT>
-    CompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_storage_factory) {
-        CompressedForest forest;
+    DAGCompressedForest compress(GenomicSequenceFactoryT& genomic_sequence_factory) {
+        DAGCompressedForest forest;
 
         // Add the samples to the compressed forest here so they have the same ID in all trees.
         _register_samples(forest);
@@ -100,13 +104,13 @@ public:
             }
 
             // Process the mutations of this tree
-            genomic_sequence_storage_factory.process_mutations(
+            genomic_sequence_factory.process_mutations(
                 asserting_cast<TreeId>(_ts_tree.tree_id()),
-                TsToSfNodeMapper(_ts_node_to_subtree, _subtree_to_sf_node)
+                graph::TsToSfNodeMapper(_ts_node_to_subtree, _subtree_to_sf_node)
             );
         }
 
-        genomic_sequence_storage_factory.finalize();
+        genomic_sequence_factory.finalize();
 
         KASSERT(forest.roots().size() == _tree_sequence.num_trees());
         KASSERT(forest.num_roots() == _tree_sequence.num_trees());
@@ -122,12 +126,12 @@ public:
     }
 
 private:
-    TSKitTreeSequence&       _tree_sequence;
-    tsk_size_t               _num_samples;
-    TSKitTree                _ts_tree;
-    std::vector<SubtreeHash> _ts_node_to_subtree;
-    SubtreeHashToNodeMapper  _subtree_to_sf_node;
-    SubtreeHasher            _subtree_hash_factory;
+    tskit::TSKitTreeSequence& _tree_sequence;
+    tsk_size_t                _num_samples;
+    tskit::TSKitTree          _ts_tree;
+    std::vector<SubtreeHash>  _ts_node_to_subtree;
+    SubtreeHashToNodeMapper   _subtree_to_sf_node;
+    SubtreeHasher             _subtree_hash_factory;
 
     // The sample ids are consecutive: 0 ... num_samples - 1
     inline bool is_sample(tsk_id_t ts_node_id) const {
@@ -135,7 +139,7 @@ private:
     }
 
     // Add them to the compressed forest first, so they have the same IDs there.
-    void _register_samples(CompressedForest& forest) {
+    void _register_samples(DAGCompressedForest& forest) {
         KASSERT(_tree_sequence.sample_ids_are_consecutive(), "Sample IDs are not consecutive.");
         for (SampleId sample_id = 0; sample_id < _num_samples; sample_id++) {
             KASSERT(_tree_sequence.is_sample(asserting_cast<tsk_id_t>(sample_id)));
@@ -159,3 +163,4 @@ private:
         }
     }
 };
+} // namespace sfkit::dag

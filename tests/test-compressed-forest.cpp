@@ -6,14 +6,22 @@
 #include "mocks/TsToSfMappingExtractor.hpp"
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
-#include "sfkit/graph/common.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/utils/concepts.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace Catch::Matchers;
+
+using sfkit::SuccinctForest;
+using sfkit::dag::DAGCompressedForest;
+using sfkit::dag::DAGForestCompressor;
+using sfkit::graph::NodeId;
+using sfkit::samples::SampleId;
+using sfkit::tskit::TSKitTree;
+using sfkit::tskit::TSKitTreeSequence;
 
 TEST_CASE("CompressedForest::is_sample() Timon", "[CompressedForest]") {
     //                                      38
@@ -56,16 +64,16 @@ TEST_CASE("CompressedForest::is_sample() Timon", "[CompressedForest]") {
     // ┃ ┃  ┃ ┃ ┃  ┃  ┃  ┃ ┃ ┃  ┃  ┃ ┏┻┓  ┃ ┃ ┃  ┃  ┃  ┃
     // 0 6 10 8 9 11 12 13 4 7 14 19 1 2 18 3 5 15 16 17
 
-    std::string const ts_file = "data/test-timon.trees";
-    TSKitTreeSequence tree_sequence(ts_file);
-    ForestCompressor  forest_compressor(tree_sequence);
+    std::string const   ts_file = "data/test-timon.trees";
+    TSKitTreeSequence   tree_sequence(ts_file);
+    DAGForestCompressor forest_compressor(tree_sequence);
 
     std::vector<tsk_id_t> samples = {0, 6, 10, 8, 9, 11, 12, 13, 4, 7, 14, 19, 1, 2, 18, 3, 5, 15, 16, 17};
     CHECK(samples.size() == tree_sequence.num_samples());
     CHECK(tree_sequence.num_trees() == 1);
 
     Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      forest = forest_compressor.compress(ts_2_sf_node);
+    DAGCompressedForest   forest = forest_compressor.compress(ts_2_sf_node);
     CHECK(ts_2_sf_node.finalize_called());
     CHECK(ts_2_sf_node.process_mutations_callcnt() == 1);
 
@@ -122,16 +130,16 @@ TEST_CASE("CompressedForest::is_sample() Scar", "[CompressedForest]") {
     // ┃  ┃ ┃ ┏┻━┓  ┃  ┃  ┃ ┃  ┃  ┃ ┃ ┃  ┃ ┃ ┃ ┃ ┃  ┃  ┃
     // 0 11 4 7 13 17 12 10 1 18 16 2 6 14 9 3 8 5 15 19
 
-    std::string const ts_file = "data/test-scar.trees";
-    TSKitTreeSequence tree_sequence(ts_file);
-    ForestCompressor  forest_compressor(tree_sequence);
+    std::string const   ts_file = "data/test-scar.trees";
+    TSKitTreeSequence   tree_sequence(ts_file);
+    DAGForestCompressor forest_compressor(tree_sequence);
 
     std::vector<tsk_id_t> samples = {0, 11, 4, 7, 13, 17, 12, 10, 1, 18, 16, 2, 6, 14, 9, 3, 8, 5, 15, 19};
     CHECK(samples.size() == tree_sequence.num_samples());
     CHECK(tree_sequence.num_trees() == 1);
 
     Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      forest = forest_compressor.compress(ts_2_sf_node);
+    DAGCompressedForest   forest = forest_compressor.compress(ts_2_sf_node);
     CHECK(ts_2_sf_node.finalize_called());
     CHECK(ts_2_sf_node.process_mutations_callcnt() == 1);
 
@@ -150,9 +158,9 @@ TEST_CASE("CompressedForest::is_sample() Scar", "[CompressedForest]") {
 TEST_CASE("CompressedForest::is_sample() Ed", "[CompressedForest]") {
     // Too large to print here
 
-    std::string const ts_file = "data/test-ed.trees";
-    TSKitTreeSequence tree_sequence(ts_file);
-    ForestCompressor  forest_compressor(tree_sequence);
+    std::string const   ts_file = "data/test-ed.trees";
+    TSKitTreeSequence   tree_sequence(ts_file);
+    DAGForestCompressor forest_compressor(tree_sequence);
 
     std::vector<tsk_id_t> samples = {
         0,   8,   18,  148, 28,  59,  112, 78,  119, 199, 179, 190, 151, 159, 5,   32,  79,  84,  109, 182,
@@ -169,7 +177,7 @@ TEST_CASE("CompressedForest::is_sample() Ed", "[CompressedForest]") {
     CHECK(tree_sequence.num_trees() == 2);
 
     Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      forest = forest_compressor.compress(ts_2_sf_node);
+    DAGCompressedForest   forest = forest_compressor.compress(ts_2_sf_node);
     CHECK(ts_2_sf_node.finalize_called());
     CHECK(ts_2_sf_node.process_mutations_callcnt() == 2);
 
@@ -232,16 +240,16 @@ TEST_CASE("CompressedForest TS to SF Node Mapping Timon", "[CompressedForest]") 
     // ┃ ┃  ┃ ┃ ┃  ┃  ┃  ┃ ┃ ┃  ┃  ┃ ┏┻┓  ┃ ┃ ┃  ┃  ┃  ┃
     // 0 6 10 8 9 11 12 13 4 7 14 19 1 2 18 3 5 15 16 17
 
-    std::string const ts_file = "data/test-timon.trees";
-    TSKitTreeSequence tree_sequence(ts_file);
-    ForestCompressor  forest_compressor(tree_sequence);
+    std::string const   ts_file = "data/test-timon.trees";
+    TSKitTreeSequence   tree_sequence(ts_file);
+    DAGForestCompressor forest_compressor(tree_sequence);
 
     std::vector<tsk_id_t> samples = {0, 6, 10, 8, 9, 11, 12, 13, 4, 7, 14, 19, 1, 2, 18, 3, 5, 15, 16, 17};
     CHECK(samples.size() == tree_sequence.num_samples());
     CHECK(tree_sequence.num_trees() == 1);
 
     Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      forest = forest_compressor.compress(ts_2_sf_node);
+    DAGCompressedForest   forest = forest_compressor.compress(ts_2_sf_node);
     CHECK(ts_2_sf_node.finalize_called());
     CHECK(ts_2_sf_node.process_mutations_callcnt() == 1);
 
@@ -316,12 +324,12 @@ TEST_CASE("CompressedForest TS to SF Node Mapping Shenzi", "[CompressedForest]")
     // ┃  ┃ ┃ ┏┻━┓  ┃  ┃  ┃ ┃  ┃  ┃ ┃ ┃  ┃ ┃ ┃ ┃ ┃  ┃  ┃
     // 0 11 4 7 13 17 12 10 1 18 16 2 6 14 9 3 8 5 15 19
 
-    std::string const ts_file = "data/test-shenzi.trees";
-    TSKitTreeSequence tree_sequence(ts_file);
-    ForestCompressor  forest_compressor(tree_sequence);
+    std::string const   ts_file = "data/test-shenzi.trees";
+    TSKitTreeSequence   tree_sequence(ts_file);
+    DAGForestCompressor forest_compressor(tree_sequence);
 
     Ts2SfMappingExtractor ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
-    CompressedForest      forest = forest_compressor.compress(ts_2_sf_node);
+    DAGCompressedForest   forest = forest_compressor.compress(ts_2_sf_node);
     CHECK(ts_2_sf_node.finalize_called());
     CHECK(ts_2_sf_node.process_mutations_callcnt() == 1);
 

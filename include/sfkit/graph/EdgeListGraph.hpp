@@ -10,9 +10,15 @@
 #include <kassert/kassert.hpp>
 #include <sfkit/include-redirects/hopscotch_map.hpp>
 
-#include "common.hpp"
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/graph/Edge.hpp"
+#include "sfkit/graph/types.hpp"
 #include "sfkit/samples/SampleSet.hpp"
+
+namespace sfkit::graph {
+
+using sfkit::samples::SampleId;
+using sfkit::utils::asserting_cast;
 
 using EdgeList = std::vector<Edge>;
 
@@ -284,3 +290,4 @@ private:
     std::vector<NodeId> _leaves;
     TraversalOrder      _traversal_order = TraversalOrder::Unordered;
 };
+} // namespace sfkit::graph

@@ -9,14 +9,22 @@
 
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/graph/CompressedForest.hpp"
-#include "sfkit/load/ForestCompressor.hpp"
-#include "sfkit/sequence/AlleleFrequencySpectrum.hpp"
-#include "sfkit/tskit.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
+#include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
+#include "sfkit/tskit/tskit.hpp"
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch;
 using namespace ::Catch::Matchers;
+
+using sfkit::SuccinctForest;
+using sfkit::graph::NodeId;
+using sfkit::samples::SampleId;
+using sfkit::samples::SampleSet;
+using sfkit::sequence::PerfectNumericHasher;
+using sfkit::sequence::SiteId;
+using sfkit::tskit::TSKitTreeSequence;
 
 TEST_CASE("Diversity tskit example", "[Diversity]") {
     tsk_treeseq_t tskit_tree_sequence;

@@ -14,6 +14,7 @@
 #include "tskit-testlib/testlib.hpp"
 
 using namespace ::Catch::Matchers;
+using namespace sfkit::samples;
 
 TEST_CASE("SampleSet Basics", "[SampleSet]") {
     SampleSet samples{10};

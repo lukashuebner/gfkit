@@ -4,9 +4,11 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/checking_casts.hpp"
+#include "sfkit/utils/checking_casts.hpp"
 
-// TODO Use sfkit namespace
+namespace sfkit::sequence {
+
+using sfkit::utils::asserting_cast;
 
 using SiteId = int32_t;
 
@@ -63,3 +65,4 @@ public:
 
     static constexpr Idx num_states = 4;
 };
+} // namespace sfkit::sequence
