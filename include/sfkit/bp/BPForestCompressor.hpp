@@ -9,10 +9,9 @@
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/bp/BPCompressedForest.hpp"
-// TODO Remove?
-//#include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/bp/Parens.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/graph/ForestCompressor.hpp"
 #include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
 #include "sfkit/graph/SubtreeHasher.hpp"
 #include "sfkit/graph/TsToSfNodeMapper.hpp"
@@ -22,14 +21,16 @@
 #include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-namespace sfkit::bp {
+namespace sfkit::graph {
 
+using sfkit::bp::BPCompressedForest;
 using sfkit::tskit::TSKitTree;
 using sfkit::tskit::TSKitTreeSequence;
 
-class BPForestCompressor {
+template <>
+class ForestCompressor<BPCompressedForest> {
 public:
-    BPForestCompressor(TSKitTreeSequence& tree_sequence)
+    ForestCompressor(TSKitTreeSequence& tree_sequence)
         : _num_trees(tree_sequence.num_trees()),
           _ts_tree(tree_sequence) {
         if (!tree_sequence.sample_ids_are_consecutive()) {
@@ -312,4 +313,8 @@ private:
         }
     }
 };
-} // namespace sfkit::bp
+} // namespace sfkit::graph
+
+namespace sfkit::bp {
+using BPForestCompressor = sfkit::graph::ForestCompressor<sfkit::bp::BPCompressedForest>;
+}

@@ -10,6 +10,7 @@
 #include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/graph/ForestCompressor.hpp"
 #include "sfkit/graph/SubtreeHashToNodeMapper.hpp"
 #include "sfkit/graph/SubtreeHasher.hpp"
 #include "sfkit/graph/TsToSfNodeMapper.hpp"
@@ -19,14 +20,16 @@
 #include "sfkit/utils/checking_casts.hpp"
 #include "sfkit/utils/concepts.hpp"
 
-namespace sfkit::dag {
+namespace sfkit::graph {
 
+using sfkit::dag::DAGCompressedForest;
 using sfkit::utils::asserting_cast;
 using namespace sfkit::graph;
 
-class DAGForestCompressor {
+template <>
+class ForestCompressor<DAGCompressedForest> {
 public:
-    DAGForestCompressor(tskit::TSKitTreeSequence& tree_sequence)
+    ForestCompressor(tskit::TSKitTreeSequence& tree_sequence)
         : _tree_sequence(tree_sequence),
           _num_samples(tree_sequence.num_samples()),
           _ts_tree(tree_sequence) {
@@ -163,4 +166,8 @@ private:
         }
     }
 };
-} // namespace sfkit::dag
+} // namespace sfkit::graph
+
+namespace sfkit::dag {
+using DAGForestCompressor = sfkit::graph::ForestCompressor<sfkit::dag::DAGCompressedForest>;
+}

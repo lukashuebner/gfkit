@@ -20,8 +20,8 @@ public:
         SampleId          num_samples_1,
         AlleleFrequencies allele_freqs_1
     ) {
-        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequency;
-        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequency;
+        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
+        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequencyT;
 
         double divergence       = 0.0;
         auto   allele_freq_0_it = allele_freqs_0.cbegin();

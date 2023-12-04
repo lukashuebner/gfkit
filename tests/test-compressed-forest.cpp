@@ -15,7 +15,6 @@
 
 using namespace Catch::Matchers;
 
-using sfkit::SuccinctForest;
 using sfkit::dag::DAGCompressedForest;
 using sfkit::dag::DAGForestCompressor;
 using sfkit::graph::NodeId;
@@ -394,7 +393,7 @@ TEST_CASE("Subtrees are created only once Example I", "[CompresedForest]") {
         0
     );
 
-    SuccinctForest forest(tree_sequence); // Takes ownership
+    sfkit::DAGSuccinctForestNumeric forest(tree_sequence); // Takes ownership
 
     CHECK(forest.num_trees() == 3);
     CHECK(forest.num_samples() == 4);

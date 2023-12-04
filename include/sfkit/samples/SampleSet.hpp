@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <numeric>
 #include <vector>
@@ -163,4 +164,8 @@ public:
 private:
     std::vector<bool> _samples;
 };
+
+template <size_t N>
+using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
+
 } // namespace sfkit::samples

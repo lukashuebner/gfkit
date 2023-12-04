@@ -4,6 +4,9 @@
 #include <memory>
 
 #include "sfkit/graph/primitives.hpp"
+#include "sfkit/samples/BPNumSamplesBelow.hpp"
+#include "sfkit/samples/DAGNumSamplesBelow.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/samples/primitives.hpp"
 

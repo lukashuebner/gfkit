@@ -82,7 +82,7 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
 
     SampleSet const all_samples           = bp_forest.all_samples();
     auto const      bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(non_bp_forest.postorder_edges(), all_samples);
+    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(non_bp_forest, all_samples);
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
@@ -201,7 +201,7 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
 
     SampleSet const all_samples           = bp_forest.all_samples();
     auto const      bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest.postorder_edges(), all_samples);
+    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest, all_samples);
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
@@ -313,7 +313,7 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
 
     SampleSet const all_samples           = bp_forest.all_samples();
     auto const      bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
-    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(non_bp_forest.postorder_edges(), all_samples);
+    auto const      ref_num_samples_below = NumSamplesBelowFactory::build(non_bp_forest, all_samples);
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
@@ -367,7 +367,7 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
     { // Single sample set
         SampleSet  all_samples{bp_forest.all_samples()};
         auto const bp_num_samples_below  = NumSamplesBelowFactory::build(bp_forest, all_samples);
-        auto const ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest.postorder_edges(), all_samples);
+        auto const ref_num_samples_below = NumSamplesBelowFactory::build(ref_forest, all_samples);
 
         TSKitTree tree(tree_sequence);
         TreeId    tree_id = 0;

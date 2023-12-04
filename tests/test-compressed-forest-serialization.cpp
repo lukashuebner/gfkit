@@ -23,7 +23,7 @@
 using namespace ::Catch::Matchers;
 using Catch::Approx;
 
-using sfkit::SuccinctForest;
+using sfkit::DAGSuccinctForest;
 using sfkit::bp::BPCompressedForest;
 using sfkit::bp::BPForestCompressor;
 using sfkit::dag::DAGCompressedForest;
@@ -35,7 +35,6 @@ using sfkit::samples::SampleSet;
 using sfkit::sequence::AlleleFrequencies;
 using sfkit::sequence::GenomicSequence;
 using sfkit::sequence::GenomicSequenceFactory;
-using sfkit::sequence::PerfectDNAHasher;
 using sfkit::sequence::SiteId;
 using sfkit::stats::AlleleFrequencySpectrum;
 using sfkit::tskit::TSKitTreeSequence;
@@ -78,10 +77,9 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK(forest_deserialized.num_roots() == forest.num_roots());
     CHECK(forest_deserialized.roots() == forest.roots());
 
-    auto const all_samples = forest.all_samples();
-    auto const num_samples_below_deserialized =
-        NumSamplesBelowFactory::build(forest_deserialized.postorder_edges(), all_samples);
-    auto const num_samples_below = NumSamplesBelowFactory::build(forest.postorder_edges(), all_samples);
+    auto const all_samples                    = forest.all_samples();
+    auto const num_samples_below_deserialized = NumSamplesBelowFactory::build(forest_deserialized, all_samples);
+    auto const num_samples_below              = NumSamplesBelowFactory::build(forest, all_samples);
     for (NodeId node_id = 0; node_id < forest.num_nodes(); ++node_id) {
         CHECK(forest_deserialized.is_sample(node_id) == forest.is_sample(node_id));
         CHECK(num_samples_below_deserialized(node_id) == num_samples_below(node_id));
@@ -122,14 +120,10 @@ TEST_CASE("CompressedForest/GenomicSequenceStorage Serialization", "[Serializati
     CHECK(sequence_deserialized.mutations_are_sorted_by_site() == sequence.mutations_are_sorted_by_site());
 
     // High-level operations
-    SuccinctForest sf(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    DAGSuccinctForest sf(std::move(forest), std::move(sequence));
 
     tree_sequence = TSKitTreeSequence(ts_file);
-    SuccinctForest sf_deserialized(
-        std::move(tree_sequence),
-        std::move(forest_deserialized),
-        std::move(sequence_deserialized)
-    );
+    DAGSuccinctForest sf_deserialized(std::move(forest_deserialized), std::move(sequence_deserialized));
 
     auto const afs              = sf.allele_frequency_spectrum(sf.all_samples());
     auto const afs_deserialized = sf_deserialized.allele_frequency_spectrum(sf_deserialized.all_samples());
@@ -279,8 +273,6 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
         std::string trees_file;
     };
 
-    // TODO Rename these sample datasets
-    // TODO Generate more sample datasets
     std::vector<Dataset> const datasets = {
         {"data/test-sarafina.forest", "data/test-sarafina.trees"},
         {"data/test-scar.forest", "data/test-scar.trees"},
@@ -306,8 +298,8 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     // --- AFS ---
     auto tskit_afs = tree_sequence.allele_frequency_spectrum();
 
-    AlleleFrequencies<PerfectDNAHasher> const allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum const             sfkit_afs(allele_frequencies);
+    AlleleFrequencies const       allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum const sfkit_afs(allele_frequencies);
 
     CHECK(sfkit_afs.num_samples() == forest.postorder_edges().num_leaves());
 
@@ -321,7 +313,7 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
     }
 
     // --- Divergence ---
-    SuccinctForest sequence_forest(std::move(tree_sequence), std::move(forest), std::move(sequence));
+    DAGSuccinctForest sequence_forest(std::move(forest), std::move(sequence));
 
     {
         SampleSet sample_set_1(sequence_forest.num_samples());
@@ -337,14 +329,14 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
         }
 
         double const sfkit_divergence = sequence_forest.divergence(sample_set_1, sample_set_2);
-        double const tskit_divergence = sequence_forest.tree_sequence().divergence(sample_set_1, sample_set_2);
+        double const tskit_divergence = tree_sequence.divergence(sample_set_1, sample_set_2);
         CHECK(sfkit_divergence == Approx(tskit_divergence).epsilon(1e-4));
     }
 
     // --- Diversity ---
     {
         double const sfkit_diversity = sequence_forest.diversity();
-        double const tskit_diversity = sequence_forest.tree_sequence().diversity();
+        double const tskit_diversity = tree_sequence.diversity();
         CHECK(sfkit_diversity == Approx(tskit_diversity).epsilon(1e-4));
     }
 
@@ -357,25 +349,23 @@ TEST_CASE("Statistics on .forest files", "[Serialization]") {
         idx = (idx + 1ul) % num_sample_sets;
     }
     double const sfkit_f4 = sequence_forest.f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
-    double const tskit_f4 =
-        sequence_forest.tree_sequence().f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
+    double const tskit_f4 = tree_sequence.f4(sample_sets[0], sample_sets[1], sample_sets[2], sample_sets[3]);
     CHECK(sfkit_f4 == Approx(tskit_f4).epsilon(1e-4));
 
     double const sfkit_f3 = sequence_forest.f3(sample_sets[0], sample_sets[1], sample_sets[2]);
-    double const tskit_f3 = sequence_forest.tree_sequence().f3(sample_sets[0], sample_sets[1], sample_sets[2]);
+    double const tskit_f3 = tree_sequence.f3(sample_sets[0], sample_sets[1], sample_sets[2]);
     CHECK(sfkit_f3 == Approx(tskit_f3).epsilon(1e-4));
 
     double const sfkit_f2 = sequence_forest.f2(sample_sets[0], sample_sets[1]);
-    double const tskit_f2 = sequence_forest.tree_sequence().f2(sample_sets[0], sample_sets[1]);
+    double const tskit_f2 = tree_sequence.f2(sample_sets[0], sample_sets[1]);
     CHECK(sfkit_f2 == Approx(tskit_f2).epsilon(1e-4));
 
     // Benchmark computing the number of segregating sites
     SiteId const sfkit_num_seg_sites = sequence_forest.num_segregating_sites();
-    double const tskit_num_seg_sites = sequence_forest.tree_sequence().num_segregating_sites();
+    double const tskit_num_seg_sites = tree_sequence.num_segregating_sites();
     CHECK(sfkit_num_seg_sites == Approx(tskit_num_seg_sites).epsilon(1e-4));
 
-    // Check some properties of the compressed forest
-    auto const dag = forest.postorder_edges();
-    CHECK(dag.check_postorder());
-    CHECK(dag.check_no_duplicate_edges());
+    // Check some postorder_edges;
+    CHECK(forest.postorder_edges().check_postorder());
+    CHECK(forest.postorder_edges().check_no_duplicate_edges());
 }

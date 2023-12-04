@@ -11,7 +11,6 @@
 #include "sfkit/graph/AdjacencyArrayGraph.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
 #include "sfkit/graph/SubtreeHasher.hpp"
-#include "sfkit/samples/DAGNumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/tskit/tskit.hpp"
 #include "sfkit/utils/checking_casts.hpp"

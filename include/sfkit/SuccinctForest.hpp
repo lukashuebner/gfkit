@@ -7,8 +7,11 @@
 #include <tskit.h>
 
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/bp/BPCompressedForest.hpp"
+#include "sfkit/bp/BPForestCompressor.hpp"
 #include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/dag/DAGForestCompressor.hpp"
+#include "sfkit/graph/ForestCompressor.hpp"
 #include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/sequence/AlleleFrequencies.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
@@ -26,38 +29,36 @@
 
 namespace sfkit {
 
+using sfkit::bp::BPCompressedForest;
 using sfkit::dag::DAGCompressedForest;
-using sfkit::dag::DAGForestCompressor;
-using sfkit::stats::AlleleFrequencies;
+using sfkit::graph::ForestCompressor;
+using sfkit::sequence::AlleleFrequencies;
 using sfkit::tskit::TSKitTreeSequence;
 using namespace sfkit::samples;
 using namespace sfkit::sequence;
 
-// TODO Abstract over the type of the compressed forest
-template <typename PerfectAllelicStateHasher = PerfectDNAHasher>
+// TODO Re-think the interface for this (esp. construction)
+template <typename CompressedForest, typename PerfectAllelicStateHasher>
 class SuccinctForest {
 public:
-    SuccinctForest(
-        TSKitTreeSequence&& tree_sequence, DAGCompressedForest&& compressed_forest, GenomicSequence&& genomic_sequence
-    )
-        : _tree_sequence(std::move(tree_sequence)),
-          _forest(compressed_forest),
+    SuccinctForest(CompressedForest&& forest, GenomicSequence&& genomic_sequence)
+        : _forest(forest),
           _sequence(genomic_sequence) {}
 
-    SuccinctForest(tsk_treeseq_t&& ts_tree_sequence) : SuccinctForest(TSKitTreeSequence(ts_tree_sequence)) {}
+    explicit SuccinctForest(tsk_treeseq_t&& ts_tree_sequence) : SuccinctForest(TSKitTreeSequence(ts_tree_sequence)) {}
 
-    SuccinctForest(TSKitTreeSequence&& tree_sequence) : _tree_sequence(std::move(tree_sequence)) {
-        DAGForestCompressor    forest_compressor(_tree_sequence);
-        GenomicSequenceFactory sequence_factory(_tree_sequence);
+    explicit SuccinctForest(TSKitTreeSequence&& tree_sequence) {
+        ForestCompressor<CompressedForest> forest_compressor(tree_sequence);
+        GenomicSequenceFactory             sequence_factory(tree_sequence);
         _forest   = forest_compressor.compress(sequence_factory);
         _sequence = sequence_factory.move_storage();
     }
 
     auto allele_frequencies(SampleSet const& samples) {
-        // return AlleleFrequencies<AllelicStatePerfectHasher>(_forest, _sequence, samples);
-        auto num_samples_below = NumSamplesBelowAccessor(
-            std::make_shared<DAGNumSamplesBelow<1>>(
-                _forest.postorder_edges(),
+        using NumSamplesBelowT = NumSamplesBelow<CompressedForest, 1, SampleId>;
+        auto num_samples_below = NumSamplesBelowAccessor<NumSamplesBelowT>(
+            std::make_shared<NumSamplesBelowT>(
+                _forest,
                 std::array<std::reference_wrapper<SampleSet const>, 1>{std::cref(samples)}
             ),
             0
@@ -67,7 +68,7 @@ public:
 
     template <NumSamplesBelowAccessorC NumSamplesBelowAccessorT>
     auto allele_frequencies(NumSamplesBelowAccessorT const& num_samples_below) {
-        return AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessorT>(
+        return AlleleFrequencies<CompressedForest, PerfectAllelicStateHasher, NumSamplesBelowAccessorT>(
             _forest,
             _sequence,
             num_samples_below
@@ -77,7 +78,7 @@ public:
     auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1) {
         return sfkit::utils::tuple_transform(
             [this](auto&& e) { return allele_frequencies(e); },
-            NumSamplesBelowFactory::build(_forest.postorder_edges(), samples_0, samples_1)
+            NumSamplesBelowFactory::build(_forest, samples_0, samples_1)
         );
     }
 
@@ -85,8 +86,8 @@ public:
     auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
         SampleSet empty_sample_set = SampleSet(samples_0.overall_num_samples());
         auto [num_samples_below_0, num_samples_below_1, num_samples_below_2, dummy] =
-            NumSamplesBelowFactory::build<NumSamplesBelowBaseType>(
-                _forest.postorder_edges(),
+            NumSamplesBelowFactory::build<CompressedForest, NumSamplesBelowBaseType>(
+                _forest,
                 samples_0,
                 samples_1,
                 samples_2,
@@ -105,8 +106,13 @@ public:
     ) {
         return sfkit::utils::tuple_transform(
             [this](auto&& e) { return allele_frequencies(e); },
-            NumSamplesBelowFactory::build<
-                NumSamplesBelowBaseType>(_forest.postorder_edges(), samples_0, samples_1, samples_2, samples_3)
+            NumSamplesBelowFactory::build<CompressedForest, NumSamplesBelowBaseType>(
+                _forest,
+                samples_0,
+                samples_1,
+                samples_2,
+                samples_3
+            )
         );
     }
 
@@ -115,10 +121,8 @@ public:
         return diversity(_forest.all_samples());
     }
 
-    template <
-        typename AlleleFrequenciesT =
-            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>>
-    [[nodiscard]] double diversity(SampleId num_samples, AlleleFrequenciesT allele_freqs) {
+    template <typename AlleleFrequencies>
+    [[nodiscard]] double diversity(SampleId num_samples, AlleleFrequencies allele_freqs) {
         return stats::Diversity::diversity(num_samples, allele_freqs);
     }
 
@@ -128,18 +132,15 @@ public:
         return diversity(num_samples, freqs);
     }
 
-    [[nodiscard]] stats::AlleleFrequencySpectrum<PerfectAllelicStateHasher> allele_frequency_spectrum() {
+    [[nodiscard]] auto allele_frequency_spectrum() {
         return allele_frequency_spectrum(_forest.all_samples());
     }
 
-    [[nodiscard]] stats::AlleleFrequencySpectrum<PerfectAllelicStateHasher>
-    allele_frequency_spectrum(SampleSet sample_set) {
-        return sfkit::stats::AlleleFrequencySpectrum<PerfectAllelicStateHasher>(allele_frequencies(sample_set));
+    [[nodiscard]] auto allele_frequency_spectrum(SampleSet sample_set) {
+        return sfkit::stats::AlleleFrequencySpectrum(allele_frequencies(sample_set));
     }
 
-    template <
-        typename AlleleFrequenciesT =
-            AlleleFrequencies<PerfectAllelicStateHasher, NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>>
+    template <typename AlleleFrequenciesT>
     [[nodiscard]] double divergence(
         SampleId           num_samples_0,
         AlleleFrequenciesT allele_frequencies_0,
@@ -189,8 +190,8 @@ public:
     }
 
     // TODO Make this const
-    [[nodiscard]] SiteId
-    num_segregating_sites(SampleId num_samples, AlleleFrequencies<PerfectAllelicStateHasher> allele_frequencies) {
+    template <typename AlleleFrequencies>
+    [[nodiscard]] SiteId num_segregating_sites(SampleId num_samples, AlleleFrequencies allele_frequencies) {
         return sfkit::stats::NumSegregatingSites::num_segregating_sites(num_samples, allele_frequencies);
     }
 
@@ -231,7 +232,7 @@ public:
         return _sequence;
     }
 
-    [[nodiscard]] DAGCompressedForest const& forest() const {
+    [[nodiscard]] CompressedForest const& forest() const {
         return _forest;
     }
 
@@ -251,18 +252,27 @@ public:
         return _sequence.subtrees_with_mutations().size();
     }
 
-    [[nodiscard]] TSKitTreeSequence& tree_sequence() {
-        return _tree_sequence;
-    }
+    // TODO Remove
+    // [[nodiscard]] TSKitTreeSequence& tree_sequence() {
+    //     return _tree_sequence;
+    // }
 
-    // TODO We should not store this!!
-    [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
-        return _tree_sequence;
-    }
+    // TODO Remove
+    // // TODO We should not store this!!
+    // [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
+    //     return _tree_sequence;
+    // }
 
 private:
-    TSKitTreeSequence   _tree_sequence;
-    DAGCompressedForest _forest;
-    GenomicSequence     _sequence;
+    // TODO Remove
+    // TSKitTreeSequence   _tree_sequence;
+    CompressedForest _forest;
+    GenomicSequence  _sequence;
 };
+
+using DAGSuccinctForest        = SuccinctForest<DAGCompressedForest, PerfectDNAHasher>;
+using DAGSuccinctForestNumeric = SuccinctForest<DAGCompressedForest, PerfectNumericHasher>;
+using BPSuccinctForest         = SuccinctForest<BPCompressedForest, PerfectDNAHasher>;
+using BPSuccinctForestNumeric  = SuccinctForest<BPCompressedForest, PerfectNumericHasher>;
+
 } // namespace sfkit

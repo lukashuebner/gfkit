@@ -84,9 +84,14 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
 
     auto sequence = sequence_factory.move_storage();
 
-    SampleSet const                                      all_samples = forest.all_samples();
-    AlleleFrequencies<PerfectNumericHasher> const        allele_frequencies(forest, sequence, all_samples);
-    stats::AlleleFrequencySpectrum<PerfectNumericHasher> afs(allele_frequencies);
+    SampleSet const all_samples = forest.all_samples();
+    // TODO Remove perfect numeric hashing? It's only used during the unit-tests and complicates the code considerably.
+    AlleleFrequencies<DAGCompressedForest, PerfectNumericHasher> const allele_frequencies(
+        forest,
+        sequence,
+        all_samples
+    );
+    stats::AlleleFrequencySpectrum afs(allele_frequencies);
 
     CHECK(afs.num_samples() == 4);
 
@@ -153,8 +158,12 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
 
     auto sequence = sequence_factory.move_storage();
 
-    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    AlleleFrequencies<DAGCompressedForest, PerfectNumericHasher> allele_frequencies(
+        forest,
+        sequence,
+        forest.all_samples()
+    );
+    AlleleFrequencySpectrum sfkit_afs(allele_frequencies);
 
     CHECK(sfkit_afs.num_samples() == 4);
 
@@ -225,8 +234,12 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
     DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    AlleleFrequencies<DAGCompressedForest, PerfectNumericHasher> allele_frequencies(
+        forest,
+        sequence,
+        forest.all_samples()
+    );
+    AlleleFrequencySpectrum sfkit_afs(allele_frequencies);
     CHECK(sfkit_afs.num_samples() == 4);
 
     CHECK(sfkit_afs.frequency(0) == 0u);
@@ -301,8 +314,12 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    AlleleFrequencies<DAGCompressedForest, PerfectNumericHasher> allele_frequencies(
+        forest,
+        sequence,
+        forest.all_samples()
+    );
+    AlleleFrequencySpectrum sfkit_afs(allele_frequencies);
     CHECK(sfkit_afs.num_samples() == 4);
 
     CHECK(sfkit_afs.frequency(0) == 0u);
@@ -377,8 +394,12 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
     DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencies<PerfectNumericHasher>       allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum<PerfectNumericHasher> sfkit_afs(allele_frequencies);
+    AlleleFrequencies<DAGCompressedForest, PerfectNumericHasher> allele_frequencies(
+        forest,
+        sequence,
+        forest.all_samples()
+    );
+    AlleleFrequencySpectrum sfkit_afs(allele_frequencies);
     CHECK(sfkit_afs.num_samples() == 4);
 
     CHECK(sfkit_afs.frequency(0) == 0u);
@@ -415,8 +436,8 @@ TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
     DAGCompressedForest    forest   = forest_compressor.compress(sequence_factory);
     GenomicSequence        sequence = sequence_factory.move_storage();
 
-    AlleleFrequencies<PerfectDNAHasher>       allele_frequencies(forest, sequence, forest.all_samples());
-    AlleleFrequencySpectrum<PerfectDNAHasher> sfkit_afs(allele_frequencies);
+    AlleleFrequencies<DAGCompressedForest, PerfectDNAHasher> allele_frequencies(forest, sequence, forest.all_samples());
+    AlleleFrequencySpectrum                                  sfkit_afs(allele_frequencies);
 
     CHECK(sfkit_afs.num_samples() == forest.postorder_edges().num_leaves());
 

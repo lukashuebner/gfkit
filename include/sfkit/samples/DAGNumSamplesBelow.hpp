@@ -9,24 +9,26 @@
 
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/bp/BPCompressedForest.hpp"
+#include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/graph/EdgeListGraph.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/samples/primitives.hpp"
 #include "sfkit/utils/BufferedSDSLBitVectorView.hpp"
 
-namespace sfkit::samples {
+namespace sfkit::samples::internal {
 
+using sfkit::dag::DAGCompressedForest;
 using sfkit::graph::EdgeListGraph;
 using sfkit::graph::NodeId;
 namespace stdx = std::experimental;
 
-template <size_t N = 1, typename BaseType = SampleId>
-class DAGNumSamplesBelow {
+template <size_t N, typename BaseType>
+class DAGNumSamplesBelowImpl {
 public:
     using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
 
-    DAGNumSamplesBelow(EdgeListGraph const& dag_postorder_edges, SetOfSampleSets const& samples)
-        : _dag(dag_postorder_edges) {
+    DAGNumSamplesBelowImpl(EdgeListGraph const& dag, SetOfSampleSets const& samples) : _dag(dag) {
         // Check inputs
         KASSERT(_dag.check_postorder(), "DAG edges are not post-ordered.", sfkit::assert::normal);
         KASSERT(_dag.num_nodes() >= _dag.num_leaves(), "DAG has less nodes than leaves.", sfkit::assert::light);
@@ -152,6 +154,75 @@ private:
             work_it++;
         }
     }
+};
+
+} // namespace sfkit::samples::internal
+
+namespace sfkit::samples {
+using sfkit::dag::DAGCompressedForest;
+using sfkit::graph::EdgeListGraph;
+
+template <size_t N, typename BaseType>
+class NumSamplesBelow<DAGCompressedForest, N, BaseType> {
+public:
+    using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
+
+    NumSamplesBelow(DAGCompressedForest const& forest, SetOfSampleSets const& samples)
+        : _impl(forest.postorder_edges(), samples) {}
+
+    [[nodiscard]] SampleId num_samples_below(NodeId node_id, SampleSetId sample_set_id) const {
+        return _impl.num_samples_below(node_id, sample_set_id);
+    }
+
+    [[nodiscard]] SampleId operator()(NodeId node_id, SampleSetId sample_set_id) const {
+        return _impl(node_id, sample_set_id);
+    }
+
+    [[nodiscard]] SampleId num_nodes_in_dag() const {
+        return _impl.num_nodes_in_dag();
+    }
+
+    [[nodiscard]] SampleId num_samples_in_dag() const {
+        return _impl.num_samples_in_dag();
+    }
+
+    [[nodiscard]] SampleId num_samples_in_sample_set(SampleSetId sample_set_id) const {
+        return _impl.num_samples_in_sample_set(sample_set_id);
+    }
+
+private:
+    internal::DAGNumSamplesBelowImpl<N, BaseType> _impl;
+};
+
+template <size_t N, typename BaseType>
+class NumSamplesBelow<EdgeListGraph, N, BaseType> {
+public:
+    using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
+
+    NumSamplesBelow(EdgeListGraph const& dag, SetOfSampleSets const& samples) : _impl(dag, samples) {}
+
+    [[nodiscard]] SampleId num_samples_below(NodeId node_id, SampleSetId sample_set_id) const {
+        return _impl.num_samples_below(node_id, sample_set_id);
+    }
+
+    [[nodiscard]] SampleId operator()(NodeId node_id, SampleSetId sample_set_id) const {
+        return _impl(node_id, sample_set_id);
+    }
+
+    [[nodiscard]] SampleId num_nodes_in_dag() const {
+        return _impl.num_nodes_in_dag();
+    }
+
+    [[nodiscard]] SampleId num_samples_in_dag() const {
+        return _impl.num_samples_in_dag();
+    }
+
+    [[nodiscard]] SampleId num_samples_in_sample_set(SampleSetId sample_set_id) const {
+        return _impl.num_samples_in_sample_set(sample_set_id);
+    }
+
+private:
+    internal::DAGNumSamplesBelowImpl<N, BaseType> _impl;
 };
 
 } // namespace sfkit::samples

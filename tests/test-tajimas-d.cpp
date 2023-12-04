@@ -39,6 +39,6 @@ TEST_CASE("Tajima's D tskit example", "[Tajima's D]") {
     auto const& tskit_tajimas_d = testcase.tskit_tajimas_d;
     std::cout << "Testing " << ts_file << " with expected value " << tskit_tajimas_d << std::endl;
 
-    sfkit::SuccinctForest sequence_forest(ts_file);
-    CHECK(Approx(sequence_forest.tajimas_d()).epsilon(1e-6) == tskit_tajimas_d);
+    sfkit::DAGSuccinctForest forest(ts_file);
+    CHECK(Approx(forest.tajimas_d()).epsilon(1e-6) == tskit_tajimas_d);
 }

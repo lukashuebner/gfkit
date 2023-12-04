@@ -6,30 +6,27 @@
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
-#include "sfkit/dag/DAGCompressedForest.hpp"
-#include "sfkit/dag/DAGForestCompressor.hpp"
 #include "sfkit/sequence/AlleleFrequencies.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
 
 namespace sfkit::stats {
 
 using sfkit::samples::SampleId;
-using sfkit::sequence::AlleleFrequencies;
 using sfkit::sequence::SiteId;
 using sfkit::utils::asserting_cast;
 
 // We store the number of sites without a mutation in afs[0], the number of singletons (sites with one mutation) in
 // afs[1] and so on. For simplicity we also compute afs[num_samples], that is the number of sites with all samples
 // having a derived state.
-template <typename AllelicStatePerfectHasher>
+template <typename AlleleFrequencies>
 class AlleleFrequencySpectrum {
 public:
-    using value_type            = SiteId;
-    using iterator              = std::vector<value_type>::iterator;
-    using const_iterator        = std::vector<value_type>::const_iterator;
-    using MultiallelicFrequency = typename AlleleFrequencies<AllelicStatePerfectHasher>::MultiallelicFrequency;
+    using value_type     = SiteId;
+    using iterator       = std::vector<value_type>::iterator;
+    using const_iterator = std::vector<value_type>::const_iterator;
 
-    AlleleFrequencySpectrum(AlleleFrequencies<AllelicStatePerfectHasher> const& allele_frequencies) {
+    explicit AlleleFrequencySpectrum(AlleleFrequencies const& allele_frequencies) {
+        using MultiallelicFrequency = AlleleFrequencies::MultiallelicFrequencyT;
         // There are at most \c num_samples many derived samples per site.
         // +1 because there might also be /no/ derived samples.
         auto const num_samples = allele_frequencies.num_samples_in_sample_set();

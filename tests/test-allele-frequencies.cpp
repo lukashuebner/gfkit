@@ -36,8 +36,7 @@ TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {
         0
     );
 
-    // TODO Rename sequence_forest to succinct_forest
-    SuccinctForest sequence_forest(tskit_tree_sequence); // Takes ownership
+    DAGSuccinctForestNumeric sequence_forest(tskit_tree_sequence);
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     std::vector<uint64_t> expected    = {3, 3, 1};
@@ -76,7 +75,7 @@ TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
         0
     );
 
-    SuccinctForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
+    DAGSuccinctForestNumeric sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     auto const& all_samples = sequence_forest.all_samples();
@@ -85,7 +84,7 @@ TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
     auto freqs_it = freqs.begin();
     REQUIRE(freqs_it != freqs.end());
 
-    using MultiallelicFrequency = AlleleFrequencies<PerfectNumericHasher>::MultiallelicFrequency;
+    using MultiallelicFrequency = MultiallelicFrequency<PerfectNumericHasher>;
     REQUIRE(std::holds_alternative<MultiallelicFrequency>(*freqs_it));
     MultiallelicFrequency const& freq = std::get<MultiallelicFrequency>(*freqs_it);
     CHECK(freq[0] == 1);
@@ -116,15 +115,14 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         0
     );
 
-    SuccinctForest<PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     // Site 0 is multiallelic with 2 1 1 0 derived states.
     // Site 1 is biallelic with 1 derived state.
     // Site 2 is biallelic with 2 derived states.
-    using MultiallelicFrequency = typename AlleleFrequencies<PerfectNumericHasher>::MultiallelicFrequency;
-    using BiallelicFrequency    = typename AlleleFrequencies<PerfectNumericHasher>::BiallelicFrequency;
-    using AlleleFrequency       = typename AlleleFrequencies<PerfectNumericHasher>::AlleleFrequency;
+    using MultiallelicFrequency = MultiallelicFrequency<PerfectNumericHasher>;
+    using AlleleFrequency       = AlleleFrequency<PerfectNumericHasher>;
     std::vector<AlleleFrequency> expected(std::initializer_list<AlleleFrequency>{
         MultiallelicFrequency(static_cast<unsigned char>('0'), 2_uc, 1_uc, 1_uc, 0_uc),
         BiallelicFrequency{3_uc},
@@ -166,11 +164,10 @@ TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") 
         0
     );
 
-    SuccinctForest<PerfectNumericHasher> forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> forest(tskit_tree_sequence); // Takes ownership
 
-    using BiallelicFrequency    = typename AlleleFrequencies<PerfectNumericHasher>::BiallelicFrequency;
-    using MultiallelicFrequency = typename AlleleFrequencies<PerfectNumericHasher>::MultiallelicFrequency;
-    using AlleleFrequency       = typename AlleleFrequencies<PerfectNumericHasher>::AlleleFrequency;
+    using MultiallelicFrequency = MultiallelicFrequency<PerfectNumericHasher>;
+    using AlleleFrequency       = AlleleFrequency<PerfectNumericHasher>;
 
     auto const sample_0 = SampleSet(4).add(0);
     auto const sample_1 = SampleSet(4).add(1);

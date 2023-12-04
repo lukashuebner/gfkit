@@ -24,7 +24,7 @@
 
 using namespace ::Catch::Matchers;
 
-using sfkit::SuccinctForest;
+using sfkit::DAGSuccinctForest;
 using sfkit::graph::EdgeListGraph;
 using sfkit::graph::NodeId;
 using sfkit::samples::SampleId;
@@ -147,15 +147,15 @@ TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    SuccinctForest    sequence_forest(std::move(tree_sequence));
+    DAGSuccinctForest    sequence_forest(std::move(tree_sequence));
 
     EdgeListGraph const& dag = sequence_forest.forest().postorder_edges();
 
     REQUIRE(dag.is_postorder());
-    CHECK(dag.num_trees() == sequence_forest.tree_sequence().num_trees());
-    CHECK(dag.num_roots() == sequence_forest.tree_sequence().num_trees());
-    CHECK(dag.roots().size() == sequence_forest.tree_sequence().num_trees());
-    CHECK(dag.num_leaves() == sequence_forest.tree_sequence().num_samples());
+    CHECK(dag.num_trees() == tree_sequence.num_trees());
+    CHECK(dag.num_roots() == tree_sequence.num_trees());
+    CHECK(dag.roots().size() == tree_sequence.num_trees());
+    CHECK(dag.num_leaves() == tree_sequence.num_samples());
 
     // Compute the number of samples below each root.
     std::vector<size_t> subtree_sizes(dag.num_nodes(), 0);

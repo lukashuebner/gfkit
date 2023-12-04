@@ -59,7 +59,7 @@ TEST_CASE("Segregating Sites tskit example", "[SegregatingSites]") {
     CHECK(tree_sequence.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    sfkit::SuccinctForest forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
 
     CHECK(forest.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 

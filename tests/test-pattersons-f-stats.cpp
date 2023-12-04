@@ -19,11 +19,9 @@
 using namespace ::Catch;
 using namespace ::Catch::Matchers;
 
-using sfkit::SuccinctForest;
 using sfkit::graph::NodeId;
 using sfkit::samples::SampleId;
 using sfkit::samples::SampleSet;
-using sfkit::sequence::PerfectNumericHasher;
 using sfkit::sequence::SiteId;
 using sfkit::tskit::TSKitTreeSequence;
 
@@ -160,7 +158,7 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     CHECK(tree_sequence.f2(f2_sample_set_1, f2_sample_set_2) == Approx(reference_f2).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
 
     CHECK(
         forest.f4(f4_sample_set_1, f4_sample_set_2, f4_sample_set_3, f4_sample_set_4)

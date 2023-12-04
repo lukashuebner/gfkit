@@ -7,6 +7,9 @@
 #include <experimental/simd>
 
 #include "sfkit/bp/BPCompressedForest.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
+#include "sfkit/samples/BPNumSamplesBelow.hpp"
+#include "sfkit/samples/DAGNumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/samples/primitives.hpp"
 #include "sfkit/utils/BufferedSDSLBitVectorView.hpp"
@@ -21,12 +24,10 @@ using sfkit::utils::BufferedSDSLBitVectorView;
 namespace stdx = std::experimental;
 
 // TODO Move from header-only to .hpp + .cpp ?
-template <size_t N = 1, typename BaseType = SampleId>
-class BPNumSamplesBelow {
+template <size_t N, typename BaseType>
+class NumSamplesBelow<BPCompressedForest, N, BaseType> {
 public:
-    using SetOfSampleSets = std::array<std::reference_wrapper<SampleSet const>, N>;
-
-    BPNumSamplesBelow(BPCompressedForest const& forest, SetOfSampleSets const& samples) : _forest(forest) {
+    NumSamplesBelow(BPCompressedForest const& forest, SetOfSampleSets<N> const& samples) : _forest(forest) {
         // Check inputs
         KASSERT(_forest.num_nodes() >= _forest.num_leaves(), "DAG has less nodes than leaves.", sfkit::assert::light);
         for (auto sample_set: samples) {
@@ -96,7 +97,7 @@ private:
     std::array<SampleId, N>   _num_samples_in_sample_set;
     std::vector<simd_t>       _subtree_sizes;
 
-    void _compute(SetOfSampleSets const& samples) {
+    void _compute(SetOfSampleSets<N> const& samples) {
         KASSERT(_subtree_sizes.size() == 0ul, "Subtree sizes already computed.", sfkit::assert::light);
         _subtree_sizes.resize(_forest.num_nodes(), 0);
 

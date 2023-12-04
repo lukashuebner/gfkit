@@ -6,6 +6,7 @@
 #include "sfkit/assertion_levels.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
+// TODO Rename this file. There is GenomicSequence.hpp and Sequence.hpp which is confusing
 namespace sfkit::sequence {
 
 using sfkit::utils::asserting_cast;

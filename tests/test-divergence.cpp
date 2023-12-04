@@ -18,7 +18,6 @@
 using namespace ::Catch;
 using namespace ::Catch::Matchers;
 
-using sfkit::SuccinctForest;
 using sfkit::graph::NodeId;
 using sfkit::samples::SampleId;
 using sfkit::samples::SampleSet;
@@ -74,7 +73,7 @@ TEST_CASE("Divergence tskit example", "[Divergence]") {
     CHECK(tree_sequence.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
 
     CHECK(forest.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 

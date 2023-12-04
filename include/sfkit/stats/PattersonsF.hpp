@@ -14,8 +14,8 @@ class PattersonsF {
 public:
     template <typename AlleleFrequencies>
     [[nodiscard]] static double f2(AlleleFrequencies const& allele_freqs_0, AlleleFrequencies const& allele_freqs_1) {
-        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequency;
-        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequency;
+        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequencyT;
+        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
 
         double const num_samples_0 = allele_freqs_0.num_samples_in_sample_set();
         double const num_samples_1 = allele_freqs_1.num_samples_in_sample_set();
@@ -87,8 +87,8 @@ public:
        AlleleFrequencies const& allele_freqs_2) {
         double f3 = 0.0;
 
-        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequency;
-        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequency;
+        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
+        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequencyT;
 
         double const num_samples_0 = allele_freqs_0.num_samples_in_sample_set();
         double const num_samples_1 = allele_freqs_1.num_samples_in_sample_set();
@@ -165,8 +165,8 @@ public:
        AlleleFrequencies const& allele_freqs_3) {
         double f4 = 0.0;
 
-        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequency;
-        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequency;
+        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
+        using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequencyT;
 
         double const num_samples_0 = allele_freqs_0.num_samples_in_sample_set();
         double const num_samples_1 = allele_freqs_1.num_samples_in_sample_set();

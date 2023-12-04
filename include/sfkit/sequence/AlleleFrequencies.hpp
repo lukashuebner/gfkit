@@ -3,140 +3,136 @@
 #include <variant>
 #include <vector>
 
-// TODO Generalize to be able to use DAG and BP based forests
 #include "sfkit/dag/DAGCompressedForest.hpp"
 #include "sfkit/samples/NumSamplesBelowAccessor.hpp"
 #include "sfkit/samples/NumSamplesBelowFactory.hpp"
 #include "sfkit/sequence/GenomicSequence.hpp"
+#include "sfkit/sequence/Sequence.hpp"
 #include "sfkit/utils/always_false_v.hpp"
 
 namespace sfkit::sequence {
 
 using namespace sfkit::samples;
 using sfkit::dag::DAGCompressedForest;
-using sfkit::samples::DAGNumSamplesBelow;
 using sfkit::samples::NumSamplesBelowAccessor;
 using sfkit::utils::always_false_v;
 
+class BiallelicFrequency {
+public:
+    explicit BiallelicFrequency(SampleId num_ancestral) noexcept : _num_ancestral(num_ancestral) {}
+
+    [[nodiscard]] SampleId num_ancestral() const {
+        return _num_ancestral;
+    }
+
+    // Always compare the number of ancestral samples. Only compare the ancestral state and derived state if both
+    // values have it set.
+    bool operator==(BiallelicFrequency const& other) const {
+        return _num_ancestral == other._num_ancestral;
+    }
+
+private:
+    SampleId _num_ancestral; // There can never be more derived samples than total samples.
+};
+
+template <typename AllelicStatePerfectHasher = PerfectDNAHasher>
+class MultiallelicFrequency {
+public:
+    using iterator       = typename std::array<SampleId, AllelicStatePerfectHasher::num_states>::iterator;
+    using const_iterator = typename std::array<SampleId, AllelicStatePerfectHasher::num_states>::const_iterator;
+
+    using Idx = typename AllelicStatePerfectHasher::Idx;
+
+    MultiallelicFrequency(AllelicState ancestral_state = InvalidAllelicState) : _ancestral_state(ancestral_state) {
+        _num_samples_in_state.fill(0);
+    }
+
+    template <typename... T>
+    MultiallelicFrequency(AllelicState ancestral_state, T... ts)
+        : _num_samples_in_state{ts...},
+          _ancestral_state(ancestral_state) {}
+
+    [[nodiscard]] SampleId operator[](Idx idx) const {
+        KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
+        return _num_samples_in_state[idx];
+    }
+
+    SampleId& operator[](Idx idx) {
+        KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
+        return _num_samples_in_state[idx];
+    }
+
+    iterator begin() {
+        return _num_samples_in_state.begin();
+    }
+
+    iterator end() {
+        return _num_samples_in_state.end();
+    }
+
+    const_iterator begin() const noexcept {
+        return _num_samples_in_state.begin();
+    }
+
+    const_iterator end() const noexcept {
+        return _num_samples_in_state.end();
+    }
+
+    [[nodiscard]] bool valid(SampleId expected_num_samples) const {
+        auto const sum = std::accumulate(
+            _num_samples_in_state.begin(),
+            _num_samples_in_state.end(),
+            SampleId(0),
+            [](SampleId running_sum, SampleId num_samples_in_state) { return running_sum + num_samples_in_state; }
+        );
+        return sum == expected_num_samples;
+    }
+
+    [[nodiscard]] AllelicState ancestral_state() const {
+        KASSERT(_ancestral_state != InvalidAllelicState, "The ancestral state has not been set.", sfkit::assert::light);
+        return _ancestral_state;
+    }
+
+    [[nodiscard]] Idx ancestral_state_idx() const {
+        KASSERT(_ancestral_state != InvalidAllelicState, "The ancestral state has not been set.", sfkit::assert::light);
+        return AllelicStatePerfectHasher::to_idx(_ancestral_state);
+    }
+
+    // Always compare the number of samples per state. Only compare the ancestral state if both values have it set.
+    bool operator==(MultiallelicFrequency const& other) const {
+        return _num_samples_in_state == other._num_samples_in_state
+               && (_ancestral_state == InvalidAllelicState || other._ancestral_state == InvalidAllelicState
+                   || _ancestral_state == other._ancestral_state);
+    }
+
+    static constexpr auto num_states = AllelicStatePerfectHasher::num_states;
+
+private:
+    using AllelicStateFrequencies = std::array<SampleId, AllelicStatePerfectHasher::num_states>;
+    AllelicStateFrequencies _num_samples_in_state;
+    AllelicState            _ancestral_state;
+};
+
+template <typename AllelicStatePerfectHasher>
+using AlleleFrequency = std::variant<BiallelicFrequency, MultiallelicFrequency<AllelicStatePerfectHasher>>;
+
 template <
+    typename CompressedForest                         = DAGCompressedForest,
     typename AllelicStatePerfectHasher                = PerfectDNAHasher,
-    NumSamplesBelowAccessorC NumSamplesBelowAccessorT = NumSamplesBelowAccessor<DAGNumSamplesBelow<1>>>
+    NumSamplesBelowAccessorC NumSamplesBelowAccessorT = NumSamplesBelowAccessor<NumSamplesBelow<CompressedForest, 1>>>
 class AlleleFrequencies {
 public:
-    class BiallelicFrequency {
-    public:
-        BiallelicFrequency(SampleId num_ancestral) noexcept : _num_ancestral(num_ancestral) {}
+    using BiallelicFrequencyT    = BiallelicFrequency;
+    using MultiallelicFrequencyT = MultiallelicFrequency<AllelicStatePerfectHasher>;
+    using AlleleFrequencyT       = AlleleFrequency<AllelicStatePerfectHasher>;
 
-        [[nodiscard]] SampleId num_ancestral() const {
-            return _num_ancestral;
-        }
-
-        // Always compare the number of ancestral samples. Only compare the ancestral state and derived state if both
-        // values have it set.
-        bool operator==(BiallelicFrequency const& other) const {
-            return _num_ancestral == other._num_ancestral;
-        }
-
-    private:
-        SampleId _num_ancestral; // There can never be more derived samples than total samples.
-    };
-
-    class MultiallelicFrequency {
-    public:
-        using iterator       = typename std::array<SampleId, AllelicStatePerfectHasher::num_states>::iterator;
-        using const_iterator = typename std::array<SampleId, AllelicStatePerfectHasher::num_states>::const_iterator;
-
-        using Idx = typename AllelicStatePerfectHasher::Idx;
-
-        MultiallelicFrequency(AllelicState ancestral_state = InvalidAllelicState) : _ancestral_state(ancestral_state) {
-            _num_samples_in_state.fill(0);
-        }
-
-        template <typename... T>
-        MultiallelicFrequency(AllelicState ancestral_state, T... ts)
-            : _num_samples_in_state{ts...},
-              _ancestral_state(ancestral_state) {}
-
-        [[nodiscard]] SampleId operator[](Idx idx) const {
-            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
-            return _num_samples_in_state[idx];
-        }
-
-        SampleId& operator[](Idx idx) {
-            KASSERT(idx < AllelicStatePerfectHasher::num_states, "Index out of bounds", sfkit::assert::light);
-            return _num_samples_in_state[idx];
-        }
-
-        iterator begin() {
-            return _num_samples_in_state.begin();
-        }
-
-        iterator end() {
-            return _num_samples_in_state.end();
-        }
-
-        const_iterator begin() const noexcept {
-            return _num_samples_in_state.begin();
-        }
-
-        const_iterator end() const noexcept {
-            return _num_samples_in_state.end();
-        }
-
-        [[nodiscard]] bool valid(SampleId expected_num_samples) const {
-            auto const sum = std::accumulate(
-                _num_samples_in_state.begin(),
-                _num_samples_in_state.end(),
-                SampleId(0),
-                [](SampleId running_sum, SampleId num_samples_in_state) { return running_sum + num_samples_in_state; }
-            );
-            return sum == expected_num_samples;
-        }
-
-        [[nodiscard]] AllelicState ancestral_state() const {
-            KASSERT(
-                _ancestral_state != InvalidAllelicState,
-                "The ancestral state has not been set.",
-                sfkit::assert::light
-            );
-            return _ancestral_state;
-        }
-
-        [[nodiscard]] Idx ancestral_state_idx() const {
-            KASSERT(
-                _ancestral_state != InvalidAllelicState,
-                "The ancestral state has not been set.",
-                sfkit::assert::light
-            );
-            return AllelicStatePerfectHasher::to_idx(_ancestral_state);
-        }
-
-        // Always compare the number of samples per state. Only compare the ancestral state if both values have it set.
-        bool operator==(MultiallelicFrequency const& other) const {
-            return _num_samples_in_state == other._num_samples_in_state
-                   && (_ancestral_state == InvalidAllelicState || other._ancestral_state == InvalidAllelicState
-                       || _ancestral_state == other._ancestral_state);
-        }
-
-        static constexpr auto num_states = AllelicStatePerfectHasher::num_states;
-
-    private:
-        using AllelicStateFrequencies = std::array<SampleId, AllelicStatePerfectHasher::num_states>;
-        AllelicStateFrequencies _num_samples_in_state;
-        AllelicState            _ancestral_state;
-    };
-
-    using AlleleFrequency = std::variant<BiallelicFrequency, MultiallelicFrequency>;
-
-    AlleleFrequencies(
-        DAGCompressedForest& compressed_forest, GenomicSequence const& sequence_store, SampleSet const& sample_set
-    )
-        : _forest(compressed_forest),
+    AlleleFrequencies(CompressedForest& forest, GenomicSequence const& sequence_store, SampleSet const& sample_set)
+        : _forest(forest),
           _sequence(sequence_store),
-          _num_samples_below(NumSamplesBelowFactory::build(compressed_forest.postorder_edges(), sample_set)) {}
+          _num_samples_below(NumSamplesBelowFactory::build(forest, sample_set)) {}
 
     AlleleFrequencies(
-        DAGCompressedForest&            compressed_forest,
+        CompressedForest&               compressed_forest,
         GenomicSequence const&          sequence_store,
         NumSamplesBelowAccessorT const& num_samples_below
     )
@@ -160,7 +156,7 @@ public:
         return typename allele_frequency_iterator::sentinel{};
     }
 
-    [[nodiscard]] DAGCompressedForest& forest() {
+    [[nodiscard]] CompressedForest& forest() {
         return _forest;
     }
 
@@ -178,14 +174,14 @@ public:
 
     template <typename BiallelicVisitor, typename MultiallelicVisitor>
     void visit(BiallelicVisitor biallelic_vistor, MultiallelicVisitor multiallelic_visitor) const noexcept {
-        for (AlleleFrequency const& this_sites_state: *this) {
+        for (AlleleFrequencyT const& this_sites_state: *this) {
             std::visit(
                 // TODO This noexcept should be conditional on the noexcept of the visitors.
                 [biallelic_vistor, multiallelic_visitor](auto const& arg) noexcept -> void {
                     using T = std::decay_t<decltype(arg)>;
-                    if constexpr (std::is_same_v<T, BiallelicFrequency>) {
+                    if constexpr (std::is_same_v<T, BiallelicFrequencyT>) {
                         biallelic_vistor(arg);
-                    } else if constexpr (std::is_same_v<T, MultiallelicFrequency>) {
+                    } else if constexpr (std::is_same_v<T, MultiallelicFrequencyT>) {
                         multiallelic_visitor(arg);
                     } else {
                         static_assert(
@@ -203,14 +199,14 @@ public:
     public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type   = std::ptrdiff_t;
-        using value_type        = AlleleFrequency;
+        using value_type        = AlleleFrequencyT;
         using pointer           = value_type*;
         using reference         = value_type&;
         struct sentinel {};
 
         allele_frequency_iterator(AlleleFrequencies const& freqs)
             : _freqs(freqs),
-              _state(BiallelicFrequency(0)),
+              _state(BiallelicFrequencyT(0)),
               _site(0) {
             _update_state();
         }
@@ -259,7 +255,7 @@ public:
         }
 
         void force_multiallelicity() {
-            if (std::holds_alternative<BiallelicFrequency>(_state)) {
+            if (std::holds_alternative<BiallelicFrequencyT>(_state)) {
                 AllelicState const ancestral_state   = _freqs._sequence.ancestral_state(_site);
                 auto const         mutations_at_site = _freqs._sequence.mutations_at_site(_site);
                 _update_state_multiallelic(ancestral_state, mutations_at_site);
@@ -268,7 +264,7 @@ public:
 
     private:
         AlleleFrequencies const& _freqs;
-        AlleleFrequency          _state;
+        AlleleFrequencyT         _state;
         SiteId                   _site;
 
         // Maybe it's faster (it's certainly simpler) to just use multiallelic iterator for all sites.
@@ -283,7 +279,7 @@ public:
             // Handle case where there are no mutations at this site
             // TODO Remove this once we're iterating only over sites with mutations
             if (mutations_at_site.empty()) {
-                _state = BiallelicFrequency(num_ancestral);
+                _state = BiallelicFrequencyT(num_ancestral);
                 return;
             } else {
                 auto         mutation_it   = mutations_at_site.begin();
@@ -328,14 +324,14 @@ public:
                     mutation_it++;
                 }
 
-                _state = BiallelicFrequency(num_ancestral);
+                _state = BiallelicFrequencyT(num_ancestral);
                 return;
             }
         }
 
         void _update_state_multiallelic(AllelicState ancestral_state, MutationView const& mutations_at_site) {
             // For this site, compute how many of the samples have which derived or ancestral state.
-            MultiallelicFrequency state_freqs(ancestral_state);
+            MultiallelicFrequencyT state_freqs(ancestral_state);
 
             // Before looking at any mutations, all samples are in the ancestral state
             auto const idx_of_ancestral_state   = AllelicStatePerfectHasher::to_idx(ancestral_state);
@@ -360,7 +356,7 @@ public:
     };
 
 private:
-    DAGCompressedForest&     _forest;
+    CompressedForest&        _forest;
     GenomicSequence const&   _sequence;
     NumSamplesBelowAccessorT _num_samples_below;
 };

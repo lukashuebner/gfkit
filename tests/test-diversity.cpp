@@ -19,6 +19,7 @@ using namespace ::Catch;
 using namespace ::Catch::Matchers;
 
 using sfkit::SuccinctForest;
+using sfkit::dag::DAGCompressedForest;
 using sfkit::graph::NodeId;
 using sfkit::samples::SampleId;
 using sfkit::samples::SampleSet;
@@ -64,9 +65,9 @@ TEST_CASE("Diversity tskit example", "[Diversity]") {
     CHECK(tree_sequence.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    SuccinctForest<sfkit::dag::DAGCompressedForest, PerfectNumericHasher> forest(std::move(tree_sequence));
 
-    CHECK(sequence_forest.diversity() == Approx(reference_pi).epsilon(1e-6));
+    CHECK(forest.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
     // tsk_treeseq_free(&tskit_tree_sequence);
@@ -110,7 +111,7 @@ TEST_CASE("Diversity single tree with multiple derived states", "[Diversity]") {
     CHECK(tree_sequence.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric sequence_forest(std::move(tree_sequence));
     CHECK(sequence_forest.diversity() == Approx(reference_pi).epsilon(1e-6));
 
     // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
@@ -155,7 +156,7 @@ TEST_CASE("Diversity tskit example with sample sets", "[Diversity]") {
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
@@ -200,7 +201,7 @@ TEST_CASE("Diversity multi tree with back and recurrent mutations", "[Diversity]
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
@@ -245,7 +246,7 @@ TEST_CASE("Diversity multi tree with multiple derived states", "[Diversity]") {
     CHECK(tree_sequence.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    SuccinctForest<PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(std::move(tree_sequence));
 
     CHECK(sequence_forest.diversity(sample_set_1) == Approx(reference_pi[0]).epsilon(1e-6));
     CHECK(sequence_forest.diversity(sample_set_2) == Approx(reference_pi[1]).epsilon(1e-6));
