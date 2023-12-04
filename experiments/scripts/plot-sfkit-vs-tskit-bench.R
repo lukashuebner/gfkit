@@ -5,7 +5,7 @@ library(argparse)
 
 # --- Parse command line arguments ---
 # parser <- ArgumentParser()
-# 
+#
 # by default ArgumentParser will add an help option
 # parser$add_argument(
 #     "-i", "--input",
@@ -148,7 +148,7 @@ runtime_data <- data %>%
 
 speedup_data <- inner_join(
     # Reference (tskit)
-    runtime_data %>% 
+    runtime_data %>%
         filter(variant == "tskit") %>%
         rename(
             ref_walltime_ns_median = walltime_ns_median,
@@ -156,9 +156,9 @@ speedup_data <- inner_join(
             ref_walltime_ns_max = walltime_ns_max,
             ref_walltime_ns_q10 = walltime_ns_q10,
             ref_walltime_ns_q90 = walltime_ns_q90,
-    ),
+        ),
     # sfkit
-    runtime_data %>% filter(variant == "sfkit"),
+    runtime_data %>% filter(variant == "sfkit_dag"),
     by = c("section", "dataset", "collection", "chromosome", "revision", "machine_id", "variable")
 ) %>%
     mutate(
@@ -196,7 +196,7 @@ speedup_data %>%
     ) +
     ylab("speedup over tskit") +
     scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
-    scale_x_discrete( labels = pretty_print_datasets) +
+    scale_x_discrete(labels = pretty_print_datasets) +
     # scale_color_shape_manual(
     #     color_values = section_colors,
     #     labels = section_labels
@@ -236,7 +236,7 @@ speedup_data %>%
     ) +
     scale_x_discrete(
         labels = section_labels,
-        #breaks = section_labels,
+        # breaks = section_labels,
     ) +
     ylab("speedup over tskit") +
     gg_eps()
@@ -270,7 +270,7 @@ runtime_data %>%
     ) +
     ylab("runtime [ms]") +
     scale_y_continuous() +
-    scale_x_discrete( labels = pretty_print_datasets) +
+    scale_x_discrete(labels = pretty_print_datasets) +
     # scale_color_shape_manual(
     #     color_values = section_colors,
     #     labels = section_labels

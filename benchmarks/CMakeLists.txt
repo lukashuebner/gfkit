@@ -12,6 +12,8 @@ if (SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT)
     target_compile_definitions(sfkit-bench PRIVATE "ENABLE_MALLOC_COUNT")
 endif ()
 
+target_sources(sfkit-bench PRIVATE benchmark.cpp compress.cpp)
+
 set(MALLOC_COUNT_LIBS "$<$<BOOL:${SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT}>:malloc_count;dl>")
 target_link_libraries(sfkit-bench PRIVATE sfkit CLI11 Catch2::Catch2 "${MALLOC_COUNT_LIBS}")
 # TODO Add -march=native flag via option() and presets target_compile_options(sfkit PRIVATE "-march=native")
