@@ -7,9 +7,9 @@
 #include <experimental/simd>
 
 #include "sfkit/bp/BPCompressedForest.hpp"
-#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/BPNumSamplesBelow.hpp"
 #include "sfkit/samples/DAGNumSamplesBelow.hpp"
+#include "sfkit/samples/NumSamplesBelow.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/samples/primitives.hpp"
 #include "sfkit/utils/BufferedSDSLBitVectorView.hpp"
@@ -129,7 +129,6 @@ private:
         std::vector<simd_t>  sample_counts;
         plf::stack<SampleId> num_children;
         sample_counts.resize(_forest.num_samples() + 1); // TODO Think about the maximum size
-        size_t times_sample_counts_was_empty = 0;
         // We're wasting the first entry here as a sentinel to simplify the logic below.
         auto sample_counts_top = sample_counts.begin();
 
@@ -175,8 +174,6 @@ private:
                     ++sample_counts_top;
                     *sample_counts_top = _subtree_sizes[node_id];
                     num_children.top()++;
-                } else {
-                    times_sample_counts_was_empty++;
                 }
                 ++ref_rank;
             } else { // description of subtree
@@ -213,9 +210,6 @@ private:
                         if (level == 0) [[unlikely]] {
                             --sample_counts_top;
                         }
-                        if (sample_counts_top == sample_counts.begin()) {
-                            ++times_sample_counts_was_empty;
-                        }
                         ++inner_node_id;
                     }
                     num_children.pop();
@@ -227,10 +221,6 @@ private:
             ++is_ref_it;
             // is_leaf_it++;
         }
-        std::cout << "times_sample_counts_was_empty: " << times_sample_counts_was_empty << std::endl;
-        std::cout << "sample_counts_top - sample_counts.begin(): " << sample_counts_top - sample_counts.begin()
-                  << std::endl;
-        KASSERT(times_sample_counts_was_empty == _forest.num_trees());
         KASSERT(sample_counts_top - sample_counts.begin() == 0);
         KASSERT(num_children.size() == 1ul);
     }
