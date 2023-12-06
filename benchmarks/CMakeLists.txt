@@ -12,7 +12,7 @@ if (SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT)
     target_compile_definitions(sfkit-bench PRIVATE "ENABLE_MALLOC_COUNT")
 endif ()
 
-target_sources(sfkit-bench PRIVATE benchmark.cpp compress.cpp)
+target_sources(sfkit-bench PRIVATE benchmark.cpp compress.cpp print_ds_stats.cpp)
 
 set(MALLOC_COUNT_LIBS "$<$<BOOL:${SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT}>:malloc_count;dl>")
 target_link_libraries(sfkit-bench PRIVATE sfkit CLI11 Catch2::Catch2 "${MALLOC_COUNT_LIBS}")
