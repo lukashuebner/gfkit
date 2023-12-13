@@ -4,6 +4,7 @@
 #include <sdsl/bit_vectors.hpp>
 
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/utils/bitpacking.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
 namespace sfkit::utils {
@@ -32,8 +33,6 @@ public:
             if (_remaining_bits_in_buffer == 0) [[unlikely]] {
                 _refill_buffer();
             }
-            _value = _buffer & RIGHTMOST_BIT;
-            _buffer >>= 1;
             --_remaining_bits_in_buffer;
 
             return *this;
@@ -55,22 +54,24 @@ public:
         }
 
         [[nodiscard]] reference operator*() {
-            return _value;
+            KASSERT(_remaining_bits_in_buffer < BUFFER_SIZE);
+            return _buffer[_remaining_bits_in_buffer];
         }
 
         [[nodiscard]] pointer operator->() {
-            return &_value;
+            KASSERT(_remaining_bits_in_buffer < BUFFER_SIZE);
+            return &(_buffer[_remaining_bits_in_buffer]);
         }
 
     private:
-        using buffer_t      = uint64_t;
-        using buffer_size_t = uint8_t;
+        using buffer_size_t                        = uint8_t;
+        static constexpr buffer_size_t BUFFER_SIZE = 8;
+        using buffer_t                             = std::array<bool, BUFFER_SIZE>;
 
-        static constexpr buffer_size_t BUFFER_SIZE   = sizeof(buffer_t) * 8;
-        static constexpr buffer_t      RIGHTMOST_BIT = 1ULL;
-        static constexpr buffer_t      LEFTMOST_BIT  = 1ULL << (BUFFER_SIZE - 1);
+        // static constexpr buffer_size_t BUFFER_SIZE   = sizeof(buffer_t) * 8;
+        // static constexpr buffer_t      RIGHTMOST_BIT = 1ULL;
+        // static constexpr buffer_t      LEFTMOST_BIT  = 1ULL << (BUFFER_SIZE - 1);
 
-        bool                        _value;
         sdsl::bit_vector const&     _bit_vector;
         sdsl::bit_vector::size_type _bit_vector_idx;
         sdsl::bit_vector::size_type _bit_vector_size;
@@ -80,13 +81,19 @@ public:
 
         void _refill_buffer() {
             KASSERT(_bit_vector_idx <= _bit_vector_size, "Bit vector index is out of bounds", sfkit::assert::light);
-            auto const bits_read =
-                asserting_cast<decltype(BUFFER_SIZE)>(std::min<size_t>(BUFFER_SIZE, _bit_vector_size - _bit_vector_idx)
-                );
+            buffer_size_t const bits_read =
+                asserting_cast<buffer_size_t>(std::min<size_t>(BUFFER_SIZE, _bit_vector_size - _bit_vector_idx));
             if (bits_read == 0) [[unlikely]] {
                 _is_end = true;
             } else {
-                _buffer                   = _bit_vector.get_int(_bit_vector_idx, bits_read);
+                uint8_t bits = asserting_cast<uint8_t>(_bit_vector.get_int(_bit_vector_idx, bits_read));
+                KASSERT(BUFFER_SIZE >= bits_read);
+                bits = asserting_cast<buffer_size_t>(
+                    bits << asserting_cast<buffer_size_t>(
+                        static_cast<buffer_size_t>(BUFFER_SIZE) - static_cast<buffer_size_t>(bits_read)
+                    )
+                );
+                unpack8bools(bits, _buffer.data());
                 _remaining_bits_in_buffer = bits_read;
                 _bit_vector_idx += bits_read;
             }

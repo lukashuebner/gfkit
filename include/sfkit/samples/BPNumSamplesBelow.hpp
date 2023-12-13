@@ -140,12 +140,13 @@ private:
         // auto bp_size = bp.size(); // Doing this in the for-loop used a substantial amount of runtime.
         KASSERT(bp.size() == is_ref.size(), "balanced_parenthesis and is_reference are of different size");
         // TODO Write a faster iterator for the BP sequence (extracting 64bit, shifting over them...)
-        auto bp_view     = BufferedSDSLBitVectorView(bp);
-        auto bp_it       = bp_view.begin();
-        auto bp_end      = bp_view.end();
-        auto is_ref_view = BufferedSDSLBitVectorView(is_ref);
-        auto is_ref_it   = is_ref_view.begin();
-        auto is_ref_end  = is_ref_view.end();
+        BufferedSDSLBitVectorView bp_view{bp};
+        BufferedSDSLBitVectorView is_ref_view{is_ref};
+
+        auto bp_it      = bp_view.begin();
+        auto bp_end     = bp_view.end();
+        auto is_ref_it  = is_ref_view.begin();
+        auto is_ref_end = is_ref_view.end();
         // auto is_leaf_view = BufferedSDSLBitVectorView(_forest.is_leaf());
         // auto is_leaf_it = is_leaf_view.begin();
         // auto is_leaf_end = is_leaf_view.end();
