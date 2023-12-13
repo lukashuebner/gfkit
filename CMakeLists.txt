@@ -57,6 +57,7 @@ option(SFKIT_TESTS_ENABLE_SANITIZERS "Enable sanitizers for tests?" OFF)
 option(SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP "Enable backward-cpp for the benchmarks" OFF)
 option(SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT "Enable malloc_count for the benchmarks" OFF)
 option(SFKIT_BENCHMARK_ENABLE_SANITIZERS "Enable ASan and UBSan for the benchmarks" OFF)
+option(SFKIT_MARCH_NATIVE "Build with -march=native" ON)
 
 # Enable compilation with ccache. Defaults to ON if this is the main project.
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
@@ -77,6 +78,11 @@ target_include_directories(sfkit_base INTERFACE include)
 
 # Set the C++ standard to C++20.
 target_compile_features(sfkit_base INTERFACE cxx_std_20)
+
+# Enable --march=native if requested
+if (SFKIT_MARCH_NATIVE)
+    target_compile_options(sfkit_base INTERFACE -march=native)
+endif ()
 
 list(
     APPEND

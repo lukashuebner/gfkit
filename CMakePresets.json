@@ -17,7 +17,8 @@
                 "SFKIT_TESTS_ENABLE_SANITIZERS": "OFF",
                 "SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP": "OFF",
                 "SFKIT_BENCHMARK_ENABLE_MALLOC_COUNT": "OFF",
-                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "OFF"
+                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "OFF",
+                "SFKIT_MARCH_NATIVE": "ON"
             }
         },
         {
