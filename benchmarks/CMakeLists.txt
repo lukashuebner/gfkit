@@ -3,7 +3,7 @@
 
 if (SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP)
     add_executable(sfkit-bench sfkit-bench.cpp ${BACKWARD_ENABLE})
-    add_backward(sfkit-bench)
+    target_link_libraries(sfkit-bench PRIVATE Backward::Backward)
 else ()
     add_executable(sfkit-bench sfkit-bench.cpp)
 endif ()
