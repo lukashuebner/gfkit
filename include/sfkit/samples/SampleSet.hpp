@@ -135,7 +135,14 @@ public:
     }
 
     [[nodiscard]] SampleId popcount() const {
-        return asserting_cast<SampleId>(std::reduce(_samples.begin(), _samples.end(), 0));
+        auto const popcount = std::reduce(_samples.begin(), _samples.end(), 0);
+        KASSERT(
+            std::cmp_less_equal(popcount, _samples.size()),
+            "The popcount is larger than the number of samples.",
+            sfkit::assert::light
+        );
+        KASSERT(std::cmp_greater_equal(popcount, 0), "The popcount is negative.", sfkit::assert::light);
+        return asserting_cast<SampleId>(popcount);
     }
 
     [[nodiscard]] SampleSet inverse() const {
@@ -152,8 +159,13 @@ public:
         std::vector<tsk_id_t> tsk_samples;
         tsk_samples.reserve(popcount());
         for (auto&& sample_id: *this) {
-            tsk_samples.push_back(asserting_cast<tsk_id_t>(sample_id));
+            tsk_samples.emplace_back(asserting_cast<tsk_id_t>(sample_id));
         }
+        KASSERT(
+            tsk_samples.size() == popcount(),
+            "The number of samples in the TSK samples vector does not match the popcount.",
+            sfkit::assert::light
+        );
         return tsk_samples;
     }
 
