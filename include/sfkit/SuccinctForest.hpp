@@ -252,20 +252,7 @@ public:
         return _sequence.subtrees_with_mutations().size();
     }
 
-    // TODO Remove
-    // [[nodiscard]] TSKitTreeSequence& tree_sequence() {
-    //     return _tree_sequence;
-    // }
-
-    // TODO Remove
-    // // TODO We should not store this!!
-    // [[nodiscard]] TSKitTreeSequence const& tree_sequence() const {
-    //     return _tree_sequence;
-    // }
-
 private:
-    // TODO Remove
-    // TSKitTreeSequence   _tree_sequence;
     CompressedForest _forest;
     GenomicSequence  _sequence;
 };
