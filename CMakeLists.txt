@@ -73,18 +73,22 @@ if (SFKIT_USE_CCACHE)
     enable_ccache()
 endif ()
 
+# Add external libaries used by sfkit
 add_subdirectory(extern)
 
-add_library(sfkit_base INTERFACE)
+# Create the sfkit library target
+add_library(sfkit STATIC)
 
-target_include_directories(sfkit_base INTERFACE include)
+# Set include dir and sources fot the sfkit target
+target_include_directories(sfkit PUBLIC include)
+add_subdirectory(src)
 
 # Set the C++ standard to C++20.
-target_compile_features(sfkit_base INTERFACE cxx_std_20)
+target_compile_features(sfkit PUBLIC cxx_std_20)
 
 # Enable --march=native if requested
 if (SFKIT_MARCH_NATIVE)
-    target_compile_options(sfkit_base INTERFACE -march=native)
+    target_compile_options(sfkit PUBLIC -march=native)
 endif ()
 
 list(
@@ -133,17 +137,16 @@ if (SFKIT_WARNINGS_ARE_ERRORS)
     list(APPEND SFKIT_WARNING_FLAGS "-Werror")
 endif ()
 
-# Target for user-code
-add_library(sfkit INTERFACE)
+# Target for user-code add_library(sfkit STATIC)
 add_library(sfkit::sfkit ALIAS sfkit)
-target_link_libraries(sfkit INTERFACE sfkit_base)
+# target_link_libraries(sfkit PUBLIC sfkit)
 
 # If enabled, use exceptions, otherwise use KASSERT()
 option(SFKIT_EXCEPTION_MODE "Use exceptions to report recoverable errors." ON)
 
 if (SFKIT_EXCEPTION_MODE)
     set(KASSERT_EXCEPTION_MODE 1)
-    target_compile_definitions(sfkit INTERFACE -DKASSERT_EXCEPTION_MODE)
+    target_compile_definitions(sfkit PUBLIC -DKASSERT_EXCEPTION_MODE)
     message(STATUS "Build with exceptions enabled.")
 else ()
     set(KASSERT_EXCEPTION_MODE 0)
@@ -187,40 +190,40 @@ string(
            $<$<STREQUAL:"${SFKIT_ASSERTION_LEVEL}","heavy">:60>
 )
 
-# Add the KaSSERT assertion library
+# TODO DO all of these need to be public? Add the KaSSERT assertion library
 add_subdirectory("extern/kassert")
-target_include_directories(sfkit_base INTERFACE "extern/kassert/include")
-target_link_libraries(sfkit_base INTERFACE kassert)
+target_include_directories(sfkit PUBLIC "extern/kassert/include")
+target_link_libraries(sfkit PUBLIC kassert)
 
 # Add the tskit (succinct tree sequences) library
 add_subdirectory("extern/tskit/c" "extern/tskit")
-target_link_libraries(sfkit_base INTERFACE tskit)
+target_link_libraries(sfkit PUBLIC tskit)
 
 # Hopscotch Map as HashTable
 add_subdirectory("extern/hopscotch-map")
-target_link_libraries(sfkit_base INTERFACE tsl::hopscotch_map)
+target_link_libraries(sfkit PUBLIC tsl::hopscotch_map)
 
 # Add xxHash for fast non-cryptographic hashing
 set(BUILD_SHARED_LIBS OFF)
 set(XXHASH_BUILD_ENABLE_INLINE_API ON)
 set(XXHASH_BUILD_XXHSUM OFF)
 add_subdirectory("extern/xxHash/cmake_unofficial" EXCLUDE_FROM_ALL)
-target_link_libraries(sfkit_base INTERFACE xxhash)
+target_link_libraries(sfkit PUBLIC xxhash)
 
 # Add the succinct data structures library (SDSL) for bitmaps, balanced-paranthesis trees etc.
 add_subdirectory("extern/sdsl")
-target_link_libraries(sfkit_base INTERFACE sdsl)
+target_link_libraries(sfkit PUBLIC sdsl)
 
 # Add plf_stack for a fast stack implementation.
 add_subdirectory("extern/plf_stack")
-target_link_libraries(sfkit_base INTERFACE plf_stack)
+target_link_libraries(sfkit PUBLIC plf_stack)
 
 # Add cereal for serialization
 option(BUILD_DOC "" OFF)
 option(BUILD_SANDBOX "" OFF)
 option(SKIP_PERFORMANCE_COMPARISON "" ON)
 add_subdirectory("extern/cereal")
-target_link_libraries(sfkit_base INTERFACE cereal)
+target_link_libraries(sfkit PUBLIC cereal)
 
 # Add Catch2 (testing and benchmarking)
 add_subdirectory("extern/Catch2")
@@ -230,7 +233,7 @@ add_subdirectory("extern/backward-cpp")
 
 # Add fmt for std::format for older libstdc++ TODO Remove this at least for the Release mode
 add_subdirectory("extern/fmt")
-target_link_libraries(sfkit_base INTERFACE fmt)
+target_link_libraries(sfkit PUBLIC fmt)
 
 # Add CLI11 for command line parsing
 add_subdirectory("extern/CLI11")
