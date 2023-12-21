@@ -6,19 +6,19 @@
 #include <CLI/Config.hpp>
 #include <CLI/Formatter.hpp>
 #include <catch2/catch_approx.hpp>
+#include <sfkit/SuccinctForest.hpp>
+#include <sfkit/bp/BPForestCompressor.hpp>
+#include <sfkit/dag/DAGCompressedForest.hpp>
+#include <sfkit/dag/DAGForestCompressor.hpp>
+#include <sfkit/io/CompressedForestIO.hpp>
+#include <sfkit/sequence/GenomicSequence.hpp>
+#include <sfkit/stats/AlleleFrequencySpectrum.hpp>
+#include <sfkit/tskit/tskit.hpp>
 
 #include "ResultsPrinter.hpp"
 #include "benchmark.hpp"
 #include "compress.hpp"
 #include "perf.hpp"
-#include "sfkit/SuccinctForest.hpp"
-#include "sfkit/bp/BPForestCompressor.hpp"
-#include "sfkit/dag/DAGCompressedForest.hpp"
-#include "sfkit/dag/DAGForestCompressor.hpp"
-#include "sfkit/io/CompressedForestIO.hpp"
-#include "sfkit/sequence/GenomicSequence.hpp"
-#include "sfkit/stats/AlleleFrequencySpectrum.hpp"
-#include "sfkit/tskit/tskit.hpp"
 #include "timer.hpp"
 
 int main(int argc, char** argv) {
