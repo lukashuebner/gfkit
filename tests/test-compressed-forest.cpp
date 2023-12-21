@@ -182,7 +182,7 @@ TEST_CASE("CompressedForest::is_sample() Ed", "[CompressedForest]") {
 
     TSKitTree ts_tree(tree_sequence);
     TreeId    tree_id = 0;
-    for (ts_tree.first(); ts_tree.is_valid(); ts_tree.next()) {
+    for (ts_tree.first(); ts_tree.is_tree(); ts_tree.next()) {
         for (auto const node: ts_tree.postorder()) {
             // Note, that the root node does not get mapped (see CompressedForest::compress() for rationale).
             if (!ts_tree.is_root(node)) {

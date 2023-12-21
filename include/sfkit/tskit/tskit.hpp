@@ -17,6 +17,8 @@
 
 namespace sfkit::tskit {
 
+constexpr int TSK_NULL_TREE = 0;
+
 using sfkit::graph::EdgeId;
 using sfkit::graph::NodeId;
 using sfkit::graph::TreeId;
@@ -424,8 +426,15 @@ public:
     }
 
     bool is_valid() const {
-        KASSERT(_state >= 0, "The tree is not valid.", sfkit::assert::light);
+        return is_tree() || is_null();
+    }
+
+    bool is_tree() const {
         return _state == TSK_TREE_OK;
+    }
+
+    bool is_null() const {
+        return _state == TSK_NULL_TREE;
     }
 
     std::size_t num_roots() const {

@@ -46,7 +46,7 @@ public:
         _num_samples = 0;
 
         // TODO Rewrite this, once we have the tree_sequence iterator
-        for (_ts_tree.first(); _ts_tree.is_valid(); _ts_tree.next()) {
+        for (_ts_tree.first(); _ts_tree.is_tree(); _ts_tree.next()) {
             auto const eulertour = _ts_tree.eulertour();
             auto       node_it   = eulertour.begin();
             while (node_it != eulertour.end()) {

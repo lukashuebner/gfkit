@@ -47,7 +47,7 @@ public:
         _register_samples(forest);
 
         // TODO Rewrite this, once we have the tree_sequence iterator
-        for (_ts_tree.first(); _ts_tree.is_valid(); _ts_tree.next()) {
+        for (_ts_tree.first(); _ts_tree.is_tree(); _ts_tree.next()) {
             for (auto const ts_node_id: _ts_tree.postorder()) {
                 // Samples are already mapped and added to the DAG before processing the first tree.
                 if (is_sample(ts_node_id)) [[unlikely]] {

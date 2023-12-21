@@ -86,7 +86,7 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
         for (tsk_id_t ts_node_id: tree.postorder()) {
             if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
@@ -205,7 +205,7 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
         for (tsk_id_t ts_node_id: tree.postorder()) {
             if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
@@ -317,7 +317,7 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
 
     TSKitTree tree{tree_sequence};
     TreeId    tree_id = 0;
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
         for (tsk_id_t ts_node_id: tree.postorder()) {
             if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced
@@ -371,7 +371,7 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
 
         TSKitTree tree(tree_sequence);
         TreeId    tree_id = 0;
-        for (tree.first(); tree.is_valid(); tree.next()) {
+        for (tree.first(); tree.is_tree(); tree.next()) {
             KASSERT(tree_id < bp_forest.num_trees(), "Tree id out of range", sfkit::assert::light);
             for (tsk_id_t ts_node_id: tree.postorder()) {
                 if (!tree.is_root(ts_node_id)) { // The root nodes are not mapped because they're never referenced

@@ -48,14 +48,14 @@ TEST_CASE("TSKitTree basics", "[LoadFromTreeSequence]") {
     TSKitTree         tree(tree_sequence);
 
     CHECK(tree.first());
-    CHECK(tree.is_valid());
+    CHECK(tree.is_tree());
     CHECK(tree.next());
-    CHECK(tree.is_valid());
+    CHECK(tree.is_tree());
 
     size_t num_trees = 0;
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         num_trees++;
-        CHECK(tree.is_valid());
+        CHECK(tree.is_tree());
         CHECK(tree.is_root(tree.root()));
         CHECK(tree.num_samples() == tree_sequence.num_samples());
 
@@ -89,7 +89,7 @@ TEST_CASE("TSKitTree.postorder()", "[LoadFromTreeSequence]") {
     TSKitTreeSequence tree_sequence(ts_file);
     TSKitTree         tree(tree_sequence);
 
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         auto              postorder = tree.postorder();
         auto const        num_nodes = postorder.size();
         std::vector<bool> visited(tree.max_node_id() + 1, false);
@@ -115,7 +115,7 @@ TEST_CASE("TSKitTree.children()", "[LoadFromTreeSequence]") {
     TSKitTreeSequence tree_sequence(ts_file);
     TSKitTree         tree(tree_sequence);
 
-    for (tree.first(); tree.is_valid(); tree.next()) {
+    for (tree.first(); tree.is_tree(); tree.next()) {
         std::vector<bool> appeared_as_child(tree.max_node_id() + 1, false);
         appeared_as_child[asserting_cast<size_t>(tree.root())] = true;
         std::vector<bool> postorder_visited(tree.max_node_id() + 1, false);
