@@ -99,7 +99,7 @@ public:
     }
 
     template <IterableInput IterableInput>
-    SampleSet& add(IterableInput input) {
+    SampleSet& add(IterableInput const& input) {
         for (auto&& sample_id: input) {
             this->add(sample_id);
         }
@@ -113,7 +113,7 @@ public:
     }
 
     template <IterableInput IterableInput>
-    SampleSet& remove(IterableInput input) {
+    SampleSet& remove(IterableInput const& input) {
         for (auto&& sample_id: input) {
             this->remove(sample_id);
         }
