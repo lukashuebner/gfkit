@@ -26,7 +26,7 @@ public:
     using const_iterator = std::vector<value_type>::const_iterator;
 
     explicit AlleleFrequencySpectrum(AlleleFrequencies const& allele_frequencies) {
-        using MultiallelicFrequency = AlleleFrequencies::MultiallelicFrequencyT;
+        using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
         // There are at most \c num_samples many derived samples per site.
         // +1 because there might also be /no/ derived samples.
         auto const num_samples = allele_frequencies.num_samples_in_sample_set();
