@@ -10,7 +10,7 @@ class Diversity {
 public:
     // TODO Define an AlleleFrequencies concept
     template <typename AlleleFrequencies>
-    [[nodiscard]] static double diversity(SampleId num_samples, AlleleFrequencies allele_freqs) {
+    [[nodiscard]] static double diversity(SampleId num_samples, AlleleFrequencies const& allele_freqs) {
         auto const n  = num_samples;
         double     pi = 0.0;
 

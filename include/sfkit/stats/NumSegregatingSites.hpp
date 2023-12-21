@@ -14,7 +14,7 @@ using sfkit::utils::asserting_cast;
 class NumSegregatingSites {
 public:
     template <typename AlleleFrequencies>
-    [[nodiscard]] static SiteId num_segregating_sites(SampleId num_samples, AlleleFrequencies allele_freqs) {
+    [[nodiscard]] static SiteId num_segregating_sites(SampleId num_samples, AlleleFrequencies const& allele_freqs) {
         // We compute the number of segregating sites in this way in order to be compatible with tskit's
         // definition. See https://doi.org/10.1534/genetics.120.303253 and tskit's trees.c
         size_t num_segregating_sites = 0;

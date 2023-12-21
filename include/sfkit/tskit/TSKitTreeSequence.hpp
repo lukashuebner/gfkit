@@ -52,7 +52,7 @@ public:
     [[nodiscard]] bool is_discrete_genome() const;
 
     [[nodiscard]] double diversity() const;
-    [[nodiscard]] double diversity(SampleSet samples) const;
+    [[nodiscard]] double diversity(SampleSet const& samples) const;
 
     [[nodiscard]] double divergence(SampleSet const& sample_set_1, SampleSet const& sample_set_2) const;
 

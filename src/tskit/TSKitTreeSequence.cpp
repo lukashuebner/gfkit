@@ -135,8 +135,9 @@ double TSKitTreeSequence::diversity() const {
     return pi;
 }
 
-double TSKitTreeSequence::diversity(SampleSet samples) const {
-    double     pi;
+double TSKitTreeSequence::diversity(SampleSet const& samples) const {
+    double pi;
+
     auto const tsk_samples        = samples.to_tsk_samples();
     tsk_size_t sample_set_sizes[] = {tsk_samples.size()};
 

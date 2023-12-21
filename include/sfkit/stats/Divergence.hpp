@@ -15,10 +15,10 @@ class Divergence {
 public:
     template <typename AlleleFrequencies>
     [[nodiscard]] static double divergence(
-        SampleId          num_samples_0,
-        AlleleFrequencies allele_freqs_0,
-        SampleId          num_samples_1,
-        AlleleFrequencies allele_freqs_1
+        SampleId                 num_samples_0,
+        AlleleFrequencies const& allele_freqs_0,
+        SampleId                 num_samples_1,
+        AlleleFrequencies const& allele_freqs_1
     ) {
         using MultiallelicFrequency = typename AlleleFrequencies::MultiallelicFrequencyT;
         using BiallelicFrequency    = typename AlleleFrequencies::BiallelicFrequencyT;

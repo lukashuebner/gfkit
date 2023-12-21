@@ -15,7 +15,7 @@ using sfkit::sequence::SiteId;
 class TajimasD {
 public:
     template <typename AlleleFrequencies>
-    [[nodiscard]] static double tajimas_d(SampleId num_samples, AlleleFrequencies allele_freqs) {
+    [[nodiscard]] static double tajimas_d(SampleId num_samples, AlleleFrequencies const& allele_freqs) {
         SampleId const n = num_samples;
 
         // TODO Does the compiler optimize the following two loops into one?
