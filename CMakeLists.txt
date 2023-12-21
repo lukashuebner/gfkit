@@ -4,6 +4,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 include(CCache)
 include(Sanitizers)
 
+# Let target_source() convert relative to absolute paths
+cmake_policy(SET CMP0076 NEW)
+
 # Project setup
 project(
     sfkit
