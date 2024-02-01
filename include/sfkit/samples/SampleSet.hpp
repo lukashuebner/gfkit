@@ -55,10 +55,6 @@ public:
             return _it == _end;
         }
 
-        bool operator==(const_iterator const& other) const {
-            return _it == other._it && _end == other._end;
-        }
-
         reference operator*() {
             return _sample_id;
         }
