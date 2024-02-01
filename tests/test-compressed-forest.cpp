@@ -393,10 +393,12 @@ TEST_CASE("Subtrees are created only once Example I", "[CompresedForest]") {
         0
     );
 
-    sfkit::DAGSuccinctForestNumeric forest(tree_sequence); // Takes ownership
+    sfkit::DAGSuccinctForestNumeric forest(tree_sequence);
 
     CHECK(forest.num_trees() == 3);
     CHECK(forest.num_samples() == 4);
     // Even though the last two trees are identical, the root exists twice (see forest compression).
     CHECK(forest.num_unique_subtrees() == 11);
+
+    tsk_treeseq_free(&tree_sequence);
 }

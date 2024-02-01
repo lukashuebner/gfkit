@@ -88,6 +88,9 @@ TEST_CASE("SampleSet::to_tsk_samples()", "[SampleSet]") {
         samples.add(1);
         samples.add(3);
         CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 1, 3}));
+
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, RangeEquals(std::vector<SampleId>{0, 1, 3}));
     }
 
     { // Example with some more samples
@@ -96,13 +99,64 @@ TEST_CASE("SampleSet::to_tsk_samples()", "[SampleSet]") {
         samples.add(3);
         samples.add(8);
         samples.add(9);
+
         CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 1, 3, 8, 9}));
+
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, RangeEquals(std::vector<SampleId>{0, 1, 3, 8, 9}));
     }
 
     { // Example with all samples
         for (uint32_t i = 0; i < 10; ++i) {
             samples.add(i);
         }
+
         CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, RangeEquals(std::vector<SampleId>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+    }
+}
+
+TEST_CASE("SampleSet::to_tsk_samples() II", "[SampleSet]") {
+    SampleSet samples{4};
+
+    { // Empty SampleSet
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, IsEmpty());
+    }
+
+    { // Example with half of the samples
+        samples.add(0);
+        samples.add(1);
+
+        CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 1}));
+
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, RangeEquals(std::vector<SampleId>{0, 1}));
+    }
+
+    { // Example with all samples
+        for (uint32_t i = 0; i < 4; ++i) {
+            samples.add(i);
+        }
+
+        CHECK_THAT(samples, RangeEquals(std::vector<SampleId>{0, 1, 2, 3}));
+
+        auto const tsk_samples = samples.to_tsk_samples();
+        CHECK_THAT(tsk_samples, RangeEquals(std::vector<SampleId>{0, 1, 2, 3}));
+    }
+}
+
+TEST_CASE("SampleSet::to_tsk_samples() III", "[SampleSet]") {
+    constexpr SampleId overall_samples = 128;
+    SampleSet          samples{overall_samples};
+
+    std::vector<SampleId> reference;
+    CHECK_THAT(samples.to_tsk_samples(), IsEmpty());
+    for (SampleId sample = 0; sample < overall_samples; ++sample) {
+        samples.add(sample);
+        reference.push_back(sample);
+        CHECK_THAT(samples, RangeEquals(reference));
     }
 }

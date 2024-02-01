@@ -53,7 +53,9 @@ TEST_CASE("BP Forest Compression Example I", "[BPForestCompression]") {
         0
     );
 
-    TSKitTreeSequence     tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(tree_sequence.is_owning());
+
     Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
     auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
     REQUIRE(bp_ts_2_sf_node.finalize_called());
@@ -136,7 +138,9 @@ TEST_CASE("BP Forest Compression Example II", "[BPForestCompression]") {
     constexpr NodeId   num_unique_subtrees = 10;
     constexpr NodeId   num_references      = 5;
 
-    TSKitTreeSequence     tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(tree_sequence.is_owning());
+
     Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
     auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
     REQUIRE(bp_ts_2_sf_node.finalize_called());
@@ -239,7 +243,9 @@ TEST_CASE("BP Forest Compression Zazu", "[BPForestCompression]") {
     constexpr NodeId   num_unique_subtrees = 12;
     constexpr NodeId   num_references      = 9;
 
-    TSKitTreeSequence     tree_sequence("data/test-zazu.trees");
+    TSKitTreeSequence tree_sequence("data/test-zazu.trees");
+    REQUIRE(tree_sequence.is_owning());
+
     Ts2SfMappingExtractor bp_ts_2_sf_node(tree_sequence.num_trees(), tree_sequence.num_nodes());
     auto const            bp_forest = BPForestCompressor(tree_sequence).compress(bp_ts_2_sf_node);
     REQUIRE(bp_ts_2_sf_node.finalize_called());
@@ -344,6 +350,7 @@ TEST_CASE("Compare BP-based compression to reference implementation", "[BPForest
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);
+    REQUIRE(tree_sequence.is_owning());
 
     DAGForestCompressor ref_forest_compressor(tree_sequence);
     // GenomicSequenceFactory ref_sequence_factory(tree_sequence);

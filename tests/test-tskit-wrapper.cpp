@@ -46,7 +46,8 @@ TEST_CASE("TSKitTree::eulertour() Example I", "[TSKitTree]") {
         0
     );
 
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
 
     TSKitTree tree{sfkit_tree_sequence};
 
@@ -58,9 +59,6 @@ TEST_CASE("TSKitTree::eulertour() Example I", "[TSKitTree]") {
 
     tree.next();
     CHECK_THAT(tree.eulertour(), RangeEquals(std::vector<NodeId>{7, 0, 5, 1, 4, 2, 3, 4, 5, 7}));
-
-    // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("TSKitTree::eulertour() Example II", "[TSKitTree]") {
@@ -87,15 +85,13 @@ TEST_CASE("TSKitTree::eulertour() Example II", "[TSKitTree]") {
         0
     );
 
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
 
     TSKitTree tree{sfkit_tree_sequence};
 
     tree.first();
     CHECK_THAT(tree.eulertour(), RangeEquals(std::vector<NodeId>{6, 4, 0, 1, 4, 5, 2, 3, 5, 6}));
-
-    // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("TSKitTree::eulertour() Timon", "[TSKitTree]") {
@@ -150,9 +146,6 @@ TEST_CASE("TSKitTree::eulertour() Timon", "[TSKitTree]") {
                                                                  26, 4,  21, 7,  14, 21, 26, 27, 32, 29, 8,  28,
                                                                  13, 25, 12, 23, 9,  11, 23, 25, 28, 29, 31, 10,
                                                                  24, 0,  6,  24, 31, 32, 33, 36, 37, 38}));
-
-    // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("TSKitTree::eulertour() Scar", "[TSKitTree]") {
@@ -207,9 +200,6 @@ TEST_CASE("TSKitTree::eulertour() Scar", "[TSKitTree]") {
                                                                  32, 33, 37, 35, 16, 30, 1,  18, 30, 35, 36, 10,
                                                                  34, 12, 31, 23, 4,  22, 17, 20, 7,  13, 20, 22,
                                                                  23, 29, 0,  11, 29, 31, 34, 36, 37, 38}));
-
-    // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("TSKitTree::eulertour() Shenzi", "[TSKitTree]") {
@@ -267,3 +257,46 @@ TEST_CASE("TSKitTree::eulertour() Shenzi", "[TSKitTree]") {
     // Do not free the tskit tree sequence, as we transferred the ownershop to sfkit_tree_sequence.
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
+
+// TEST_CASE("TSKitTree::changed_nodes() Example I", "[TSKitTree]") {
+//     //     8   ┊         ┊         ┊
+//     //   ┏━┻━┓ ┊         ┊         ┊
+//     //   ┃   ┃ ┊         ┊   7     ┊
+//     //   ┃   ┃ ┊         ┊ ┏━┻━┓   ┊
+//     //   6   ┃ ┊   6     ┊ ┃   ┃   ┊
+//     // ┏━┻┓  ┃ ┊ ┏━┻━┓   ┊ ┃   ┃   ┊
+//     // ┃  5  ┃ ┊ ┃   5   ┊ ┃   5   ┊
+//     // ┃ ┏┻┓ ┃ ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊
+//     // ┃ ┃ ┃ ┃ ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊
+//     // ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊
+//     // 0 1 3 2 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊
+
+//     tsk_treeseq_t tskit_tree_sequence;
+
+//     tsk_treeseq_from_text(
+//         &tskit_tree_sequence,
+//         10,
+//         paper_ex_nodes,
+//         paper_ex_edges,
+//         NULL,
+//         paper_ex_sites,
+//         paper_ex_mutations,
+//         paper_ex_individuals,
+//         NULL,
+//         0
+//     );
+
+//     TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence);
+//     REQUIRE(sfkit_tree_sequence.is_owning());
+
+//     TSKitTree tree{sfkit_tree_sequence};
+
+//     tree.first();
+//     CHECK(tree.changed_nodes().empty());
+
+//     tree.next();
+//     CHECK_THAT(tree.changed_nodes(), UnorderedRangeEquals(std::vector<NodeId>{4, 5, 6, 8}));
+
+//     tree.next();
+//     CHECK_THAT(tree.changed_nodes(), UnorderedRangeEquals(std::vector<NodeId>{6, 7}));
+// }

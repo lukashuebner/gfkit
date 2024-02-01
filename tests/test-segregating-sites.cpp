@@ -55,14 +55,13 @@ TEST_CASE("Segregating Sites tskit example", "[SegregatingSites]") {
     REQUIRE(reference_num_seg_sites == Approx(3.0).epsilon(1e-6));
 
     // Test our wrapper around tskit
-    sfkit::tskit::TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership
+    sfkit::tskit::TSKitTreeSequence tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(tree_sequence.is_owning());
+
     CHECK(tree_sequence.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(tree_sequence);
 
     CHECK(forest.num_segregating_sites() == Approx(reference_num_seg_sites).epsilon(1e-6));
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }

@@ -149,7 +149,9 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     REQUIRE(ret == 0);
 
     // Test our wrapper around tskit
-    TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
+    TSKitTreeSequence tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(tree_sequence.is_owning());
+
     CHECK(
         tree_sequence.f4(f4_sample_set_1, f4_sample_set_2, f4_sample_set_3, f4_sample_set_4)
         == Approx(reference_f4).epsilon(1e-6)
@@ -158,7 +160,7 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     CHECK(tree_sequence.f2(f2_sample_set_1, f2_sample_set_2) == Approx(reference_f2).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(tree_sequence);
 
     CHECK(
         forest.f4(f4_sample_set_1, f4_sample_set_2, f4_sample_set_3, f4_sample_set_4)
@@ -168,7 +170,4 @@ TEST_CASE("Patterson's f{2,3,4} tskit examples", "[PattersonsFStats]") {
     CHECK(forest.f3(f3_sample_set_1, f3_sample_set_2, f3_sample_set_3) == Approx(reference_f3).epsilon(1e-6));
 
     CHECK(forest.f2(f2_sample_set_1, f2_sample_set_2) == Approx(reference_f2).epsilon(1e-6));
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }

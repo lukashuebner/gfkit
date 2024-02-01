@@ -38,15 +38,14 @@ TEST_CASE("TSKitSiteToTreeMapper example multi tree no back no recurrent", "[TSK
         0
     );
 
-    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
     TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 1);
     CHECK(site2tree(2) == 2);
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 // This /dataset/ is taken from the tskit test suite -- they don't use it as a unit test for the AFS.
@@ -67,15 +66,14 @@ TEST_CASE("TSKitSiteToTreeMapper example single tree back recurrent", "[TSKitSit
     );
     REQUIRE(tsk_treeseq_get_num_trees(&tskit_tree_sequence) == 1);
 
-    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
     TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 0);
     CHECK(site2tree(2) == 0);
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("TSKitSiteToTreeMapper example multi tree back recurrent", "[TSKitSiteToTreeMapper]") {
@@ -94,13 +92,12 @@ TEST_CASE("TSKitSiteToTreeMapper example multi tree back recurrent", "[TSKitSite
         0
     );
 
-    TSKitTreeSequence     sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
     TSKitSiteToTreeMapper site2tree(sfkit_tree_sequence);
 
     CHECK(site2tree(0) == 0);
     CHECK(site2tree(1) == 1);
     CHECK(site2tree(2) == 2);
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }

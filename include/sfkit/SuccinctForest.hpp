@@ -45,16 +45,22 @@ public:
         : _forest(forest),
           _sequence(genomic_sequence) {}
 
-    explicit SuccinctForest(tsk_treeseq_t&& ts_tree_sequence) : SuccinctForest(TSKitTreeSequence(ts_tree_sequence)) {}
-
-    explicit SuccinctForest(TSKitTreeSequence&& tree_sequence) {
-        ForestCompressor<CompressedForest> forest_compressor(tree_sequence);
-        GenomicSequenceFactory             sequence_factory(tree_sequence);
-        _forest   = forest_compressor.compress(sequence_factory);
-        _sequence = sequence_factory.move_storage();
+    explicit SuccinctForest(tsk_treeseq_t& ts_tree_sequence) {
+        TSKitTreeSequence tree_sequence(ts_tree_sequence);
+        _init(tree_sequence);
     }
 
-    auto allele_frequencies(SampleSet const& samples) {
+    explicit SuccinctForest(TSKitTreeSequence& tree_sequence) {
+        _init(tree_sequence);
+    }
+
+    explicit SuccinctForest(std::string const& filename) {
+        TSKitTreeSequence tree_sequence(filename);
+        _init(tree_sequence);
+    }
+
+    // TODO Pass by reference
+    auto allele_frequencies(SampleSet const samples) {
         using NumSamplesBelowT = NumSamplesBelow<CompressedForest, 1, SampleId>;
         auto num_samples_below = NumSamplesBelowAccessor<NumSamplesBelowT>(
             std::make_shared<NumSamplesBelowT>(
@@ -75,15 +81,17 @@ public:
         );
     }
 
-    auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1) {
+    // TODO Pass by reference
+    auto allele_frequencies(SampleSet const samples_0, SampleSet const samples_1) {
         return sfkit::utils::tuple_transform(
             [this](auto&& e) { return allele_frequencies(e); },
             NumSamplesBelowFactory::build(_forest, samples_0, samples_1)
         );
     }
 
+    // TODO Pass by reference
     template <typename NumSamplesBelowBaseType = SampleId>
-    auto allele_frequencies(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
+    auto allele_frequencies(SampleSet const samples_0, SampleSet const samples_1, SampleSet const samples_2) {
         SampleSet empty_sample_set = SampleSet(samples_0.overall_num_samples());
         auto [num_samples_below_0, num_samples_below_1, num_samples_below_2, dummy] =
             NumSamplesBelowFactory::build<CompressedForest, NumSamplesBelowBaseType>(
@@ -100,9 +108,10 @@ public:
         );
     }
 
+    // TODO Pass by reference
     template <typename NumSamplesBelowBaseType = SampleId>
     auto allele_frequencies(
-        SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3
+        SampleSet const samples_0, SampleSet const samples_1, SampleSet const samples_2, SampleSet const samples_3
     ) {
         return sfkit::utils::tuple_transform(
             [this](auto&& e) { return allele_frequencies(e); },
@@ -126,7 +135,8 @@ public:
         return stats::Diversity::diversity(num_samples, allele_freqs);
     }
 
-    [[nodiscard]] double diversity(SampleSet const& sample_set) {
+    // TODO Pass by reference
+    [[nodiscard]] double diversity(SampleSet const sample_set) {
         SampleId const num_samples = sample_set.popcount();
         auto const     freqs       = allele_frequencies(sample_set);
         return diversity(num_samples, freqs);
@@ -136,6 +146,7 @@ public:
         return allele_frequency_spectrum(_forest.all_samples());
     }
 
+    // TODO Pass by reference
     [[nodiscard]] auto allele_frequency_spectrum(SampleSet sample_set) {
         return sfkit::stats::AlleleFrequencySpectrum(allele_frequencies(sample_set));
     }
@@ -150,19 +161,22 @@ public:
         return stats::Divergence::divergence(num_samples_0, allele_frequencies_0, num_samples_1, allele_frequencies_1);
     }
 
-    [[nodiscard]] double divergence(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
+    // TODO Pass by reference?
+    [[nodiscard]] double divergence(SampleSet const sample_set_0, SampleSet const sample_set_1) {
         auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
         auto const num_samples_0              = sample_set_0.popcount();
         auto const num_samples_1              = sample_set_1.popcount();
         return divergence(num_samples_0, allele_freqs_0, num_samples_1, allele_freqs_1);
     }
 
-    [[nodiscard]] double f2(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
+    // TODO Pass by reference?
+    [[nodiscard]] double f2(SampleSet const sample_set_0, SampleSet const sample_set_1) {
         auto const [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
         return stats::PattersonsF::f2(allele_freqs_0, allele_freqs_1);
     }
 
-    [[nodiscard]] double f3(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2) {
+    // TODO Pass by reference?
+    [[nodiscard]] double f3(SampleSet const samples_0, SampleSet const samples_1, SampleSet const samples_2) {
         if (samples_0.popcount() <= UINT16_MAX && samples_1.popcount() <= UINT16_MAX
             && samples_2.popcount() <= UINT16_MAX) [[likely]] {
             auto const [allele_freqs_0, allele_freqs_1, allele_freqs_2] =
@@ -175,8 +189,9 @@ public:
         }
     }
 
+    // TODO Pass by reference?
     [[nodiscard]] double
-    f4(SampleSet const& samples_0, SampleSet const& samples_1, SampleSet const& samples_2, SampleSet const& samples_3) {
+    f4(SampleSet const samples_0, SampleSet const samples_1, SampleSet const samples_2, SampleSet const samples_3) {
         if (samples_0.popcount() <= UINT16_MAX && samples_1.popcount() <= UINT16_MAX
             && samples_2.popcount() <= UINT16_MAX && samples_3.popcount() <= UINT16_MAX) [[likely]] {
             auto const [allele_freqs_0, allele_freqs_1, allele_freqs_2, allele_freqs_3] =
@@ -195,7 +210,8 @@ public:
         return sfkit::stats::NumSegregatingSites::num_segregating_sites(num_samples, allele_frequencies);
     }
 
-    [[nodiscard]] SiteId num_segregating_sites(SampleSet const& sample_set) {
+    // TODO Pass by reference?
+    [[nodiscard]] SiteId num_segregating_sites(SampleSet const sample_set) {
         auto const num_samples = sample_set.popcount();
         auto const freqs       = allele_frequencies(sample_set);
         return num_segregating_sites(num_samples, freqs);
@@ -211,7 +227,8 @@ public:
     }
 
     // This is per sequence length, the other statistics are not
-    [[nodiscard]] double fst(SampleSet const& sample_set_0, SampleSet const& sample_set_1) {
+    // TODO Pass by reference?
+    [[nodiscard]] double fst(SampleSet const sample_set_0, SampleSet const sample_set_1) {
         auto [allele_freqs_0, allele_freqs_1] = allele_frequencies(sample_set_0, sample_set_1);
         return stats::Fst::fst(_sequence.num_sites(), allele_freqs_0, allele_freqs_1);
     }
@@ -255,6 +272,13 @@ public:
 private:
     CompressedForest _forest;
     GenomicSequence  _sequence;
+
+    void _init(TSKitTreeSequence& tree_sequence) {
+        ForestCompressor<CompressedForest> forest_compressor(tree_sequence);
+        GenomicSequenceFactory             sequence_factory(tree_sequence);
+        _forest   = forest_compressor.compress(sequence_factory);
+        _sequence = sequence_factory.move_storage();
+    }
 };
 
 using DAGSuccinctForest        = SuccinctForest<DAGCompressedForest, PerfectDNAHasher>;

@@ -39,6 +39,11 @@ TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const& tree_sequence)
       owning(false) {
 }
 
+TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const&& tree_sequence)
+    : _tree_sequence(tree_sequence),
+      owning(true) {
+}
+
 TSKitTreeSequence::~TSKitTreeSequence() {
     if (owning) {
         tsk_treeseq_free(&_tree_sequence);
@@ -59,6 +64,10 @@ TSKitTreeSequence& TSKitTreeSequence::operator=(TSKitTreeSequence&& other) {
         other._tree_sequence = tsk_treeseq_t();
     }
     return *this;
+}
+
+bool TSKitTreeSequence::is_owning() const {
+    return owning;
 }
 
 NodeId TSKitTreeSequence::num_nodes() const {

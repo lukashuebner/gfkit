@@ -55,8 +55,7 @@ TEST_CASE("AlleleFrequencies biallelic example", "[AlleleFrequencies]") {
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
+    tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
@@ -95,8 +94,7 @@ TEST_CASE("AlleleFrequencies multiallelic example", "[AlleleFrequencies]") {
     freqs_it++;
     CHECK(freqs_it == freqs.end());
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
+    tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
@@ -115,7 +113,7 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         0
     );
 
-    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> sequence_forest(tskit_tree_sequence);
 
     // .allele_frequencies() returns the number of samples in the ancestral state.
     // Site 0 is multiallelic with 2 1 1 0 derived states.
@@ -144,8 +142,7 @@ TEST_CASE("AlleleFrequencies mixed example", "[AlleleFrequencies]") {
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
+    tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") {
@@ -164,7 +161,7 @@ TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") 
         0
     );
 
-    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> forest(tskit_tree_sequence); // Takes ownership
+    SuccinctForest<DAGCompressedForest, PerfectNumericHasher> forest(tskit_tree_sequence);
 
     using MultiallelicFrequency = MultiallelicFrequency<PerfectNumericHasher>;
     using AlleleFrequency       = AlleleFrequency<PerfectNumericHasher>;
@@ -235,6 +232,5 @@ TEST_CASE("AlleleFrequencies single-sample sample sets", "[AlleleFrequencies]") 
         }
     );
 
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
+    tsk_treeseq_free(&tskit_tree_sequence);
 }

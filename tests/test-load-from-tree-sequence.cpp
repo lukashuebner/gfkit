@@ -147,7 +147,8 @@ TEST_CASE("ForestCompressor", "[LoadFromTreeSequence]") {
     REQUIRE(std::filesystem::exists(ts_file));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    DAGSuccinctForest    sequence_forest(std::move(tree_sequence));
+    // TODO Owning?
+    DAGSuccinctForest    sequence_forest(tree_sequence);
 
     EdgeListGraph const& dag = sequence_forest.forest().postorder_edges();
 

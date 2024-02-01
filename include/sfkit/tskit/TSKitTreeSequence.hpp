@@ -25,6 +25,7 @@ class TSKitTreeSequence {
 public:
     TSKitTreeSequence(std::string const& trees_file);
     TSKitTreeSequence(tsk_treeseq_t const& tree_sequence);
+    TSKitTreeSequence(tsk_treeseq_t const&& tree_sequence);
     ~TSKitTreeSequence();
 
     TSKitTreeSequence(TSKitTreeSequence const& other)            = delete;
@@ -32,6 +33,8 @@ public:
 
     TSKitTreeSequence(TSKitTreeSequence&& other) noexcept;
     TSKitTreeSequence& operator=(TSKitTreeSequence&& other);
+
+    [[nodiscard]] bool is_owning() const;
 
     [[nodiscard]] NodeId      num_nodes() const;
     [[nodiscard]] EdgeId      num_edges() const;

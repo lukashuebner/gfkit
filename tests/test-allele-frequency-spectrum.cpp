@@ -74,8 +74,10 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
     CHECK(ref_result[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
-    tskit::TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto                     wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    tskit::TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
+    auto wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(ref_result));
 
     dag::DAGForestCompressor         forest_compressor(sfkit_tree_sequence);
@@ -105,9 +107,6 @@ TEST_CASE("AFS example multi tree no back no recurrent", "[AlleleFrequencySpectr
         std::span(afs).subspan(1, afs.num_samples() - 1),
         RangeEquals(std::span(ref_result).subspan(1, afs.num_samples() - 1))
     );
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
@@ -148,8 +147,10 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
     CHECK(tskit_afs[3] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
+    auto wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
@@ -177,9 +178,6 @@ TEST_CASE("AFS example single tree multi state", "[AlleleFrequencySpectrum]") {
         std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
         RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 // This /dataset/ is taken from the tskit test suite -- they don't use it as a unit test for the AFS.
@@ -225,8 +223,10 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
     CHECK(tskit_afs[4] == 0); // tskit considers all-sites-derived as no-site-derived
 
     // Test our method of calling tskit's AFS with our wrapper.
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
+    auto wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
@@ -252,9 +252,6 @@ TEST_CASE("AFS example single tree back recurrent", "[AlleleFrequencySpectrum]")
         std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
         RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
@@ -305,8 +302,10 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
     CHECK(tskit_afs[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
+    auto wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     DAGForestCompressor    forest_compressor(sfkit_tree_sequence);
@@ -332,9 +331,6 @@ TEST_CASE("AFS example multiple derived states", "[AlleleFrequencySpectrum]") {
         std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
         RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") {
     tsk_treeseq_t tskit_tree_sequence;
@@ -384,8 +380,10 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
     CHECK(tskit_afs[4] == 0);
 
     // Test our method of calling tskit's AFS with our wrapper.
-    TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence); // Takes ownership
-    auto              wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
+
+    auto wrapper_result = sfkit_tree_sequence.allele_frequency_spectrum();
     CHECK_THAT(wrapper_result, RangeEquals(tskit_afs));
 
     // TODO Write a utility function to construct the compressed tree + sequence store and use it in all the tests.
@@ -412,9 +410,6 @@ TEST_CASE("AFS example multi tree back recurrent", "[AlleleFrequencySpectrum]") 
         std::span(sfkit_afs).subspan(1, sfkit_afs.num_samples() - 1),
         RangeEquals(std::span(tskit_afs).subspan(1, sfkit_afs.num_samples() - 1))
     );
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
 TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
@@ -429,7 +424,9 @@ TEST_CASE("AFS simulated dataset", "[AlleleFrequencySpectrum]") {
     auto const& ts_file = GENERATE_REF(from_range(ts_files));
 
     TSKitTreeSequence tree_sequence(ts_file);
-    auto              tskit_afs = tree_sequence.allele_frequency_spectrum();
+    REQUIRE(tree_sequence.is_owning());
+
+    auto tskit_afs = tree_sequence.allele_frequency_spectrum();
 
     DAGForestCompressor    forest_compressor(tree_sequence);
     GenomicSequenceFactory sequence_factory(tree_sequence);

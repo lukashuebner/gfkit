@@ -69,14 +69,13 @@ TEST_CASE("Divergence tskit example", "[Divergence]") {
     // REQUIRE(reference_pi == Approx(1.5).epsilon(1e-6));
 
     // Test our wrapper around tskit
-    TSKitTreeSequence tree_sequence(tskit_tree_sequence); // Takes ownership of tskit_tree_sequence
+    TSKitTreeSequence tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(tree_sequence.is_owning());
+
     CHECK(tree_sequence.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
 
     // Test our implementation on the compressed forest.
-    sfkit::DAGSuccinctForestNumeric forest(std::move(tree_sequence));
+    sfkit::DAGSuccinctForestNumeric forest(tree_sequence);
 
     CHECK(forest.divergence(sample_set_1, sample_set_2) == Approx(reference_divergence).epsilon(1e-6));
-
-    // Do not free the tskit tree sequence, as we transferred ownershop to  sfkit_tree_sequence now.
-    // tsk_treeseq_free(&tskit_tree_sequence);
 }
