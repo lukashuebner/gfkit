@@ -26,7 +26,7 @@ using sfkit::sequence::MutationId;
 using sfkit::sequence::SiteId;
 using sfkit::utils::asserting_cast;
 
-TSKitTreeSequence::TSKitTreeSequence(std::string const& trees_file) : _trees_file(trees_file) {
+TSKitTreeSequence::TSKitTreeSequence(std::string const& trees_file) : _trees_file(trees_file), owning(true) {
     int ret;
 
     // Load the tree sequence from the .trees file
@@ -34,14 +34,22 @@ TSKitTreeSequence::TSKitTreeSequence(std::string const& trees_file) : _trees_fil
     KASSERT(tskit_noerr(ret), "Failed to load tree sequence from the .trees file", sfkit::assert::light);
 }
 
-TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const& tree_sequence) : _tree_sequence(tree_sequence) {}
-
-TSKitTreeSequence::~TSKitTreeSequence() {
-    tsk_treeseq_free(&_tree_sequence);
+TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const& tree_sequence)
+    : _tree_sequence(tree_sequence),
+      owning(false) {
 }
 
-TSKitTreeSequence::TSKitTreeSequence(TSKitTreeSequence&& other) noexcept : _tree_sequence(other._tree_sequence) {
+TSKitTreeSequence::~TSKitTreeSequence() {
+    if (owning) {
+        tsk_treeseq_free(&_tree_sequence);
+    }
+}
+
+TSKitTreeSequence::TSKitTreeSequence(TSKitTreeSequence&& other) noexcept
+    : _tree_sequence(other._tree_sequence),
+      owning(other.owning) {
     other._tree_sequence = tsk_treeseq_t();
+    other.owning         = false;
 }
 
 TSKitTreeSequence& TSKitTreeSequence::operator=(TSKitTreeSequence&& other) {

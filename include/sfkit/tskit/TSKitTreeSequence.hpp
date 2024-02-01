@@ -29,8 +29,8 @@ public:
 
     TSKitTreeSequence(TSKitTreeSequence const& other)            = delete;
     TSKitTreeSequence& operator=(TSKitTreeSequence const& other) = delete;
-    TSKitTreeSequence(TSKitTreeSequence&& other) noexcept;
 
+    TSKitTreeSequence(TSKitTreeSequence&& other) noexcept;
     TSKitTreeSequence& operator=(TSKitTreeSequence&& other);
 
     [[nodiscard]] NodeId      num_nodes() const;
@@ -77,6 +77,7 @@ public:
 private:
     std::string   _trees_file;
     tsk_treeseq_t _tree_sequence;
+    bool          owning;
 
     bool tskit_noerr(int ret) const;
 };
