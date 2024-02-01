@@ -52,16 +52,19 @@ public:
     }
 
     [[nodiscard]] SampleSet all_samples() const {
+        SampleSet sample_set(num_samples());
+
         KASSERT(
             num_nodes_is_set(),
             "The number of nodes in the DAG must be set before calling all_samples().",
             sfkit::assert::light
         );
-        SampleSet sample_set(num_samples());
+
         for (NodeId const sample_id: _dag_postorder_edges.leaves()) {
             KASSERT(sample_id < num_samples(), "Sample ID is out of range.", sfkit::assert::light);
             sample_set.add(sample_id);
         }
+
         return sample_set;
     }
 
