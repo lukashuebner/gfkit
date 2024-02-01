@@ -39,8 +39,8 @@ public:
         }
 
         const_iterator& operator++() {
-            _it++;
-            _sample_id++;
+            ++_it;
+            ++_sample_id;
             _forward_to_next_contained_sample();
             return *this;
         }
@@ -157,15 +157,18 @@ public:
 
     [[nodiscard]] std::vector<tsk_id_t> to_tsk_samples() const {
         std::vector<tsk_id_t> tsk_samples;
+
         tsk_samples.reserve(popcount());
         for (auto&& sample_id: *this) {
             tsk_samples.emplace_back(asserting_cast<tsk_id_t>(sample_id));
         }
+
         KASSERT(
             tsk_samples.size() == popcount(),
             "The number of samples in the TSK samples vector does not match the popcount.",
             sfkit::assert::light
         );
+
         return tsk_samples;
     }
 

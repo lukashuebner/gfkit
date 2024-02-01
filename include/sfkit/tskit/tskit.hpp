@@ -723,3 +723,10 @@ private:
     std::vector<tsk_id_t> _postorder_nodes;
 };
 } // namespace sfkit::tskit
+
+// #include "ChangedNodesView.hpp"
+// #include "ChildrenView.hpp"
+// #include "EulertourView.hpp"
+// #include "TSKitTree.hpp"
+// #include "TSKitTreeSequence.hpp"
+
