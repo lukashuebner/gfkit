@@ -27,9 +27,6 @@ function (register_test TARGET_NAME)
     catch_discover_tests(${TARGET_NAME} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     easycatch_set_kassert_flags(${TARGET_NAME} ${ARGN})
 
-    target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG)
-    target_compile_definitions(${TARGET_NAME} PRIVATE -D_GLIBCXX_DEBUG_PEDANTIC)
-
     if (SFKIT_TESTS_ENABLE_SANITIZERS)
         add_address_sanitizer(${TARGET_NAME})
         add_undefined_sanitizer(${TARGET_NAME})

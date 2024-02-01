@@ -48,7 +48,8 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "SFKIT_TESTS_ENABLE_SANITIZERS": "ON",
                 "SFKIT_BENCHMARK_ENABLE_BACKWARD_CPP": "ON",
-                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "ON"
+                "SFKIT_BENCHMARK_ENABLE_SANITIZERS": "ON",
+                "CMAKE_CXX_FLAGS": "-D_GLIBCXX_DEBUG -DGLIBCXX_DEBUG_PEDANTIC"
             }
         }
     ],
