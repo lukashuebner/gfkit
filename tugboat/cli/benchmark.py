@@ -9,7 +9,7 @@ from tugboat.machine_id import machine_id
 from tugboat.deps import _Deps
 
 
-def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int, collections: list[str]) -> RequiresContext[_Deps, None]:
+def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int, collections) -> RequiresContext[_Deps, None]:
     """Run the benchmarks on all the datasets"""
     def factory(deps: _Deps) -> None:
         datasets = list(deps.datasets.by_collection(collections))

@@ -35,7 +35,7 @@ def _compress_and_check_for_error(sfkit_compress: str, dataset, sh: Callable[[st
         )
 
 
-def cmd_compress(parallel: int, collections: list[str]) -> RequiresContext[_Deps, None]:
+def cmd_compress(parallel: int, collections) -> RequiresContext[_Deps, None]:
     """Compress all the datasets (.trees) to the .forest format"""
     def factory(deps: _Deps) -> None:
         sh = deps.sh

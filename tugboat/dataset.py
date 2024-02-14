@@ -1,6 +1,6 @@
 from itertools import filterfalse, chain
 import fs.path
-import csv 
+import csv
 from rich.pretty import pprint
 
 from tugboat.config import Config
@@ -147,7 +147,7 @@ class Datasets:
     def all(self):
         return self._datasets
 
-    def by_collection(self, collections: list[str]):
+    def by_collection(self, collections):
         return filter(lambda ds: ds.collection() in collections, self._datasets)
 
     # TODO Add existing flag
