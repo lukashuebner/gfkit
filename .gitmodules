@@ -31,4 +31,4 @@
 	url = https://github.com/Tessil/hopscotch-map.git
 [submodule "extern/sdsl"]
 	path = extern/sdsl
-	url = https://github.com/simongog/sdsl-lite
+	url = ../../lukashuebner/sdsl-lite.git
