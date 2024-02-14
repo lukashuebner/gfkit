@@ -136,7 +136,7 @@ private:
         SampleId leaf_rank     = 0;
         size_t   ref_rank      = 0;
 
-        // TODO It the buffered iterator is not faster, remove it again
+        // TODO If the buffered iterator is not faster, remove it again
         // auto bp_size = bp.size(); // Doing this in the for-loop used a substantial amount of runtime.
         KASSERT(bp.size() == is_ref.size(), "balanced_parenthesis and is_reference are of different size");
         // TODO Write a faster iterator for the BP sequence (extracting 64bit, shifting over them...)

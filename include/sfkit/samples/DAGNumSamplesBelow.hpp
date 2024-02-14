@@ -123,7 +123,7 @@ private:
         // Compute the subtree sizes using a post-order traversal
         auto work_it = _dag.begin();
         while (prefetch_it != _dag.end()) {
-            // Add all four bit counts bit-parallel
+            // Add all N bit counts bit-parallel
             _subtree_sizes[work_it->from()] += _subtree_sizes[work_it->to()];
 
             for (size_t sample_set_idx = 0; sample_set_idx < N; sample_set_idx++) {

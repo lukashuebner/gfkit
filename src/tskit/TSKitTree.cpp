@@ -142,7 +142,6 @@ std::span<tsk_id_t> TSKitTree::postorder() {
     return std::span{_postorder_nodes}.subspan(0, num_nodes);
 }
 
-// TODO Rename
 tsl::hopscotch_set<tsk_id_t> TSKitTree::invalidated_nodes() const {
     tsl::hopscotch_set<tsk_id_t> changed_nodes;
 
