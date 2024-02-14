@@ -75,10 +75,9 @@ public:
                 KASSERT(asserting_cast<size_t>(ts_node_id) < _ts_node_to_subtree.size());
                 _ts_node_to_subtree[asserting_cast<size_t>(ts_node_id)] = subtree_id;
 
-                // Add this node to the DAG if not already present. As the DAG is stored
-                // as a list of edges, we need to add an edge from this node to each of
-                // its children.  In the case that two trees in the tree sequence are exactly identical, we want
-                // two root nodes in the DAG -- one for each of the two trees.
+                // Add this node to the DAG if not already present. As the DAG is stored as a list of edges, we need to
+                // add an edge from this node to each of its children.  In the case that two trees in the tree sequence
+                // are exactly identical, we want wo root nodes in the DAG -- one for each of the two trees.
                 bool const subtree_is_root = _ts_tree.is_root(ts_node_id);
                 auto const sf_node_it      = _subtree_to_sf_node.find(subtree_id);
                 bool const subtree_in_dag  = sf_node_it != _subtree_to_sf_node.end();
