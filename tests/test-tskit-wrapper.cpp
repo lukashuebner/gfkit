@@ -258,45 +258,85 @@ TEST_CASE("TSKitTree::eulertour() Shenzi", "[TSKitTree]") {
     // tsk_treeseq_free(&tskit_tree_sequence);
 }
 
-// TEST_CASE("TSKitTree::changed_nodes() Example I", "[TSKitTree]") {
-//     //     8   ┊         ┊         ┊
-//     //   ┏━┻━┓ ┊         ┊         ┊
-//     //   ┃   ┃ ┊         ┊   7     ┊
-//     //   ┃   ┃ ┊         ┊ ┏━┻━┓   ┊
-//     //   6   ┃ ┊   6     ┊ ┃   ┃   ┊
-//     // ┏━┻┓  ┃ ┊ ┏━┻━┓   ┊ ┃   ┃   ┊
-//     // ┃  5  ┃ ┊ ┃   5   ┊ ┃   5   ┊
-//     // ┃ ┏┻┓ ┃ ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊
-//     // ┃ ┃ ┃ ┃ ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊
-//     // ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊
-//     // 0 1 3 2 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊
+TEST_CASE("TSKitTree::invalidated_nodes() Example I", "[TSKitTree]") {
+    //     8   ┊         ┊         ┊
+    //   ┏━┻━┓ ┊         ┊         ┊
+    //   ┃   ┃ ┊         ┊   7     ┊
+    //   ┃   ┃ ┊         ┊ ┏━┻━┓   ┊
+    //   6   ┃ ┊   6     ┊ ┃   ┃   ┊
+    // ┏━┻┓  ┃ ┊ ┏━┻━┓   ┊ ┃   ┃   ┊
+    // ┃  5  ┃ ┊ ┃   5   ┊ ┃   5   ┊
+    // ┃ ┏┻┓ ┃ ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊
+    // ┃ ┃ ┃ ┃ ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊
+    // ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊
+    // 0 1 3 2 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊
 
-//     tsk_treeseq_t tskit_tree_sequence;
+    tsk_treeseq_t tskit_tree_sequence;
 
-//     tsk_treeseq_from_text(
-//         &tskit_tree_sequence,
-//         10,
-//         paper_ex_nodes,
-//         paper_ex_edges,
-//         NULL,
-//         paper_ex_sites,
-//         paper_ex_mutations,
-//         paper_ex_individuals,
-//         NULL,
-//         0
-//     );
+    tsk_treeseq_from_text(
+        &tskit_tree_sequence,
+        10,
+        paper_ex_nodes,
+        paper_ex_edges,
+        NULL,
+        paper_ex_sites,
+        paper_ex_mutations,
+        paper_ex_individuals,
+        NULL,
+        0
+    );
 
-//     TSKitTreeSequence sfkit_tree_sequence(tskit_tree_sequence);
-//     REQUIRE(sfkit_tree_sequence.is_owning());
+    TSKitTreeSequence sfkit_tree_sequence(std::move(tskit_tree_sequence));
+    REQUIRE(sfkit_tree_sequence.is_owning());
 
-//     TSKitTree tree{sfkit_tree_sequence};
+    TSKitTree tree{sfkit_tree_sequence};
 
-//     tree.first();
-//     CHECK(tree.changed_nodes().empty());
+    tree.first();
 
-//     tree.next();
-//     CHECK_THAT(tree.changed_nodes(), UnorderedRangeEquals(std::vector<NodeId>{4, 5, 6, 8}));
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{4, 5, 6, 8}));
 
-//     tree.next();
-//     CHECK_THAT(tree.changed_nodes(), UnorderedRangeEquals(std::vector<NodeId>{6, 7}));
-// }
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{6, 7}));
+}
+
+TEST_CASE("TSKitTree::invalidated_nodes() Zazu", "[BPForestCompression]") {
+    // test-zazu.trees
+    // 76.16┊         ┊         ┊         ┊         ┊   9     ┊
+    //      ┊         ┊         ┊         ┊         ┊ ┏━┻━┓   ┊
+    // 50.34┊   8     ┊         ┊   8     ┊    8    ┊ ┃   8   ┊
+    //      ┊ ┏━┻━┓   ┊         ┊ ┏━┻━┓   ┊  ┏━┻━┓  ┊ ┃  ┏┻━┓ ┊
+    // 27.71┊ ┃   ┃   ┊         ┊ ┃   ┃   ┊  7   ┃  ┊ ┃  ┃  ┃ ┊
+    //      ┊ ┃   ┃   ┊         ┊ ┃   ┃   ┊ ┏┻┓  ┃  ┊ ┃  ┃  ┃ ┊
+    // 21.39┊ ┃   ┃   ┊   6     ┊ ┃   ┃   ┊ ┃ ┃  ┃  ┊ ┃  ┃  ┃ ┊
+    //      ┊ ┃   ┃   ┊ ┏━┻━┓   ┊ ┃   ┃   ┊ ┃ ┃  ┃  ┊ ┃  ┃  ┃ ┊
+    // 11.54┊ ┃   5   ┊ ┃   5   ┊ ┃   5   ┊ ┃ ┃  5  ┊ ┃  5  ┃ ┊
+    //      ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊ ┃ ┏━┻┓  ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┏┻┓ ┃ ┊
+    // 5.30 ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊ ┃ ┃  4  ┊ ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┃ ┃ ┊
+    //      ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┏┻┓ ┊ ┃ ┃ ┃ ┃ ┊ ┃ ┃ ┃ ┃ ┊
+    // 0.00 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊ 0 1 2 3 ┊ 0 3 1 2 ┊ 0 1 2 3 ┊
+    //      0         2        11        13        19        20
+
+    TSKitTreeSequence tree_sequence("data/test-zazu.trees");
+    REQUIRE(tree_sequence.is_owning());
+
+    TSKitTree tree{tree_sequence};
+
+    tree.first();
+
+    // Tree 0 -> 1
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{6, 8}));
+
+    // Tree 1 -> 2
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{6, 8}));
+
+    // Tree 2 -> 3
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{4, 5, 7, 8}));
+
+    // Tree 3 -> 4
+    tree.next();
+    CHECK_THAT(tree.invalidated_nodes(), UnorderedRangeEquals(std::vector<NodeId>{7, 8, 9}));
+}

@@ -2,11 +2,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
+#include <unordered_set>
 #include <vector>
 
 #include <tskit/trees.h>
 
 #include "sfkit/graph/primitives.hpp"
+#include "sfkit/include-redirects/hopscotch_set.hpp"
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/samples/primitives.hpp"
 #include "sfkit/sequence/Mutation.hpp"
@@ -51,9 +54,11 @@ public:
 
     [[nodiscard]] std::span<tsk_id_t> postorder();
     [[nodiscard]] EulertourView       eulertour() const;
-    [[nodiscard]] ChangedNodesView    changed_nodes();
-    [[nodiscard]] Children            children(tsk_id_t const parent);
-    [[nodiscard]] tsk_id_t            parent(tsk_id_t const node) const;
+    // [[nodiscard]] ChangedNodesView    changed_nodes();
+    [[nodiscard]] Children children(tsk_id_t const parent);
+    [[nodiscard]] tsk_id_t parent(tsk_id_t const node) const;
+
+    tsl::hopscotch_set<tsk_id_t> invalidated_nodes() const;
 
 private:
     [[nodiscard]] size_t _current_tree_size_bound() const;

@@ -1,13 +1,17 @@
 
 #include "sfkit/tskit/TSKitTree.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <ranges>
+#include <unordered_set>
 #include <vector>
 
 #include <kassert/kassert.hpp>
 
 #include "sfkit/assertion_levels.hpp"
+#include "sfkit/include-redirects/hopscotch_set.hpp"
 #include "sfkit/tskit/ChangedNodesView.hpp"
 #include "sfkit/tskit/ChildrenView.hpp"
 #include "sfkit/tskit/EulertourView.hpp"
@@ -45,6 +49,9 @@ bool TSKitTree::first() {
     tsk_tree_position_free(&_tree_pos);
     int const ret = tsk_tree_position_init(&_tree_pos, &_tree_sequence.underlying(), 0);
     KASSERT(ret == 0, "Failed to reset the tree position.", sfkit::assert::light);
+    if (is_tree()) {
+        tsk_tree_position_next(&_tree_pos);
+    }
 
     return is_tree();
 }
@@ -56,15 +63,6 @@ bool TSKitTree::next() {
     KASSERT(is_valid(), "Failed to goto the next tree.", sfkit::assert::light);
 
     tsk_tree_position_next(&_tree_pos);
-
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.interval.left, 0);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.interval.right, 1);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.in.start, 0);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.in.stop, 6);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.in.order, ts.tables->indexes.edge_insertion_order);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.out.start, 0);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.out.stop, 0);
-    // CU_ASSERT_EQUAL_FATAL(tree_pos.out.order, ts.tables->indexes.edge_removal_order);
 
     return is_tree();
 }
@@ -144,12 +142,57 @@ std::span<tsk_id_t> TSKitTree::postorder() {
     return std::span{_postorder_nodes}.subspan(0, num_nodes);
 }
 
-EulertourView TSKitTree::eulertour() const {
-    return EulertourView{_tree, _tree_sequence};
+// TODO Rename
+tsl::hopscotch_set<tsk_id_t> TSKitTree::invalidated_nodes() const {
+    tsl::hopscotch_set<tsk_id_t> changed_nodes;
+
+    tsk_id_t const*       in_it   = _tree_pos.in.order + _tree_pos.in.start;
+    tsk_id_t const* const in_end  = _tree_pos.in.order + _tree_pos.in.stop;
+    tsk_id_t const*       out_it  = _tree_pos.out.order + _tree_pos.out.start;
+    tsk_id_t const* const out_end = _tree_pos.out.order + _tree_pos.out.stop;
+
+    for (auto idx = _tree_pos.out.start; idx < _tree_pos.out.stop; ++idx) {
+        auto const e      = _tree_pos.out.order[idx];
+        auto const parent = _tree_pos.tree_sequence->tables->edges.parent[e];
+        changed_nodes.insert(parent);
+    }
+
+    for (auto idx = _tree_pos.in.start; idx < _tree_pos.in.stop; ++idx) {
+        auto const e      = _tree_pos.in.order[idx];
+        auto const parent = _tree_pos.tree_sequence->tables->edges.parent[e];
+        changed_nodes.insert(parent);
+    }
+
+    // TODO Assert there are no leaves
+
+    // Propagate the 'changed' tag upwards the tree
+    std::vector<tsk_id_t> queue;
+    queue.reserve(_tree.num_nodes);
+    std::copy(changed_nodes.begin(), changed_nodes.end(), std::back_inserter(queue));
+
+    auto node_it = queue.begin();
+    while (node_it != queue.end()) {
+        auto const node   = *node_it;
+        auto const parent = _tree.parent[node];
+
+        if (parent != TSK_NULL && !changed_nodes.contains(parent)) {
+            KASSERT(
+                queue.capacity() > queue.size() + 1,
+                "The queue would need to be resized, resulting in iterator invalidation.",
+                sfkit::assert::light
+            );
+            queue.push_back(parent);
+            changed_nodes.insert(parent);
+        }
+
+        ++node_it;
+    }
+
+    return changed_nodes;
 }
 
-ChangedNodesView TSKitTree::changed_nodes() {
-    return ChangedNodesView{_tree, _tree_sequence, _tree_pos};
+EulertourView TSKitTree::eulertour() const {
+    return EulertourView{_tree, _tree_sequence};
 }
 
 Children TSKitTree::children(tsk_id_t const parent) {

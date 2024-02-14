@@ -48,9 +48,16 @@ public:
 
         // TODO Rewrite this, once we have the tree_sequence iterator
         for (_ts_tree.first(); _ts_tree.is_tree(); _ts_tree.next()) {
+            auto const invalidated_nodes = _ts_tree.invalidated_nodes();
+
             for (auto const ts_node_id: _ts_tree.postorder()) {
                 // Samples are already mapped and added to the DAG before processing the first tree.
                 if (is_sample(ts_node_id)) [[unlikely]] {
+                    continue;
+                }
+
+                // If this node (== subtree) didn't change, skip it.
+                if (!invalidated_nodes.contains(ts_node_id) && !_ts_tree.is_root(ts_node_id)) {
                     continue;
                 }
 
