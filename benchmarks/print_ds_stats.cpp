@@ -60,14 +60,4 @@ void print_ds_stats(
 
     // Number of edges in the DAG
     results_printer.print(warmup, "stats", "tskit", trees_file, "num_edges", tree_sequence.num_edges(), "1", iteration);
-
-    // TODO Output CSV line
-    std::cout << "# uniq subtrees | BP: " << bp_forest.num_unique_subtrees()
-              << " DAG: " << dag_forest.num_unique_subtrees() << std::endl;
-    // std::cout << "# backrefs | BP: " << bp_forest.num_backrefs() << std::endl;
-    // std::cout << "# nodes | BP: " << bp_forest.num_nodes() << " DAG: " << dag_forest.num_nodes() << std::endl;
-    // std::cout << "# leaves | BP: " << bp_forest.num_leaves() << " DAG: " << dag_forest.num_leaves() << std::endl;
-    std::cout << "# samples | BP: " << bp_forest.num_samples() << " DAG: " << dag_forest.num_samples() << std::endl;
-    std::cout << "# trees | BP: " << bp_forest.num_trees() << " DAG: " << dag_forest.num_trees()
-              << " TS: " << tree_sequence.num_trees() << std::endl;
 }
