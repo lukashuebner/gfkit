@@ -1,9 +1,13 @@
-tgp_chr*.trees
+# datasets
 sgdp_chr*.trees
 1kg_chr*.trees
 anderson_chr*.trees
 unified_chr*.trees
+scaling-*.trees
+
+# output files
 *.forest
 *.bpforest
+
+# other
 .nobackup
-simulated-*.trees
