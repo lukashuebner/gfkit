@@ -36,6 +36,9 @@ def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int, collectio
                 elif not isfile(dataset.forest_file()):
                     log.warn(
                         f"{dataset.forest_file()} does not exists or is not a file")
+                elif not isfile(dataset.bpforest_file()):
+                    log.warn(
+                        f"{dataset.bpforest_file()} does not exists or is not a file")
                 elif not redo and exists(dataset.ops_bench_file()):
                     log.warn(
                         f"{dataset.ops_bench_file()} already exists but --redo not given")
@@ -49,6 +52,7 @@ def cmd_benchmark(redo: bool, warmup_iterations: int, iterations: int, collectio
                              f" --warmup-iterations={warmup_iterations}"
                              f" --iterations={iterations}"
                              f" --forest-file={dataset.forest_file()}"
+                             f" --bp-forest-file={dataset.bpforest_file()}"
                              f" --trees-file={dataset.trees_file()}"
                              f" --revision={git_rev()}"
                              f" --machine={machine_id()}"

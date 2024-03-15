@@ -18,6 +18,7 @@ def _compress_and_check_for_error(sfkit_compress: str, dataset, sh: Callable[[st
             f"{sfkit_compress} "
             f"--trees-file={dataset.trees_file()} "
             f"--forest-file={dataset.forest_file()} "
+            f"--bp-forest-file={dataset.bpforest_file()} "
             f"--revision={git_rev()} "
             f"--machine={machine_id()} "
             f" > {dataset.conversion_bench_file()}"

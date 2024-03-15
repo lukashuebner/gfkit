@@ -35,6 +35,9 @@ class EmpiricalDataset:
     def forest_file(self):
         return fs.path.combine(self._config.DATA_DIR, self.basename() + ".forest")
 
+    def bpforest_file(self):
+        return fs.path.combine(self._config.DATA_DIR, self.basename() + ".bpforest")
+
     def ops_bench_file(self):
         return fs.path.combine(self._config.MEASUREMENTS_DIR, self.basename() + ".ops_bench.csv")
 
