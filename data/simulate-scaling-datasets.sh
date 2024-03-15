@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-DATASETS_CSV='data/scaling-datasets.csv'
+DATASETS_CSV='./scaling-datasets.csv'
+MLR="$(which mlr)"
+PARALLEL="$HOME/bin/parallel"
 
-mlr --csv \
+"$MLR" --csv \
     put '
         $filename = "scaling-" . $name . ".trees";
         $cmd_msp_ancestry = "msp ancestry --random-seed " . $seed . " --length " . $sequence_length . " --ploidy 2 --population-size " . $population_size . " --recombination-rate " . $recombination_rate . " " . $num_individuals;
@@ -10,5 +12,6 @@ mlr --csv \
         $cmd = "[[ -f " . $filename . " ]] || bash -c \"" . $cmd_msp_ancestry . " | " . $cmd_msp_mutations . "\"";
     ' \
     "$DATASETS_CSV" \
-    | mlr --icsv --opprint --headerless-csv-output cut -f cmd \
-    | parallel --memsuspend 50G
+    | "$MLR" --icsv --opprint cut -f cmd \
+    | sed "1d" \
+    | "$PARALLEL"
