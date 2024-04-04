@@ -24,6 +24,7 @@ library(argparse)
 # --- For running in RStudio/VSCode/Emacs ---
 args <- list()
 args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
+args$input <- "experiments/measurements/conversion-bench.csv"
 args$output <- "experiments/plots/sfkit-vs-tskit-bench.pdf"
 
 # --- Helper functions ---
@@ -158,7 +159,8 @@ speedup_data <- inner_join(
             ref_walltime_ns_q90 = walltime_ns_q90,
         ),
     # sfkit
-    runtime_data %>% filter(variant == "sfkit_dag"),
+    # runtime_data %>% filter(variant %in% c("sfkit_dag", "sfkit_bp")),
+    runtime_data %>% filter(variant %in% c("sfkit_bp")),
     by = c("section", "dataset", "collection", "chromosome", "revision", "machine_id", "variable")
 ) %>%
     mutate(
@@ -175,6 +177,7 @@ speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
 # --- Speedup of sfkit over tskit ---
 stats_sections <- c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst", "f2", "f3", "f4")
+# stats_sections <- c("compress_forest_and_sequence")
 speedup_data %>%
     filter(section %in% stats_sections) %>%
     select(-dataset) %>%
@@ -229,7 +232,7 @@ speedup_data %>%
         axis.title.x = element_blank(),
         legend.title = element_blank(),
     ) +
-    scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
+    #scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
     scale_color_shape_manual(
         color_values = collection_colors,
         labels = collection_labels
@@ -239,6 +242,7 @@ speedup_data %>%
         # breaks = section_labels,
     ) +
     ylab("speedup over tskit") +
+    # ylab("speedup when leveraging deltas") +
     gg_eps()
 
 style$height <- 75
