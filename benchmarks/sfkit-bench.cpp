@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
             return EXIT_FAILURE;
         }
 
-        std::cerr << "Compressing tree sequence " << trees_file << " -> " << forest_file << std::endl;
+        std::cerr << "Compressing tree sequence " << trees_file << std::endl;
 
         auto results_printer = setup_results_printer();
         compress(trees_file, forest_file, bp_forest_file, results_printer);
