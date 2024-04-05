@@ -29,7 +29,7 @@ public:
     NumSamplesBelow(BPCompressedForest const& forest, SetOfSampleSets<N> const& samples) : _forest(forest) {
         // Check inputs
         KASSERT(_forest.num_nodes() >= _forest.num_leaves(), "DAG has less nodes than leaves.", sfkit::assert::light);
-        for (auto sample_set: samples) {
+        for (auto const& sample_set: samples) {
             KASSERT(
                 _forest.num_leaves() <= sample_set.get().overall_num_samples(),
                 "Number of leaves in the DAG is greater than he number of overall samples representable in the subtree "
@@ -43,7 +43,7 @@ public:
                 sfkit::assert::light
             );
             // Will make redundant comparisons, but will only execute in DEBUG mode anyway
-            for (auto other_sample_set: samples) {
+            for (auto const& other_sample_set: samples) {
                 KASSERT(
                     sample_set.get().overall_num_samples() == other_sample_set.get().overall_num_samples(),
                     "Sample sets have different number of overall representable samples. (NOT the number of samples "
