@@ -4,49 +4,25 @@
 
 #include "timer.hpp"
 
-template <typename LogMem, typename LogTime, typename CheckFailed>
+template <typename LogMem, typename LogTime>
 class BenchmarkRunner {
 public:
     static constexpr double FLOAT_EQ_EPS = 1e-4;
 
-    BenchmarkRunner(MemoryUsage& memory_usage, Timer& timer, LogMem log_mem, LogTime log_time, CheckFailed check_failed)
+    BenchmarkRunner(MemoryUsage& memory_usage, Timer& timer, LogMem log_mem, LogTime log_time)
         : _memory_usage(memory_usage),
           _timer(timer),
           _log_mem(log_mem),
-          _log_time(log_time),
-          _check_failed(check_failed) {}
+          _log_time(log_time) {}
 
-    template <typename TSKitFunc, typename SFKitDAGFunc, typename SFKitBPFunc>
-    void bench_and_check(
-        std::string stat_name, TSKitFunc tskit_func, SFKitDAGFunc sfkit_dag_func, SFKitBPFunc sfkit_bp_func
-    ) {
+    template <typename Func>
+    auto bench(std::string stat_name, Func func, std::string const& variant_name) {
         this->start();
-        double const tskit_value = tskit_func();
-        do_not_optimize(tskit_value);
-        this->stop(stat_name, "tskit");
+        double const value = func();
+        do_not_optimize(value);
+        this->stop(stat_name, variant_name);
 
-        this->start();
-        double const sfkit_dag_value = sfkit_dag_func();
-        do_not_optimize(sfkit_dag_value);
-        this->stop(stat_name, "sfkit_dag");
-
-        this->start();
-        double const sfkit_bp_value = sfkit_bp_func();
-        do_not_optimize(sfkit_bp_value);
-        this->stop(stat_name, "sfkit_bp");
-
-        // Does our value match the one computed by tskit?
-        if (sfkit_dag_value != Catch::Approx(tskit_value).epsilon(FLOAT_EQ_EPS)) {
-            std::cerr << "ERROR !! " << stat_name << " mismatch between tskit and sfkit (DAG)" << std::endl;
-            std::cerr << "    " << tskit_value << " vs. " << sfkit_dag_value << " (tskit vs. sfkit)" << std::endl;
-            _check_failed();
-        }
-
-        if (sfkit_bp_value != Catch::Approx(tskit_value).epsilon(FLOAT_EQ_EPS)) {
-            std::cerr << "ERROR !! " << stat_name << " mismatch between tskit and sfkit (BP)" << std::endl;
-            std::cerr << "    " << tskit_value << " vs. " << sfkit_bp_value << " (tskit vs. sfkit)" << std::endl;
-            _check_failed();
-        }
+        return value;
     }
 
     void start() {
@@ -64,5 +40,4 @@ private:
     MemoryUsage& _memory_usage;
     LogTime      _log_time;
     LogMem       _log_mem;
-    CheckFailed  _check_failed;
 };

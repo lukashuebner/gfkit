@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     // CLI
     CLI::App app{"Forest Compression Benchmark"};
 
-    // Compresss subcommand
+    // Compress subcommand
     CLI::App* compress_sub =
         app.add_subcommand("compress", "Compress the tree sequence (.trees) to a succinct forest (.forest)");
 
@@ -58,9 +58,17 @@ int main(int argc, char** argv) {
         ->default_val("undefined");
 
     compress_sub->callback([&trees_file, &forest_file, &bp_forest_file, &setup_results_printer]() {
-        auto results_printer = setup_results_printer();
+        if (forest_file == "" && bp_forest_file == "") {
+            std::cerr << "Please provide either --forest-file or --bp-forest-file" << std::endl;
+            return EXIT_FAILURE;
+        }
+
         std::cerr << "Compressing tree sequence " << trees_file << " -> " << forest_file << std::endl;
+
+        auto results_printer = setup_results_printer();
         compress(trees_file, forest_file, bp_forest_file, results_printer);
+    
+        return EXIT_SUCCESS;
     });
 
     // Benchmark subcommand
@@ -106,6 +114,11 @@ int main(int argc, char** argv) {
     benchmark_sub->callback(
         [&trees_file, &forest_file, &bp_forest_file, &num_iterations, &num_warmup_iterations, &setup_results_printer](
         ) {
+            if (forest_file == "" && bp_forest_file == "") {
+                std::cerr << "Please provide either --forest-file or --bp-forest-file" << std::endl;
+                return EXIT_FAILURE;
+            }
+
             auto results_printer = setup_results_printer();
 
             for (uint8_t _iteration = 0; _iteration < num_iterations + num_warmup_iterations; ++_iteration) {
@@ -121,6 +134,8 @@ int main(int argc, char** argv) {
                 }
                 benchmark(warmup, iteration, trees_file, forest_file, bp_forest_file, results_printer);
             }
+
+            return EXIT_SUCCESS;
         }
     );
 

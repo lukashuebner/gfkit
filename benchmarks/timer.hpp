@@ -21,14 +21,23 @@ void do_not_optimize(T const& val) {
     asm volatile("" : : "r,m"(val) : "memory");
 }
 
-template <typename T>
-void do_not_optimize(T& val) {
-#if defined(__clang__)
-    asm volatile("" : "+r,m"(val) : : "memory");
-#else
-    asm volatile("" : "+m,r"(val) : : "memory");
-#endif
-}
+// TODO Why doesn't this work?
+// template <typename T>
+// inline void do_not_optimize(T& val) {
+//     asm volatile("" : "+r,m"(val) : : "memory");
+// }
+
+// template <typename T>
+// inline void do_not_optimize(T&& val) {
+//     asm volatile("" : "+r,m"(val) : : "memory");
+// }
+
+// TODO Do we really need special handling for clang and GCC?
+// #if defined(__clang__)
+//     asm volatile("" : "+r,m"(val) : : "memory");
+// #else
+//     asm volatile("" : "+m,r"(val) : : "memory");
+// #endif
 
 [[nodiscard]] inline bool approx_eq(double a, double b, double eps = 1e-6) {
     return std::abs(a - b) < eps;
