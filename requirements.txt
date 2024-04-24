@@ -9,3 +9,8 @@ pandas==2.0.3
 stdpopsim
 scipy
 jsonschema==3.2.0
+click
+rich
+returns
+fs
+pandas
