@@ -95,8 +95,8 @@ class Datasets:
     @classmethod
     def from_csv(cls, filename_empirical, filename_scaling, config: Config, log: Logger):
         return cls(
-            cls.empirical_from_csv(filename_empirical, config, log),
-            cls.simulated_from_csv(filename_scaling, 'scaling', config, log)
+            cls.empirical_from_csv(filename_empirical, config, log)#,
+            #cls.simulated_from_csv(filename_scaling, 'scaling', config, log)
         )
 
     @classmethod
