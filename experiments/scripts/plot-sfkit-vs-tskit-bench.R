@@ -23,9 +23,9 @@ library(argparse)
 
 # --- For running in RStudio/VSCode/Emacs ---
 args <- list()
-args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
-args$input <- "experiments/measurements/conversion-bench.csv"
-args$output <- "experiments/plots/sfkit-vs-tskit-bench.pdf"
+# args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
+args$input <- "experiments/measurements/scaling/simulated.edge.opsBench.csv"
+args$output <- "experiments/plots/sfkit-vs-tskit-bench-scaling.pdf"
 
 # --- Helper functions ---
 
@@ -99,6 +99,8 @@ data <- read_csv(
         section = col_character(),
         variant = col_character(),
         dataset = col_character(),
+        collection = col_character(),
+        chromosome = col_integer(),
         revision = col_character(),
         machine_id = col_character(),
         iteration = col_integer(),
@@ -110,16 +112,17 @@ data <- read_csv(
     mutate(
         section = factor(section),
         variant = factor(variant),
-        dataset = factor(dataset_from_filename(dataset), levels = dataset_levels),
+        # TODO Move these preprocessing steps out of the plotting script
+        # dataset = factor(dataset_from_filename(dataset), levels = dataset_levels),
         iteration = factor(iteration),
         variable = factor(variable)
     ) %>%
-    separate(
-        col = dataset,
-        into = c("collection", "chromosome"),
-        sep = "_chr",
-        remove = FALSE,
-    ) %>%
+    # separate(
+    #     col = dataset,
+    #     into = c("collection", "chromosome"),
+    #     sep = "_chr",
+    #     remove = FALSE,
+    # ) %>%
     mutate(
         collection = factor(collection),
         chromosome = factor(chromosome, levels = seq(1, 22))
@@ -147,6 +150,7 @@ runtime_data <- data %>%
         .groups = "drop"
     )
 
+# TODO Rename sfkit_dag to sfkit_edge
 speedup_data <- inner_join(
     # Reference (tskit)
     runtime_data %>%
@@ -159,8 +163,7 @@ speedup_data <- inner_join(
             ref_walltime_ns_q90 = walltime_ns_q90,
         ),
     # sfkit
-    # runtime_data %>% filter(variant %in% c("sfkit_dag", "sfkit_bp")),
-    runtime_data %>% filter(variant %in% c("sfkit_bp")),
+    runtime_data %>% filter(variant == "sfkit_dag"),
     by = c("section", "dataset", "collection", "chromosome", "revision", "machine_id", "variable")
 ) %>%
     mutate(
@@ -177,7 +180,6 @@ speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
 # --- Speedup of sfkit over tskit ---
 stats_sections <- c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst", "f2", "f3", "f4")
-# stats_sections <- c("compress_forest_and_sequence")
 speedup_data %>%
     filter(section %in% stats_sections) %>%
     select(-dataset) %>%
@@ -223,6 +225,7 @@ speedup_data %>%
         ),
     ) +
     geom_point(size = 0.25, position = position_dodge2(width = 0.25)) +
+    # TODO Add error bars
     geom_hline(yintercept = 1, linetype = "dashed", color = "black", size = 0.25) +
     theme_husky(
         style = style,
@@ -232,23 +235,23 @@ speedup_data %>%
         axis.title.x = element_blank(),
         legend.title = element_blank(),
     ) +
-    #scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
-    scale_color_shape_manual(
-        color_values = collection_colors,
-        labels = collection_labels
-    ) +
+    scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
+    # scale_color_shape_manual(
+    #     color_values = collection_colors,
+    #     labels = collection_labels
+    # ) +
+    scale_color_dark2() +
     scale_x_discrete(
         labels = section_labels,
         # breaks = section_labels,
     ) +
     ylab("speedup over tskit") +
-    # ylab("speedup when leveraging deltas") +
     gg_eps()
 
 style$height <- 75
 style$width <- 150
-ggsave("experiments/plots/sfkit-vs-tskit-speedup-aggregated.pdf", width = style$width, height = style$height, units = style$unit)
-to_jpeg("experiments/plots/sfkit-vs-tskit-speedup-aggregated.pdf")
+ggsave("experiments/plots/scaling-sfkit-vs-tskit-speedup-aggregated.pdf", width = style$width, height = style$height, units = style$unit)
+to_jpeg("experiments/plots/scaling-sfkit-vs-tskit-speedup-aggregated.pdf")
 
 # --- Runtime of sfkit over tskit ---
 runtime_data %>%
