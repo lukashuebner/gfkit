@@ -157,6 +157,26 @@ public:
         return _is_leaf;
     }
 
+    size_t bp_size_bit() const {
+        return balanced_parenthesis().bit_size();
+    }
+
+    size_t is_ref_size_bit() const {
+        return is_reference().bit_size();
+    }
+
+    size_t is_leaf_size_bit() const {
+        return is_leaf().bit_size();
+    }
+
+    size_t references_size_bit() const {
+        return references().bit_size();
+    }
+
+    size_t leaves_size_bit() const {
+        return leaves().bit_size();
+    }
+
     // TODO move this to free functions?
     void save(std::ostream& os) const {
         _is_reference.serialize(os);

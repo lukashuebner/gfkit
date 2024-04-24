@@ -18,6 +18,7 @@
 #include "ResultsPrinter.hpp"
 #include "benchmark.hpp"
 #include "compress.hpp"
+#include "dataset_stats.hpp"
 #include "perf.hpp"
 #include "timer.hpp"
 
@@ -59,7 +60,7 @@ int main(int argc, char** argv) {
 
     compress_sub->callback([&trees_file, &forest_file, &bp_forest_file, &setup_results_printer]() {
         if (forest_file == "" && bp_forest_file == "") {
-            std::cerr << "Please provide either --forest-file or --bp-forest-file" << std::endl;
+            std::cerr << "Please provide one or both of --forest-file or --bp-forest-file" << std::endl;
             return EXIT_FAILURE;
         }
 
@@ -115,7 +116,7 @@ int main(int argc, char** argv) {
         [&trees_file, &forest_file, &bp_forest_file, &num_iterations, &num_warmup_iterations, &setup_results_printer](
         ) {
             if (forest_file == "" && bp_forest_file == "") {
-                std::cerr << "Please provide either --forest-file or --bp-forest-file" << std::endl;
+                std::cerr << "Please provide one or both of --forest-file or --bp-forest-file" << std::endl;
                 return EXIT_FAILURE;
             }
 
@@ -138,6 +139,34 @@ int main(int argc, char** argv) {
             return EXIT_SUCCESS;
         }
     );
+
+    // Stats subcommand
+    auto stats_sub = app.add_subcommand("stats", "Output statistics on the datasets, tskit and sfkit encodings.");
+
+    // std::string trees_file = "";
+    stats_sub->add_option("-f,--trees-file", trees_file, "The tree sequence file")
+        ->check(CLI::ExistingFile)
+        ->required();
+
+    // std::string forest_file = "";
+    stats_sub->add_option("-i,--forest-file", forest_file, "Compressed forest file.")->check(CLI::ExistingFile);
+
+    // std::string bp_forest_file = "";
+    stats_sub->add_option("-b,--bp-forest-file", bp_forest_file, "BP-compressed forest file")->check(CLI::ExistingFile);
+
+    // std::string revision = "";
+    stats_sub->add_option("-r,--revision", revision, "Revision of this software (unique id, e.g. git commit hash)")
+        ->default_val("undefined");
+
+    // std::string machine_id = "";
+    stats_sub->add_option("-m,--machine", machine_id, "Identifier of this computer (e.g. hostname)")
+        ->default_val("undefined");
+
+    stats_sub->callback([&trees_file, &forest_file, &bp_forest_file, &setup_results_printer]() {
+        auto results_printer = setup_results_printer();
+
+        dataset_stats(trees_file, forest_file, bp_forest_file, results_printer);
+    });
 
     // Require exactly one subcommand
     app.require_subcommand(1);

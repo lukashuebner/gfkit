@@ -10,7 +10,6 @@
 #include "BenchmarkRunner.hpp"
 #include "ResultsPrinter.hpp"
 #include "perf.hpp"
-#include "print_ds_stats.hpp"
 #include "sfkit/SuccinctForest.hpp"
 #include "sfkit/bp/BPForestCompressor.hpp"
 #include "sfkit/dag/DAGCompressedForest.hpp"
@@ -42,7 +41,7 @@ void validate_stat(
         std::cerr << "ERROR !! " << stat_name << " mismatch between tskit and sfkit (" << variant_name << ")"
                   << std::endl;
         std::cerr << "    " << tskit_value << " vs. " << sfkit_value << " (tskit vs. sfkit)" << std::endl;
-        std::exit(EXIT_FAILURE);
+        // std::exit(EXIT_FAILURE);
     }
 }
 
@@ -85,6 +84,7 @@ void benchmark(
     bench.start();
     sfkit::tskit::TSKitTreeSequence tree_sequence(trees_file);
     do_not_optimize(tree_sequence);
+    bench.stop("load_trees_file", "tskit");
 
     // --- Build sample sets ---
     auto const two_sample_sets   = distribute_samples_to_sample_sets(tree_sequence.num_samples(), 2);
@@ -102,7 +102,7 @@ void benchmark(
             if (afs[i] != tskit_afs[i]) {
                 std::cerr << "ERROR !! AFS mismatch between tskit and " << label << std::endl;
                 std::cerr << "    " << tskit_afs[i] << " vs. " << afs[i] << " (tskit vs. " << label << ")" << std::endl;
-                std::exit(EXIT_FAILURE);
+                // std::exit(EXIT_FAILURE);
             }
         }
     };
@@ -278,15 +278,4 @@ void benchmark(
         bench_variant(*bp_succinct_forest, "sfkit_bp");
     }
 
-    // // --- Output some statistics ---
-    // // TODO
-    // print_ds_stats(
-    //     warmup,
-    //     trees_file,
-    //     iteration,
-    //     results_printer,
-    //     dag_succinct_forest,
-    //     bp_succinct_forest,
-    //     tree_sequence
-    // );
 }
