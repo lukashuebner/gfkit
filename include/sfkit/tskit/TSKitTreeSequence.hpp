@@ -68,6 +68,9 @@ public:
        SampleSet const& sample_set_3,
        SampleSet const& sample_set_4) const;
 
+    [[nodiscard]] std::vector<NodeId> lca(tsk_id_t u, tsk_id_t v);
+    [[nodiscard]] std::vector<NodeId> lca(SampleSet const& samples);
+
     [[nodiscard]] double              num_segregating_sites() const;
     [[nodiscard]] std::vector<double> allele_frequency_spectrum() const;
 

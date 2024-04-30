@@ -51,6 +51,7 @@ public:
     [[nodiscard]] tsk_id_t    root() const;
     [[nodiscard]] bool        is_root(tsk_id_t const node) const;
     [[nodiscard]] bool        is_sample(tsk_id_t node) const;
+    [[nodiscard]] NodeId      lca(tsk_id_t const u, tsk_id_t const v);
 
     [[nodiscard]] std::span<tsk_id_t> postorder();
     [[nodiscard]] EulertourView       eulertour() const;

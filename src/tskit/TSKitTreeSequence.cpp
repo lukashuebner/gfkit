@@ -13,6 +13,7 @@
 #include "sfkit/samples/SampleSet.hpp"
 #include "sfkit/sequence/Mutation.hpp"
 #include "sfkit/sequence/Sequence.hpp"
+#include "sfkit/tskit/TSKitTree.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
 namespace sfkit::tskit {
@@ -36,13 +37,11 @@ TSKitTreeSequence::TSKitTreeSequence(std::string const& trees_file) : _trees_fil
 
 TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const& tree_sequence)
     : _tree_sequence(tree_sequence),
-      owning(false) {
-}
+      owning(false) {}
 
 TSKitTreeSequence::TSKitTreeSequence(tsk_treeseq_t const&& tree_sequence)
     : _tree_sequence(tree_sequence),
-      owning(true) {
-}
+      owning(true) {}
 
 TSKitTreeSequence::~TSKitTreeSequence() {
     if (owning) {
@@ -316,6 +315,41 @@ double TSKitTreeSequence::f2(SampleSet const& sample_set_1, SampleSet const& sam
     KASSERT(ret == 0, "Failed to compute the f2.", sfkit::assert::light);
 
     return f2;
+}
+
+[[nodiscard]] std::vector<NodeId> TSKitTreeSequence::lca(tsk_id_t u, tsk_id_t v) {
+    std::vector<NodeId> lcas;
+    lcas.reserve(this->num_trees());
+
+    TSKitTree ts_tree(*this);
+
+    for (ts_tree.first(); ts_tree.is_tree(); ts_tree.next()) {
+        lcas.emplace_back(ts_tree.lca(u, v));
+    }
+
+    return lcas;
+}
+
+[[nodiscard]] std::vector<NodeId> TSKitTreeSequence::lca(SampleSet const& samples) {
+    KASSERT(samples.popcount() >= 2, "The number of samples must be at least 2.", sfkit::assert::light);
+
+    std::vector<NodeId> lcas;
+    lcas.reserve(this->num_trees());
+
+    TSKitTree ts_tree(*this);
+
+    for (ts_tree.first(); ts_tree.is_tree(); ts_tree.next()) {
+        auto   sample_it = samples.begin();
+        NodeId u         = asserting_cast<NodeId>(*sample_it);
+        while (sample_it != samples.end()) {
+            NodeId v = asserting_cast<NodeId>(*sample_it);
+            u        = ts_tree.lca(u, v);
+            sample_it++;
+        }
+        lcas.emplace_back(u);
+    }
+
+    return lcas;
 }
 
 double TSKitTreeSequence::num_segregating_sites() const {

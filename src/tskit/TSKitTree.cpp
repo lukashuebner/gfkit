@@ -56,11 +56,20 @@ bool TSKitTree::first() {
     return is_tree();
 }
 
+[[nodiscard]] NodeId TSKitTree::lca(tsk_id_t const u, tsk_id_t const v) {
+    tsk_id_t mrca, ret;
+
+    ret = tsk_tree_get_mrca(&_tree, u, v, &mrca);
+    KASSERT(ret == 0, "tskit: Failed to get the MRCA.", sfkit::assert::light);
+
+    return mrca;
+}
+
 bool TSKitTree::next() {
     ++_tree_id;
 
     _state = tsk_tree_next(&_tree);
-    KASSERT(is_valid(), "Failed to goto the next tree.", sfkit::assert::light);
+    KASSERT(is_valid(), "Failed to go to the next tree.", sfkit::assert::light);
 
     tsk_tree_position_next(&_tree_pos);
 

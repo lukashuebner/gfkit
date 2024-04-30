@@ -15,6 +15,7 @@
 #include "sfkit/sequence/Sequence.hpp"
 #include "sfkit/utils/checking_casts.hpp"
 
+// TODO Clean up
 // namespace sfkit::tskit {
 
 // constexpr int TSK_NULL_TREE = 0;

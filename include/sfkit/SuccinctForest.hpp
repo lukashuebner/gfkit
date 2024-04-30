@@ -20,6 +20,7 @@
 #include "sfkit/stats/Divergence.hpp"
 #include "sfkit/stats/Diversity.hpp"
 #include "sfkit/stats/Fst.hpp"
+#include "sfkit/stats/LCA.hpp"
 #include "sfkit/stats/NumSegregatingSites.hpp"
 #include "sfkit/stats/PattersonsF.hpp"
 #include "sfkit/stats/TajimasD.hpp"
@@ -201,6 +202,25 @@ public:
             auto const [allele_freqs_0, allele_freqs_1, allele_freqs_2, allele_freqs_3] =
                 allele_frequencies<SampleId>(samples_0, samples_1, samples_2, samples_3);
             return stats::PattersonsF::f4(allele_freqs_0, allele_freqs_1, allele_freqs_2, allele_freqs_3);
+        }
+    }
+
+    [[nodiscard]] std::vector<NodeId> lca(SampleId const u, SampleId const v) {
+        SampleSet samples(_forest.num_samples());
+        samples.add(u);
+        samples.add(v);
+
+        return lca(samples);
+    }
+
+    [[nodiscard]] std::vector<NodeId> lca(SampleSet const& samples) {
+        if constexpr (std::is_same_v<CompressedForest, DAGCompressedForest>) {
+            stats::DAGLowestCommonAncestor lca(_forest.postorder_edges());
+            return lca.lca(samples);
+        } else {
+            KASSERT(false, "LCA not implemented for BP variant of SuccinctForest", sfkit::assert::light);
+
+            return std::vector<NodeId>(num_trees(), graph::INVALID_NODE_ID);
         }
     }
 
