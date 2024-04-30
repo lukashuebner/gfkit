@@ -1,16 +1,14 @@
 #~/usr/bin/env bash
 
-DATA_DIR="../sfkit/data"
+DATA_DIR="stdpopsim"
 MEASUREMENTS_DIR="."
-SFKIT_BENCH="./build/release/benchmarks/sfkit-bench"
+SFKIT_BENCH="build/release/benchmarks/sfkit-bench"
 GIT_REV=$(git rev-parse --short HEAD)
 MACHINE=$(hostname)
-WARMUP_ITERS=1
-ITERS=10
 
 ls_files() {
-    find "$DATA_DIR" -iname "*_chr*.trees" -print \
-        | grep -E "(sgdp|1kg|unified)_*"
+    find "$DATA_DIR" -iname "*_chr20.trees" -print #\
+        #| grep -E "(sgdp|1kg|unified)_*"
 }
 
 stats_cmd() {
@@ -20,7 +18,8 @@ stats_cmd() {
     BPFOREST_FILE="${DATA_DIR}/${STEM}.bpforest"
     STATS_OUT="$MEASUREMENTS_DIR/${STEM}.stats.csv"
 
-    echo "$SFKIT_BENCH stats --forest-file=$FOREST_FILE --trees-file=$TREES_FILE --bp-forest-file=$BPFOREST_FILE --revision=$GIT_REV --machine=$MACHINE > $STATS_OUT"
+    # --bp-forest-file=$BPFOREST_FILE 
+    echo "$SFKIT_BENCH stats --forest-file=$FOREST_FILE --trees-file=$TREES_FILE --revision=$GIT_REV --machine=$MACHINE > $STATS_OUT"
 }
 
 all_cmds() {
