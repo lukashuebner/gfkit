@@ -24,7 +24,7 @@ library(argparse)
 # --- For running in RStudio/VSCode/Emacs ---
 args <- list()
 # args$input <- "experiments/measurements/sfkit-vs-tskit-bench.csv"
-args$input <- "experiments/measurements/scaling/simulated.edge.opsBench.csv"
+args$input <- "experiments/measurements/scaling/scaling.edge.ops.csv"
 args$output <- "experiments/plots/sfkit-vs-tskit-bench-scaling.pdf"
 
 # --- Helper functions ---
@@ -98,7 +98,7 @@ data <- read_csv(
     col_types <- cols(
         section = col_character(),
         variant = col_character(),
-        dataset = col_character(),
+        ds_type = col_character(),
         collection = col_character(),
         chromosome = col_integer(),
         revision = col_character(),
@@ -139,7 +139,7 @@ runtime_data <- data %>%
     filter(
         variable == "walltime",
     ) %>%
-    group_by(section, variant, dataset, collection, chromosome, revision, machine_id, variable) %>%
+    group_by(section, variant, ds_type, collection, chromosome, revision, machine_id, variable) %>%
     rename(walltime_ns = value) %>%
     summarize(
         walltime_ns_median = median(walltime_ns),
@@ -164,7 +164,7 @@ speedup_data <- inner_join(
         ),
     # sfkit
     runtime_data %>% filter(variant == "sfkit_dag"),
-    by = c("section", "dataset", "collection", "chromosome", "revision", "machine_id", "variable")
+    by = c("section", "ds_type", "collection", "chromosome", "revision", "machine_id", "variable")
 ) %>%
     mutate(
         speedup_median = ref_walltime_ns_median / walltime_ns_median,
@@ -178,53 +178,24 @@ speedup_data <- inner_join(
 speedup_y_breaks <- seq(0, max(speedup_data$speedup_median * 1.05), 1)
 speedup_y_limits <- c(0, max(speedup_data$speedup_median * 1.05))
 
-# --- Speedup of sfkit over tskit ---
 stats_sections <- c("afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence", "fst", "f2", "f3", "f4")
+
+# --- Speedup of sfkit over tskit ---
 speedup_data %>%
     filter(section %in% stats_sections) %>%
-    select(-dataset) %>%
+    select(-ds_type) %>%
     ggplot(
         aes(
             y = speedup_median,
             ymin = speedup_q10,
             ymax = speedup_q90,
-            x = chromosome,
+            x = factor(collection, levels = c("5k", "10k", "20k", "40k", "80k", "160k", "320k", "640k")),
+            color = factor(section, levels = c("f3", "f4", "f2",  "divergence", "afs", "diversity", "num_segregating_sites", "tajimas_d")),
         ),
     ) +
-    geom_points_with_errorbars() +
-    facet_grid(rows = vars(section), cols = vars(collection), scales = "fixed") +
-    theme_husky(
-        style = style,
-        # legend.position = "none",
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.key.size = style$legend.key.size,
-    ) +
-    ylab("speedup over tskit") +
-    scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
-    scale_x_discrete(labels = pretty_print_datasets) +
-    # scale_color_shape_manual(
-    #     color_values = section_colors,
-    #     labels = section_labels
-    # ) +
-    gg_eps()
-
-style$height <- 200
-style$width <- 225
-ggsave(args$output, width = style$width, height = style$height, units = style$unit)
-
-speedup_data %>%
-    filter(section %in% stats_sections) %>%
-    select(-dataset) %>%
-    ggplot(
-        aes(
-            y = speedup_median,
-            ymin = speedup_q10,
-            ymax = speedup_q90,
-            x = section,
-            color = collection,
-        ),
-    ) +
-    geom_point(size = 0.25, position = position_dodge2(width = 0.25)) +
+    # geom_point(size = 0.25, position = position_dodge2(width = 0.25)) +
+    geom_point(size = 0.25) +
+    geom_line(aes(group = section), size = 0.25) +
     # TODO Add error bars
     geom_hline(yintercept = 1, linetype = "dashed", color = "black", size = 0.25) +
     theme_husky(
