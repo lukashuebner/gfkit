@@ -23,7 +23,6 @@ using sfkit::dag::DAGForestCompressor;
 using sfkit::graph::NodeId;
 using sfkit::samples::SampleId;
 using sfkit::stats::DAGLowestCommonAncestor;
-using sfkit::tskit::TSKitTree;
 using sfkit::tskit::TSKitTreeSequence;
 
 std::pair<tsk_id_t, tsk_id_t> pick_2_distinct_samples_at_random(tsk_id_t const num_overall_samples) {
