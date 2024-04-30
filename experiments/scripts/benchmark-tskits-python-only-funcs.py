@@ -48,3 +48,15 @@ for iteration in range(0, num_iterations):
     walltime = s_to_ns(end - start)
     print(f'fst,tskit,{dataset},{revision},{machine_id},{iteration},walltime,{walltime},ns')
     print(f'fst,tskit,{dataset},{revision},{machine_id},{iteration},fst,{fst},1')
+
+for iteration in range(0, num_iterations):
+    for nth in range(2, 10):
+        samples = ts.samples()[0::nth]
+
+        start = perf_counter()
+        for tree in ts.trees():
+            lca = tree.mrca(*samples)
+        end = perf_counter()
+
+        walltime = s_to_ns(end - start)
+        print(f'lca_{nth}th,tskit,{dataset},{revision},{machine_id},{iteration},walltime,{walltime},ns')

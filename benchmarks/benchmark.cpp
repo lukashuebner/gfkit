@@ -20,7 +20,8 @@
 #include "sfkit/tskit/tskit.hpp"
 #include "timer.hpp"
 
-auto distribute_samples_to_sample_sets(sfkit::SampleId const num_samples, sfkit::SampleSetId const num_sample_sets) {
+std::vector<sfkit::samples::SampleSet>
+distribute_samples_to_sample_sets(sfkit::SampleId const num_samples, sfkit::SampleSetId const num_sample_sets) {
     std::vector<sfkit::samples::SampleSet> sample_sets(num_sample_sets, num_samples);
 
     size_t idx = 0;
@@ -30,6 +31,50 @@ auto distribute_samples_to_sample_sets(sfkit::SampleId const num_samples, sfkit:
     }
 
     return sample_sets;
+}
+
+std::vector<sfkit::SampleId> pick_every_nth_sample(sfkit::SampleId const num_overall_samples, sfkit::SampleId const n) {
+    std::vector<sfkit::SampleId> output;
+    output.reserve(num_overall_samples / n);
+
+    for (sfkit::SampleId i = 0; i < num_overall_samples; i += n) {
+        output.push_back(i);
+    }
+
+    return output;
+}
+
+std::unordered_set<sfkit::SampleId>
+pick_n_samples_at_random(sfkit::SampleId const num_overall_samples, sfkit::SampleId const n) {
+    std::random_device                             rand_dev;
+    std::mt19937                                   generator(rand_dev());
+    std::uniform_int_distribution<sfkit::SampleId> pick_sample_at_random(0, num_overall_samples - 1);
+
+    std::unordered_set<sfkit::SampleId> output;
+    output.reserve(n);
+
+    while (output.size() < n) {
+        output.insert(pick_sample_at_random(generator));
+    }
+
+    return output;
+}
+
+std::vector<std::pair<sfkit::SampleId, sfkit::SampleId>>
+pick_sample_pairs_uniformly_at_random(sfkit::SampleId const num_samples, sfkit::SampleId const n) {
+    std::vector<std::pair<sfkit::SampleId, sfkit::SampleId>> pairs;
+    pairs.reserve(n);
+
+    for (sfkit::SampleId i = 0; i < n; i++) {
+        auto const samples = pick_n_samples_at_random(num_samples, 2);
+        KASSERT(samples.size() == 2, "Expected to pick exactly two samples.", sfkit::assert::light);
+        auto const first  = *samples.begin();
+        auto const second = *samples.begin().operator++();
+        KASSERT(first != second, "Expected to pick two different samples.", sfkit::assert::light);
+        pairs.emplace_back(first, second);
+    }
+
+    return pairs;
 }
 
 void validate_stat(
@@ -91,12 +136,26 @@ void benchmark(
     auto const three_sample_sets = distribute_samples_to_sample_sets(tree_sequence.num_samples(), 3);
     auto const four_sample_sets  = distribute_samples_to_sample_sets(tree_sequence.num_samples(), 4);
 
+    // --- Benchmark computing the LCA/MRCA ---
+    uint16_t const num_lca_queries = 1;
+    auto const lca_sample_pairs = pick_sample_pairs_uniformly_at_random(tree_sequence.num_samples(), num_lca_queries);
+
+    bench.start();
+    for (auto const& [u, v]: lca_sample_pairs) {
+        auto const tskit_lca = tree_sequence.lca(u, v);
+        do_not_optimize(tskit_lca);
+    }
+    bench.stop("lca_pairwise", "tskit");
+    // The node IDs of sfkit and tskit are not trivially comparable -> Full verification only in the unit tests.
+
+    // tskit's C interface only supports pair-wise queries. We use the Python interface for querying mor than two
+    // samples at once.
+
     // --- Benchmark computing the AFS ---
     bench.start();
     auto const tskit_afs = tree_sequence.allele_frequency_spectrum();
     do_not_optimize(tskit_afs);
     bench.stop("afs", "tskit");
-    bench.stop("load_trees_file", "tskit");
     auto validate_afs = [&tskit_afs](auto const& afs, std::string const& label) {
         for (size_t i = 1; i < afs.num_samples() - 1; ++i) {
             if (afs[i] != tskit_afs[i]) {
@@ -190,17 +249,7 @@ void benchmark(
         bp_succinct_forest.emplace(std::move(dag_forest), std::move(dag_sequence));
     }
 
-    // // --- Benchmark computing subtree sizes ---
-    // // TODO Add custom checker? Overload operator==? (Approx checking is a little bit more involved)
-    // // TODO Add the numsamples below function to SuccinctForest
-    // bench.start();
-    // auto num_samples_below = sfkit::sequence::NumSamplesBelowFactory::build(dag_forest, all_samples);
-    // do_not_optimize(num_samples_below);
-    // bench.stop("compute_subtree_sizes", "sfkit_dag");
-
-    // auto all_samples = dag_forest.all_samples();
-    // KASSERT(all_samples.overall_num_samples() > 0);
-
+    // --- Benchmark the sfkit variants ---
     auto const bench_variant = [&](auto succinct_forest, std::string const& variant_name) {
         // --- Benchmark computing the AFS ---
         bench.start();
@@ -208,6 +257,30 @@ void benchmark(
         do_not_optimize(sfkit_afs);
         bench.stop("afs", variant_name);
         validate_afs(sfkit_afs, variant_name);
+
+        // --- Benchmark computing the LCA/MRCA ---
+        if constexpr (std::is_same_v<decltype(succinct_forest), sfkit::DAGSuccinctForest>) {
+            bench.start();
+            for (auto [u, v]: lca_sample_pairs) {
+                auto const sfkit_lca = succinct_forest.lca(u, v);
+                do_not_optimize(sfkit_lca);
+            }
+            bench.stop("lca", variant_name);
+
+            for (uint8_t nth = 2; nth <= 10; ++nth) {
+                auto const samples_vec = pick_every_nth_sample(tree_sequence.num_samples(), nth);
+
+                sfkit::SampleSet samples(tree_sequence.num_samples());
+                for (auto const sample: samples_vec) {
+                    samples.add(sample);
+                }
+
+                bench.start();
+                auto const sfkit_lca = succinct_forest.lca(samples);
+                do_not_optimize(sfkit_lca);
+                bench.stop(std::string("lca_") + std::to_string(nth) + "th", "sfkit");
+            }
+        }
 
         // --- Benchmark computing the divergence ---
         bench.start();
@@ -277,5 +350,4 @@ void benchmark(
     if (bp_succinct_forest) {
         bench_variant(*bp_succinct_forest, "sfkit_bp");
     }
-
 }
