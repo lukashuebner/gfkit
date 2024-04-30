@@ -13,7 +13,8 @@ echo -n "" > "$JOB_QUEUE_FILE"
 
 # Generate job queue
 for n in ${NUM_SAMPLES[@]}; do
-    for chr in {1..22}; do
+    # for chr in {1..22}; do
+    for chr in 20; do
         echo "[ -f simulated_${n}k_chr${chr}.trees ] || stdpopsim HomSap --genetic-map HapMapII_GRCh38 --chromosome $chr --output simulated_${n}k_chr${chr}.trees ${n}000" >> "$JOB_QUEUE_FILE";
     done
 done
