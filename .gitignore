@@ -666,3 +666,7 @@ data/*.trees.tsz
 
 # borg
 .nobackup
+
+# backup dir
+backup/
+
