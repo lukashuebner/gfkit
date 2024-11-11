@@ -23,53 +23,45 @@ void dataset_stats(
     constexpr bool    warmup    = false;
     constexpr uint8_t iteration = 0;
 
-    auto log_time = [&results_printer,
-                     &trees_file,
-                     warmup,
-                     iteration](std::string const& section, std::string const& variant, Timer::duration duration) {
-        results_printer.print_timer(false, section, variant, trees_file, duration, iteration);
-    };
+    // auto log_time = [&results_printer,
+    //                  &trees_file,
+    //                  warmup,
+    //                  iteration](std::string const& section, std::string const& variant, Timer::duration duration) {
+    //     results_printer.print_timer(false, section, variant, trees_file, duration, iteration);
+    // };
 
-    auto log_mem = [&results_printer,
-                    iteration,
-                    &trees_file,
-                    warmup](std::string const& section, std::string const& variant, MemoryUsage::Report const& report) {
-        results_printer.print_memory(warmup, section, variant, trees_file, report, iteration);
-    };
+    // auto log_mem = [&results_printer,
+    //                 iteration,
+    //                 &trees_file,
+    //                 warmup](std::string const& section, std::string const& variant, MemoryUsage::Report const& report) {
+    //     results_printer.print_memory(warmup, section, variant, trees_file, report, iteration);
+    // };
 
-    auto log_stat =
-        [&results_printer,
-         &trees_file,
-         warmup,
-         iteration](std::string const& variable, std::string const& variant, auto const value, std::string const& unit) {
-            results_printer.print(warmup, "stats", variant, trees_file, variable, value, unit, iteration);
-        };
+    // auto log_stat =
+    //     [&results_printer,
+    //      &trees_file,
+    //      warmup,
+    //      iteration](std::string const& variable, std::string const& variant, auto const value, std::string const& unit) {
+    //         results_printer.print(warmup, "stats", variant, trees_file, variable, value, unit, iteration);
+    //     };
 
-    Timer           timer;
-    MemoryUsage     memory_usage;
-    BenchmarkRunner bench(memory_usage, timer, log_mem, log_time);
+    // Timer           timer;
+    // MemoryUsage     memory_usage;
+    // BenchmarkRunner bench(memory_usage, timer, log_mem, log_time);
 
-    // --- Benchmark tree sequence loading ---
-    bench.start();
+    // --- Load the datasets ---
     sfkit::tskit::TSKitTreeSequence tree_sequence(trees_file);
-    do_not_optimize(tree_sequence);
-    bench.stop("load_trees_file", "tskit");
-
-    // --- Benchmark loading the edge-based tree sequence ---
-    bench.start();
     sfkit::dag::DAGCompressedForest         dag_forest;
+
     sfkit::sequence::GenomicSequenceFactory dag_sequence_factory(tree_sequence);
     sfkit::sequence::GenomicSequence        dag_sequence;
     sfkit::io::CompressedForestIO::load(dag_forest_file, dag_forest, dag_sequence);
-    bench.stop("load_forest_file", "sfkit_dag");
 
     // --- Benchmark loading the BP-based tree sequence ---
-    bench.start();
     sfkit::bp::BPCompressedForest           bp_forest;
     sfkit::sequence::GenomicSequenceFactory bp_sequence_factory(tree_sequence);
     sfkit::sequence::GenomicSequence        bp_sequence;
     sfkit::io::CompressedForestIO::load(bp_forest_file, bp_forest, bp_sequence);
-    bench.stop("load_forest_file", "sfkit_bp");
 
     // --- Number of trees ---
     auto const num_trees = tree_sequence.num_trees();

@@ -236,7 +236,7 @@ void benchmark(
         sfkit::io::CompressedForestIO::load(dag_forest_file, dag_forest, dag_sequence);
         do_not_optimize(dag_forest);
         do_not_optimize(dag_sequence);
-        bench.stop("load_forest_file", "sfkit_dag");
+        bench.stop("load_forest_file", "gfkit_dag");
         dag_succinct_forest.emplace(std::move(dag_forest), std::move(dag_sequence));
     }
 
@@ -245,7 +245,7 @@ void benchmark(
         sfkit::io::CompressedForestIO::load(bp_forest_file, bp_forest, bp_sequence);
         do_not_optimize(bp_forest);
         do_not_optimize(bp_sequence);
-        bench.stop("load_forest_file", "sfkit_bp");
+        bench.stop("load_forest_file", "gfkit_bp");
         bp_succinct_forest.emplace(std::move(dag_forest), std::move(dag_sequence));
     }
 
@@ -265,7 +265,7 @@ void benchmark(
                 auto const sfkit_lca = succinct_forest.lca(u, v);
                 do_not_optimize(sfkit_lca);
             }
-            bench.stop("lca", variant_name);
+            bench.stop("lca_pairwise", variant_name);
 
             for (uint8_t nth = 2; nth <= 10; ++nth) {
                 auto const samples_vec = pick_every_nth_sample(tree_sequence.num_samples(), nth);
@@ -345,9 +345,9 @@ void benchmark(
     };
 
     if (dag_succinct_forest) {
-        bench_variant(*dag_succinct_forest, "sfkit_dag");
+        bench_variant(*dag_succinct_forest, "gfkit_dag");
     }
     if (bp_succinct_forest) {
-        bench_variant(*bp_succinct_forest, "sfkit_bp");
+        bench_variant(*bp_succinct_forest, "gfkit_bp");
     }
 }
