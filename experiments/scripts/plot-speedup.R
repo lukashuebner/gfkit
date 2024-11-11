@@ -129,75 +129,65 @@ stats_sections <- c(
     "afs", "diversity", "num_segregating_sites", "tajimas_d", "divergence",
     "fst", "f2", "f3", "f4", "lca_pairwise")
 
-max_shown_speedup <- speedup_data %>% filter(section %in% stats_sections) %>% pull(speedup_median) %>% max()
+# --- Speedup of sfkit over tskit ---
+# TODO Unify and re-use code
+variant <- "bipart"
+variant <- "subtree"
+variant_filter <- paste0("gfkit_", variant)
+
+summarized_data <- speedup_data %>%
+    filter(
+        section %in% stats_sections,
+        collection %in% c("tgp", "sgdp", "unified", "simulated_640k"),
+        variant == variant_filter
+    ) %>%
+    group_by(section, collection, variant) %>%
+    summarize(
+        speedup_min = min(speedup_median),
+        speedup_max = max(speedup_median),
+        speedup_median = median(speedup_median),
+        .groups = "drop"
+    )
+
+max_shown_speedup <- summarized_data %>%
+    filter(section %in% stats_sections, variant == variant_filter) %>%
+    pull(speedup_max) %>%
+    max()
 speedup_y_breaks <- seq(1, max_shown_speedup, 1)
 speedup_y_limits <- c(1, max_shown_speedup)
 
-# --- Speedup of sfkit over tskit ---
-# TODO Unify and re-use code
-range_data <- speedup_data %>%
-    filter(
-        section %in% stats_sections,
-        collection %in% c("tgp", "sgdp", "unified", "simulated_640k")
-    ) %>%
-    group_by(section, collection, variant) %>%
-    summarize(
-        speedup_min = min(speedup_median),
-        speedup_max = max(speedup_median),
-        speedup_median = median(speedup_median),
-        .groups = "drop"
-    )
+style$point_size <- 0.6
+style$errorbar_size <- style$point_size
+style$errorbar_width <- 0.4
 
-point_data <- speedup_data %>%
-    filter(
-        section %in% stats_sections,
-        collection %in% c("tgp", "sgdp", "unified", "simulated_640k")
-    ) %>%
-    group_by(section, collection, variant) %>%
-    summarize(
-        speedup_min = min(speedup_median),
-        speedup_max = max(speedup_median),
-        speedup_median = median(speedup_median),
-        .groups = "drop"
-    )
-
-style$point_size <- 0.75
-style$errorbar_width <- style$point_size
-style$errorbar_size <- style$errorbar_width
-ggplot() +
-    geom_errorbar(
-        data = range_data,
+ggplot(
+    data = summarized_data %>% filter(variant == variant_filter),
         mapping = aes(
             x = section,
             y = speedup_median,
             ymin = speedup_min,
             ymax = speedup_max,
             color = collection,
-        ),
+        )
+    ) +
+    geom_errorbar(
         size = style$errorbar_size,
         width = style$errorbar_width,
-        position = position_dodge2(width = style$point_size)
+        position = position_dodge(width = style$errorbar_width)
     ) +
     geom_point(
-        data = point_data,
-        mapping = aes(
-            x = section,
-            y = speedup_median,
-            color = collection,
-        ),
         size = style$point_size,
-        position = position_dodge2(width = style$point_size)
+        position = position_dodge(width = style$errorbar_width)
     ) +
-    # TODO Add error bars
     geom_hline(yintercept = 1, linetype = "dashed", color = "black", size = 0.25) +
     theme_husky(
         style = style,
-        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.x = element_text(angle = 35, hjust = 1),
         legend.key.size = style$legend.key.size,
         axis.title.x = element_blank(),
         legend.title = element_blank(),
         legend.position = "bottom",
-        legend.margin = margin(-9, 0, 0, 0),
+        legend.margin = margin(-15, 0, 0, 0),
     ) +
     scale_y_continuous(limits = speedup_y_limits, breaks = speedup_y_breaks, minor_breaks = NULL) +
     scale_color_manual(values = collection_colors, labels = collection_labels) +
@@ -206,13 +196,15 @@ ggplot() +
         labels = section_labels,
     ) +
     ylab("speedup over tskit") +
-    facet_wrap(~variant, scales = "fixed", ncol = 1, labeller = as_labeller(short_variant_labels)) +
+    # facet_wrap(~variant, scales = "fixed", ncol = 1, labeller = as_labeller(short_variant_labels)) +
     gg_eps()
 
-style$height <- 120
+# style$height <- 55 # WABI
+style$height <- 75 # presentation
 style$width <- 150
-ggsave("experiments/plots/speedup.pdf", width = style$width, height = style$height, units = style$unit)
-to_jpeg("experiments/plots/speedup.pdf")
+filename <- paste0("experiments/plots/speedup-", variant, ".pdf")
+ggsave(filename, width = style$width, height = style$height, units = style$unit)
+to_jpeg(filename)
 
 point_data %>%
     filter(variant == "gfkit_subtree", section != "lca_pairwise") %>%
@@ -236,94 +228,106 @@ stats_sections <- c(
     "lca_6th", "lca_5th", "lca_4th", "lca_3th", "lca_2th"
 )
 
-max_shown_speedup <- speedup_data %>% filter(section %in% stats_sections) %>% pull(speedup_median) %>% max()
+# --- Speedup of sfkit over tskit ---
+summarized_data <- speedup_data %>%
+    filter(
+        section %in% stats_sections,
+        collection %in% c("tgp", "sgdp", "unified"),
+        variant == "gfkit_subtree"
+    ) %>%
+    group_by(section, collection, variant) %>%
+    summarize(
+        speedup_min = min(speedup_median),
+        speedup_max = max(speedup_median),
+        speedup_median = median(speedup_median),
+        .groups = "drop"
+    )
+
+max_shown_speedup <- summarized_data %>%
+    filter(section %in% stats_sections) %>%
+    pull(speedup_max) %>%
+    max()
 speedup_y_breaks <- seq(1, max_shown_speedup, 1)
 speedup_y_limits <- c(1, max_shown_speedup)
 
-# --- Speedup of sfkit over tskit ---
-range_data <- speedup_data %>%
-    filter(
-        section %in% stats_sections,
-        collection %in% c("tgp", "sgdp", "unified", "simulated_640k")
-    ) %>%
-    group_by(section, collection, variant) %>%
-    summarize(
-        speedup_min = min(speedup_median),
-        speedup_max = max(speedup_median),
-        speedup_median = median(speedup_median),
-        .groups = "drop"
-    )
+summarized_data <- summarized_data %>% 
+    mutate(frac_of_samples_selected = 1. / as.numeric(str_extract(section, "\\d+")))
+x_breaks <- sort(summarized_data %>% pull(frac_of_samples_selected) %>% unique())
+x_breaks <- x_breaks[c(-2, -4)] 
+x_labels <- paste(round(100 * x_breaks, digits = 0), "%")
+style$point_size <- 1
 
-point_data <- speedup_data %>%
-    filter(
-        section %in% stats_sections,
-        collection %in% c("tgp", "sgdp", "unified", "simulated_640k")
-    ) %>%
-    group_by(section, collection, variant) %>%
-    summarize(
-        speedup_min = min(speedup_median),
-        speedup_max = max(speedup_median),
-        speedup_median = median(speedup_median),
-        .groups = "drop"
-    )
-
-ggplot() +
+ggplot(
+    data = summarized_data,
+    mapping = aes(
+        x = frac_of_samples_selected,
+        y = speedup_median,
+        ymin = speedup_min,
+        ymax = speedup_max,
+        color = collection,
+        shape = collection,
+    )) +
     geom_errorbar(
-        data = range_data,
-        mapping = aes(
-            x = factor(section, levels = lca_order),
-            y = speedup_median,
-            ymin = speedup_min,
-            ymax = speedup_max,
-            color = collection,
-        ),
         size = style$errorbar_size,
-        width = style$errorbar_width,
-        position = position_dodge2(width = style$point_size)
+        linetype = "solid"
     ) +
     geom_point(
-        data = point_data,
-        mapping = aes(
-            x = factor(section, levels = lca_order),
-            y = speedup_median,
-            color = collection,
-        ),
         size = style$point_size,
-        position = position_dodge2(width = style$point_size)
     ) +
-    # TODO Add error bars
+    geom_line() +
     geom_hline(yintercept = 1, linetype = "dashed", color = "black", size = 0.25) +
     theme_husky(
         style = style,
         # legend.position = "none",
-        axis.text.x = element_text(angle = 45, hjust = 1),
+        # axis.text.x = element_text(angle = 45, hjust = 1),
         legend.key.size = style$legend.key.size,
-        axis.title.x = element_blank(),
+        #legend.key.width=unit(3,"cm"),
         legend.title = element_blank(),
         legend.position = "bottom",
         legend.margin = margin(-9, 0, 0, 0),
     ) +
-    scale_y_log10() +
-    scale_color_manual(values = collection_colors, labels = collection_labels) +
-    scale_shape_manual(values = collection_shapes, labels = collection_labels) +
-    scale_x_discrete(
-        labels = lca_labels,
-    ) +
-    ylab("speedup over tskit") +
+    # scale_y_log10() +
+    scale_color_manual(values = collection_colors[1:3], labels = collection_labels[1:3]) +
+    scale_shape_manual(values = collection_shapes[1:3], labels = collection_labels[1:3]) +
+    #scale_linetype_manual(values = collection_linetypes[1:3], labels = collection_labels[1:3]) +
+    scale_x_continuous(breaks = x_breaks, labels = x_labels) +
+    ylab(TeX("speedup over tskit")) +
+    xlab(TeX("fraction of samples selected")) +
     gg_eps()
 
-style$height <- 75
+# style$height <- 45 # WABI
+style$height <- 75 # presentation
 style$width <- 150
-
 ggsave("experiments/plots/speedup-lca.pdf", width = style$width, height = style$height, units = style$unit)
 to_jpeg("experiments/plots/speedup-lca.pdf")
 
-point_data %>%
+summarized_data %>%
+    filter(variant == "gfkit_subtree", section == "lca_2th") %>%
+    select(speedup_min, speedup_max, speedup_median) %>%
+    summary()
+
+summarized_data %>%
     filter(variant == "gfkit_subtree", section == "lca_10th") %>%
     select(speedup_min, speedup_max, speedup_median) %>%
     summary()
 
-point_data %>%
-    filter(variant == "gfkit_subtree", section == "lca_2th") %>%
-    select(speedup_min, speedup_max, speedup_median) %>%
-    summary()
+data %>%
+    filter(variant == "gfkit_subtree", section %in% stats_sections, variable == "walltime") %>%
+    pull(value) %>%
+    sum()
+
+data %>%
+    filter(variable == "walltime", section %in% stats_sections) %>%
+    group_by(section, variant, variable) %>%
+    summarize(
+        walltime_ns_median = median(value),
+        .groups = "drop"
+    ) %>%
+    group_by(variant) %>%
+    summarize(
+        walltime_ms_median_min = ns2ms(min(walltime_ns_median)),
+        walltime_ms_median_max = ns2ms(max(walltime_ns_median)),
+        .groups = "drop"
+    )
+
+

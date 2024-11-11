@@ -19,7 +19,7 @@ husky_shapes <- c(19, 15, 17, 18, 3, 4, 7, 8, 10, 11, 12, 13, 14)
 # A neutral element for the `+` operator of the `ggplot` object.
 # Useful for example as the last element, so that you can comment out the previous elements
 # without having to worry about the trailing `+`.
-# Can also be used as an alternitive in an in-line `if` statement.
+# Can also be used as an alternative in an in-line `if` statement.
 gg_eps <- function() { list() }
 
 # Remove an element of a named vector by name
@@ -106,7 +106,7 @@ labeller_factory <- function(labels, pretty_printer) {
     setNames(labels, pretty_printer(labels))
 }
 
-# Generate the named vector for the `values` vector of a scale_shale_* call
+# Generate the named vector for the `values` vector of a scale_shape_* call
 # from a named vector of e.g. colors.    
 husky_shape_values <- function(color_values) {
     setNames(

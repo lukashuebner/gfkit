@@ -7,6 +7,12 @@ collection_labels <- c(
     "simulated_640k" = "Simulated 640k"
 )
 
+collection_linetypes <- c(
+    "tgp" = "solid",
+    "sgdp" = "dotted",
+    "unified" = "dashed"
+)
+
 # Color brewer
 # collection_colors <- c(
 #     "tgp" = "#ff7f0e",
@@ -48,10 +54,10 @@ section_labels <- c(
     "afs" = "AFS",
     "diversity" = "Diversity",
     "tajimas_d" = "Tajima's D",
-    "num_segregating_sites" = "Segregating Sites",
+    "num_segregating_sites" = "Segregating\nSites",
     "divergence" = "Divergence",
     "fst" = "Fst",
-    "lca_pairwise" = "LCA Pairwise"
+    "lca_pairwise" = "Pairwise\nLCA"
 )
 
 variant_labels <- c(
@@ -90,15 +96,15 @@ variant_linetypes <- c(
 )
 
 lca_labels = c(
-    "lca_10th" = "every 10th sample",
-    "lca_9th" = "every 9th sample",
-    "lca_8th" = "every 8th sample",
-    "lca_7th" = "every 7th sample",
-    "lca_6th" = "every 6th sample",
-    "lca_5th" = "every 5th sample",
-    "lca_4th" = "every 4th sample",
-    "lca_3th" = "every 3rd sample",
-    "lca_2th" = "every 2nd sample"
+    "lca_10th" = TeX("$n = 10$"),
+    "lca_9th" = TeX("$n = 9$"),
+    "lca_8th" = TeX("$n = 8$"),
+    "lca_7th" = TeX("$n = 7$"),
+    "lca_6th" = TeX("$n = 6$"),
+    "lca_5th" = TeX("$n = 5$"),
+    "lca_4th" = TeX("$n = 4$"),
+    "lca_3th" = TeX("$n = 3$"),
+    "lca_2th" = TeX("$n = 2$")
 )
 
 lca_order = c(

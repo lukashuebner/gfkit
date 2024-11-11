@@ -94,6 +94,9 @@ num_with_sd <- function(x, sd) {
         '(', signif(sd, digits = 1), ')}'
     )
 }
+geometric_mean <- function(x) {
+    exp(mean(log(x)))
+}
 
 data %>%
     mutate(
@@ -106,18 +109,18 @@ data %>%
         variant == "tskit" & variable == "tskit_num_edges" |
         variant == "gfkit_subtree" & variable == "num_unique_subtrees" |
         variant == "gfkit_bipart" & variable == "num_unique_bipartitions" |
-        variant == "all" & variable %in% c("num_mutations", "num_samples", "num_trees")
+        variant == "all" & variable %in% c("num_mutations", "num_samples", "num_trees", "num_subtrees")
     ) %>%
     select(-variant, -revision, -unit) %>%
     pivot_wider(names_from = variable, values_from = value) %>%
     mutate(
-        num_subtrees = (2 * num_samples - 1) * num_trees,
+        # num_subtrees = (2 * num_samples - 1) * num_trees,
         num_bipartitions = tskit_num_edges * num_trees,
         proportion_of_unique_subtrees = num_unique_subtrees / num_subtrees,
         # proportion_of_unique_bipartitions = num_unique_bipartitions / num_bipartitions,
         unique_bipartitions_vs_subtrees = num_unique_bipartitions / num_unique_subtrees
     ) %>%
-    select(collection, num_samples, num_unique_subtrees, num_subtrees, proportion_of_unique_subtrees, unique_bipartitions_vs_subtrees) %>%
+    select(collection, num_samples, num_unique_subtrees, num_subtrees, proportion_of_unique_subtrees, unique_bipartitions_vs_subtrees, num_mutations, num_trees, num_subtrees) %>%
     group_by(collection) %>%
     summarize(
         num_samples = first(num_samples),
@@ -126,6 +129,16 @@ data %>%
         num_subtrees_max = max(num_subtrees),
         num_subtrees_mean = mean(num_subtrees),
         num_subtrees_sd = sd(num_subtrees),
+        num_mutations_min = min(num_mutations),
+        num_mutations_median = median(num_mutations),
+        num_mutations_max = max(num_mutations),
+        num_mutations_mean = mean(num_mutations),
+        num_mutations_sd = sd(num_mutations),
+        num_trees_min = min(num_trees),
+        num_trees_median = median(num_trees),
+        num_trees_max = max(num_trees),
+        num_trees_mean = mean(num_trees),
+        num_trees_sd = sd(num_trees),
         num_unique_subtrees_min = min(num_unique_subtrees),
         num_unique_subtrees_median = median(num_unique_subtrees),
         num_unique_subtrees_max = max(num_unique_subtrees),
@@ -139,7 +152,7 @@ data %>%
         # proportion_of_unique_bipartitions_min = min(proportion_of_unique_bipartitions),
         # proportion_of_unique_bipartitions_median = median(proportion_of_unique_bipartitions),
         # proportion_of_unique_bipartitions_max = max(proportion_of_unique_bipartitions),
-        # proportion_of_unique_bipartitions_mean = mean(proportion_of_unique_bipartitions),
+        # proportion_of_unique_bipartitions_mean = geometric_mean(proportion_of_unique_bipartitions),
         # proportion_of_unique_bipartitions_sd = sd(proportion_of_unique_bipartitions),
         unique_bipartitions_vs_subtrees_min = min(unique_bipartitions_vs_subtrees),
         unique_bipartitions_vs_subtrees_median = median(unique_bipartitions_vs_subtrees),
@@ -153,22 +166,26 @@ data %>%
         num_subtrees_text = paste0('\\numrange{', num_subtrees_min, '}{', num_subtrees_max, '}'),
         num_unique_subtrees_text = paste0('\\numrange{', num_unique_subtrees_min, '}{', num_unique_subtrees_max, '}'),
         proportion_of_unique_subtrees_text = num_with_sd(proportion_of_unique_subtrees_mean, proportion_of_unique_subtrees_sd),
-        unique_bipartitions_vs_subtrees_text = num_with_sd(unique_bipartitions_vs_subtrees_mean, unique_bipartitions_vs_subtrees_sd)
+        unique_bipartitions_vs_subtrees_text = num_with_sd(unique_bipartitions_vs_subtrees_mean, unique_bipartitions_vs_subtrees_sd),
+        mutations_per_tree = num_mutations_mean / num_trees_mean,
+        mutations_per_subtree = num_mutations_mean / num_subtrees_mean,
     ) ->
 ds_stats_tbl
 
 print(
     xtable(ds_stats_tbl %>%
         select(
-            collection, num_unique_subtrees_text
-            # collection, num_samples_text, num_subtrees_text,
-            # proportion_of_unique_subtrees_text, unique_bipartitions_vs_subtrees_text
+            collection, num_samples_text, num_subtrees_text, num_unique_subtrees_text,
+            proportion_of_unique_subtrees_text, unique_bipartitions_vs_subtrees_text, num_trees_min, num_trees_max
     )),
     type = "latex",
     include.rownames = FALSE,
     sanitize.text.function = identity
 )
-        
+ds_stats_tbl %>%
+    select(
+        collection, num_trees_min, num_trees_max
+)     
 # Dataset | num samples | num subtrees | proportion of subtrees that are unique | proportion of bipartitions that are unique | num_unique_bipartitions / num_unique_subtrees
 
 # ggplot(
